@@ -1,0 +1,21 @@
+services:
+  jira-board:
+    image: almooooooo/taskboard:1.18.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:18764:18764"
+    environment:
+      LK_JIRA_BASE_URL: ${LK_JIRA_BASE_URL:-https://jira.example.com}
+      LK_JIRA_TLS_SKIP_VERIFY: ${LK_JIRA_TLS_SKIP_VERIFY:-false}
+      LK_GITLAB_BASE_URL: ${LK_GITLAB_BASE_URL:-}
+      LK_GITLAB_TOKEN: ${LK_GITLAB_TOKEN:-}
+      NODE_EXTRA_CA_CERTS: ${NODE_EXTRA_CA_CERTS:-}
+    volumes:
+      - profile:/data
+      - ./certs:/run/certs:ro
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  profile:

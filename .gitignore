@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+node_modules/
+/data/
+/profile.json
+/profile.dpapi
+/token.dpapi
+/logs/
+*.log
+/certs/*
+!/certs/.gitkeep
+*.tar

@@ -1,0 +1,307 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Мои задачи</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f6f8;color:#202632;font:15px 'Segoe UI',sans-serif}main{max-width:1180px;margin:24px auto;padding:0 28px}header{display:flex;justify-content:space-between;align-items:center;gap:20px}h1{font-size:30px;margin:0 0 8px}p{color:#647084;margin:0}.tabs{display:flex;gap:8px;margin:18px 0 14px}button{font:inherit;cursor:pointer;border:1px solid #d9dee7;border-radius:9px;padding:11px 18px;background:white;color:#344056}button[aria-selected=true]{background:#253e79;color:white;border-color:#253e79}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #7c9af0;outline-offset:3px}input{width:100%;font:inherit;padding:13px 16px;border:1px solid #d9dee7;border-radius:9px;background:white;margin-bottom:18px}.card{background:white;border:1px solid #e1e5eb;border-radius:12px;padding:20px;margin-bottom:12px}.top{display:flex;justify-content:space-between;gap:15px;align-items:center}.key{font-size:13px;color:#5b6b85}.title{display:block;font-size:18px;font-weight:600;color:#253e79;text-decoration:none;margin:12px 0}.title:hover{text-decoration:underline}.meta{font-size:13px;color:#697486;display:flex;flex-wrap:wrap;gap:18px}.status{font-size:12px;font-weight:600;border-radius:6px;padding:6px 9px;background:#edf0f5}.ready{background:#e7f3ee;color:#246647}.returned{background:#fff0dc;color:#9a4608}.testing{background:#e9edff;color:#404da4}#connection{font-size:13px;text-align:right;max-width:380px;line-height:1.6}#error{background:#fff1de;color:#84500b;border-radius:9px;padding:14px;margin:15px 0}#empty{padding:40px;text-align:center;color:#687487}@media(max-width:650px){main{margin:24px auto;padding:0 16px}header{display:block}#connection{text-align:left;margin-top:15px}.tabs{margin-top:24px}}
+.user-row{display:flex;gap:10px;align-items:end;margin-top:14px}.user-row label{flex:1;max-width:330px}label{display:flex;flex-direction:column;gap:7px;font-size:13px;color:#526075}.user-row input{margin:0}.user-row button{background:#253e79;color:white}#user-help{font-size:13px;line-height:1.6;margin-top:5px}.filters{display:grid;grid-template-columns:2fr 1fr 1.2fr;gap:12px;margin-bottom:14px}.filters input{margin:0}select{width:100%;min-width:0;font:inherit;border:1px solid #d9dee7;border-radius:9px;padding:13px 10px;background:white;color:#344056}select:focus-visible{outline:3px solid #7c9af0;outline-offset:3px}#count{font-size:13px;color:#697486;margin:0 0 12px}@media(max-width:650px){.filters{grid-template-columns:1fr}.user-row label{max-width:none}}
+dialog{border:1px solid #d9dee7;border-radius:14px;width:min(560px,95vw);padding:26px;color:#202632}dialog::backdrop{background:#17233a66}dialog h2{margin-top:0}dialog label{margin-top:16px}dialog input{margin:0}dialog p{font-size:13px;line-height:1.6;margin-top:12px}.actions{display:flex;gap:10px;margin-top:22px}#profile-message{color:#84500b}#profile-button{margin-top:8px}.header-tools{display:flex;align-items:flex-end;gap:16px}.header-tools #connection{text-align:right}@media(max-width:650px){.header-tools{align-items:flex-start;flex-direction:column;gap:4px}.header-tools #connection{margin-top:8px;text-align:left}#profile-button{margin-top:8px}}
+.user-picker{position:relative;flex:1;max-width:540px}.user-picker label{max-width:none}#user-options{position:absolute;top:100%;left:0;right:0;z-index:3;margin-top:5px;background:white;border:1px solid #d9dee7;border-radius:9px;box-shadow:0 8px 24px #26344b22;max-height:280px;overflow:auto}.user-row .user-option{display:flex;flex-direction:column;gap:5px;width:100%;text-align:left;background:white;color:#202632;border:0;border-radius:0;padding:13px 15px}.user-option small{color:#697486}.user-row .user-option:hover,.user-row .user-option[aria-selected=true]{background:#edf1fb;color:#202632}.notification-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}.notification-controls span{font-size:13px;color:#647084}#new-tasks{margin-top:18px;padding:18px;background:#e7f3ee;border:1px solid #9ac9b2;border-radius:10px;color:#20553d}#new-tasks .actions{margin-top:12px}.card.new-task{border:2px solid #439b6f}.new-label{display:inline-block;color:#246647;font-size:12px;margin-bottom:7px}:root{--page:#f4f3f6;--surface:#fff;--surface-hover:#eeebf2;--text:#29272d;--muted:#77727d;--border:#ddd9e2;--accent:#66527f;--accent-link:#66527f;--notice-bg:#eef1ed;--notice-border:#aab7a7;--notice-text:#465643;--error-bg:#f5eee8;--error-text:#76583e}
+:root[data-theme=dark]{--page:#171717;--surface:#202020;--surface-hover:#2a2a2a;--text:#e7e7e7;--muted:#a1a1a1;--border:#363636;--notice-bg:#222620;--notice-border:#4c5948;--notice-text:#c5d1bd;--error-bg:#302721;--error-text:#ddc4aa}
+body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option small,.notification-controls span,#count,#empty{color:var(--muted)}button,input,select,dialog,#user-options,.card{background:var(--surface);color:var(--text);border-color:var(--border)}input::placeholder{color:var(--muted);opacity:1}button:hover{background:var(--surface-hover)}button[aria-selected=true],.user-row>button,#profile-save{background:var(--accent);border-color:var(--accent);color:white}.title,#new-events a{color:var(--accent-link)}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--accent-link);outline-offset:3px}.user-row .user-option{background:var(--surface);color:var(--text)}.user-row .user-option:hover,.user-row .user-option[aria-selected=true]{background:var(--surface-hover);color:var(--text)}#error{background:var(--error-bg);color:var(--error-text)}#profile-message{color:var(--error-text)}#new-tasks{background:var(--notice-bg);border-color:var(--notice-border);color:var(--notice-text)}#new-tasks p,.new-label{color:var(--notice-text)}.card.new-task{border-color:var(--notice-border)}dialog::backdrop{background:#060b14b3}
+.status{--status-h:220;--status-s:10%;display:inline-flex;align-items:center;gap:8px;line-height:1.5;background:hsl(var(--status-h) var(--status-s) 92%);color:hsl(var(--status-h) var(--status-s) 24%);border:1px solid hsl(var(--status-h) var(--status-s) 66%);border-left:4px solid hsl(var(--status-h) var(--status-s) 38%);font-weight:700;letter-spacing:.02em;padding:6px 11px}.status:before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}:root[data-theme=dark] .status{background:hsl(var(--status-h) 24% 20%);color:hsl(var(--status-h) 34% 78%);border-color:hsl(var(--status-h) 20% 38%);border-left-color:hsl(var(--status-h) 32% 55%)}:root[data-theme=dark] .status[style*='--status-s: 10%']{background:#292929;color:#d3d3d3;border-color:#555}\n.status{border-left-width:3px;box-shadow:none}
+.appearance{margin-top:14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);padding:13px 16px}.appearance summary{cursor:pointer;font-weight:600;font-size:14px}.appearance-body{display:flex;align-items:end;gap:28px;flex-wrap:wrap;padding-top:18px}.appearance-body label{width:210px}.appearance fieldset{border:0;padding:0;margin:0}.appearance legend{font-size:13px;color:var(--muted);padding:0;margin-bottom:8px}#accent-colors{display:flex;gap:10px;flex-wrap:wrap}.accent-swatch{width:38px;height:38px;padding:0;background:var(--swatch);border:3px solid var(--surface);border-radius:50%;position:relative}.accent-swatch:hover{background:var(--swatch)}.accent-swatch[aria-pressed=true]{outline:2px solid var(--accent-link);outline-offset:2px}.accent-swatch[aria-pressed=true]:after{content:'✓';color:white;font-size:20px;font-weight:bold}@media(max-width:650px){.appearance-body{gap:18px}.top{align-items:flex-start;flex-wrap:wrap}.status{font-size:11px}.meta{gap:10px}}
+.release-controls{display:flex;align-items:end;gap:12px;margin:18px 0 10px}.release-controls label{flex:1;max-width:420px}.release-controls input{margin:0}.release-summary{padding:12px 16px;margin:14px 0;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);line-height:1.6}.release-parent{border-color:var(--accent)}.release-row{display:grid;grid-template-columns:minmax(220px,1fr) minmax(160px,220px) minmax(180px,1fr);gap:12px;align-items:start}.release-issue-title{display:block;font-weight:600;color:var(--accent-link);text-decoration:none;margin:8px 0}.release-relations{font-size:12px;color:var(--muted)}.release-check{display:flex;align-items:center;gap:8px;margin:8px 0;color:var(--text)}.release-check input{width:auto;margin:0}.release-result{margin:0}.release-note{margin:8px 0 0!important}.release-note input{margin:0}.release-stale{color:#c47516;font-size:13px;margin-top:6px}.release-dim{opacity:.62}#release-error{padding:12px 16px;margin:12px 0;border-radius:9px;background:var(--error-bg);color:var(--error-text)}@media(max-width:760px){.release-row{grid-template-columns:1fr}.release-controls{align-items:stretch;flex-direction:column}.release-controls label{max-width:none}}
+/* Release cards: keep the regression toggle horizontal and align all three columns. */
+#release-list .card{padding:18px 20px;margin-bottom:10px}
+.release-row{grid-template-columns:minmax(0,1.45fr) minmax(180px,.72fr) minmax(250px,1.05fr);gap:24px;align-items:center}
+.release-row>div{min-width:0}
+.release-row .top{justify-content:space-between;align-items:center}
+.release-issue-title{font-size:17px;line-height:1.4;margin:7px 0 9px;overflow-wrap:anywhere}
+.release-relations{display:inline-block;padding:3px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface-hover);line-height:1.45}
+.release-meta{display:flex;margin-top:8px;line-height:1.45;overflow-wrap:anywhere}
+.release-row>div:nth-child(2){display:flex;flex-direction:column;align-items:stretch;gap:10px}
+.release-check{display:flex;flex-direction:row;justify-content:flex-start;align-items:center;gap:9px;width:100%;margin:0;font-size:14px;line-height:1.4;cursor:pointer}
+.release-check input{width:17px;height:17px;flex:0 0 auto;margin:0;accent-color:var(--accent)}
+.release-result{min-height:44px;padding:9px 12px}
+.release-note{display:flex;flex-direction:column;gap:7px;margin:0!important;font-size:13px}
+.release-note input{min-height:44px;padding:10px 14px;margin:0}
+.release-stale{line-height:1.45}
+.release-git{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:9px;font-size:13px;line-height:1.5;color:var(--muted)}.release-git-label{font-weight:600;color:var(--text)}.release-git-repo{display:inline-flex;flex-wrap:wrap;gap:5px 8px}.release-git-branch{display:inline-block;padding:1px 7px;border:1px solid var(--border);border-radius:6px;background:var(--surface-hover);color:var(--text);text-decoration:none}.release-git-branch:hover{text-decoration:underline}.release-git-branch.mr-opened{background:#e8f0ff;border-color:#a9c2f2;color:#2759a5}.release-git-branch.mr-merged{background:#e7f3ee;border-color:#a6ceb9;color:#246647}.release-git-branch.mr-closed{background:#fff0ed;border-color:#e7b5ad;color:#a5352a}.release-git-branch.mr-locked{background:#fff1de;border-color:#e5c18d;color:#9a4608}:root[data-theme=dark] .release-git-branch.mr-opened{background:#202d43;border-color:#425e87;color:#b7d0ff}:root[data-theme=dark] .release-git-branch.mr-merged{background:#20372d;border-color:#416b55;color:#b2dfc2}:root[data-theme=dark] .release-git-branch.mr-closed{background:#3b2524;border-color:#764440;color:#f0b7b0}:root[data-theme=dark] .release-git-branch.mr-locked{background:#3a3022;border-color:#765b35;color:#f0cb94}
+@media(max-width:850px){.release-row{grid-template-columns:minmax(0,1fr) minmax(160px,.65fr);gap:16px}.release-row>div:last-child{grid-column:1/-1}}
+@media(max-width:600px){#release-list .card{padding:16px}.release-row{grid-template-columns:1fr;gap:14px}.release-row>div:last-child{grid-column:auto}.release-row>div:nth-child(2){max-width:none}}
+.builder-controls{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:18px 0}.builder-controls label{flex:1;min-width:180px}.builder-controls input,.builder-controls select{margin:0}.builder-tools{display:flex;gap:12px;align-items:end;flex-wrap:wrap}.builder-labels{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.builder-labels label,.builder-pick{display:flex;flex-direction:row;align-items:center;gap:7px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)}.builder-labels input,.builder-pick input{width:auto;margin:0}.builder-list{margin-top:12px}.builder-card{display:flex;gap:12px;align-items:flex-start}.builder-card>div{flex:1}.builder-card p{font-size:13px;margin-top:5px}.builder-summary{padding:12px 16px;border:1px solid var(--border);border-radius:9px;background:var(--surface);line-height:1.6;margin:12px 0}.builder-action{background:var(--accent);color:white;border-color:var(--accent)}.builder-action:disabled{opacity:.55;cursor:default}
+</style><main><header><div><h1>Мои задачи</h1><p id="owner">Задачи выбранного пользователя</p></div><div class="header-tools"><div id="connection">Подключение…</div><button id="profile-button">Настройки профиля</button></div></header>
+<details class="appearance"><summary>Внешний вид</summary><div class="appearance-body"><label for="theme">Тема<select id="theme"><option value="system">Как в системе</option><option value="light">Светлая</option><option value="dark">Тёмная</option></select></label><fieldset><legend>Цвет интерфейса</legend><div id="accent-colors"></div></fieldset></div></details>
+<nav class="tabs" aria-label="Разделы"><button id="review" aria-selected="true">На проверке</button><button id="todo" aria-selected="false">Прочие статусы</button><button id="release-tab" aria-selected="false">Регресс</button><button id="build-tab" aria-selected="false">Собрать релиз</button></nav>
+<section id="tasks-view">
+<div class="user-row"><div class="user-picker"><label for="username">Пользователь<input id="username" placeholder="Начни вводить имя или фамилию" autocomplete="off" maxlength="100" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="user-options" aria-describedby="user-help"></label><div id="user-options" role="listbox" aria-label="Пользователи Jira" hidden></div></div><button id="clear-user" type="button">Сбросить</button></div>
+<p id="user-help" role="status">Введи минимум 2 символа и выбери пользователя из списка.</p>
+<div class="notification-controls"><button id="enable-notifications">Включить уведомления</button><span id="notification-help">Новые READY TO TEST отмечаются на странице.</span></div>
+<div id="error" role="status" hidden></div>
+<div class="filters"><label for="search">Поиск<input id="search" placeholder="Номер или название задачи"></label><label for="status-filter">Статус<select id="status-filter"><option value="">Все статусы вкладки</option></select></label><label for="sort">Сортировка<select id="sort"><option value="updated-desc">Сначала недавно изменённые</option><option value="updated-asc">Сначала давно изменённые</option><option value="key-desc">По номеру: новые сверху</option><option value="key-asc">По номеру: старые сверху</option><option value="summary">По названию</option><option value="status">По статусу</option></select></label></div>
+<p id="count"></p><div id="list"></div><div id="empty">Загрузка…</div></section>
+<section id="release-view" hidden>
+<form id="release-form" class="release-controls"><label for="release-key">Ключ релизной задачи<input id="release-key" placeholder="Например, ECP-6376" autocomplete="off" maxlength="32"></label><button type="submit" id="release-load">Загрузить</button></form>
+<p id="release-message" role="status">Введи ключ Jira. Будут показаны подзадачи и связанные с релизом задачи.</p><div id="release-error" role="alert" hidden></div><div id="release-summary" class="release-summary" hidden></div><div id="release-parent" class="card release-parent" hidden></div><div id="release-list"></div>
+</section>
+<section id="build-view" hidden>
+<form id="builder-form" class="builder-controls"><label for="builder-key">Релизная задача Jira<input id="builder-key" placeholder="Например, ECP-5242" autocomplete="off" maxlength="32"></label><button type="submit" id="builder-load">Загрузить версии</button></form>
+<p id="builder-message" role="status">Укажи релизную задачу. Найду версии проекта и задачи в выбранной версии.</p><div id="builder-error" role="alert" hidden></div>
+<div id="builder-controls" hidden><div class="builder-summary" id="builder-parent"></div><div class="builder-tools"><label for="builder-version">Fix Version<select id="builder-version"></select></label><button id="builder-find" type="button">Найти задачи версии</button></div><p class="release-relations">Метки фильтруют задачи по любому выбранному значению. Пустой выбор оставляет все задачи версии.</p><div id="builder-labels" class="builder-labels"></div><div class="builder-summary" id="builder-summary" hidden></div><div id="builder-list" class="builder-list"></div><button id="builder-link" class="builder-action" type="button" hidden>Связать выбранные задачи</button></div>
+</section></main>
+<dialog id="profile-dialog" aria-labelledby="profile-title"><form id="profile-form"><h2 id="profile-title">Настройки профиля</h2>
+<p id="profile-account"></p>
+<label for="profile-token">Токен Jira<input id="profile-token" type="password" autocomplete="new-password" maxlength="8000"></label>
+<p id="token-help">Введи свой Personal Access Token из профиля Jira.</p>
+<label for="profile-gitlab-base">Адрес GitLab<input id="profile-gitlab-base" type="url" autocomplete="url" placeholder="https://gitlab.example.com" maxlength="500"></label>
+<label for="profile-gitlab-token">Токен GitLab<input id="profile-gitlab-token" type="password" autocomplete="new-password" maxlength="8000"></label>
+<p id="gitlab-help">Необязательно. Нужен токен с правом read_api для поиска MR и веток.</p>
+<p>Токен сохраняется на компьютере, где запущена программа. В Docker — в отдельном томе, доступном администратору Docker. В Windows — зашифрован средствами Windows.</p>
+<p id="profile-message" role="status"></p><div class="actions"><button type="submit" id="profile-save">Проверить и сохранить</button><button type="button" id="profile-cancel">Отмена</button></div></form></dialog>
+<script>
+const $=id=>document.getElementById(id);
+const readPref=(key,fallback='')=>{try{return localStorage.getItem('jira-board.'+key)??fallback}catch{return fallback}};
+const savePref=(key,value)=>{try{localStorage.setItem('jira-board.'+key,value)}catch{}};
+let tab=readPref('tab','review'),selectedUser='',selectedName='',data={issues:[],lastSuccess:null},lastRender='',timer,requestNumber=0,configuration={},searchTimer,searchSequence=0,userOptions=[],activeOption=-1;
+let unread=[];
+let releaseSnapshot=null,releaseError='',releaseLoading=false,releaseSequence=0,releaseKey=readPref('releaseKey','');
+let builder=null,builderCandidates=null,builderError='',builderLoading=false,builderSaving=false,builderSelected=new Set(),builderLabels=new Set();
+const parsePref=(key,fallback)=>{try{return JSON.parse(readPref(key))??fallback}catch{return fallback}};
+const noticeKey=()=> 'ready-events-v2.'+(configuration.account?.username||'local')+'.'+selectedUser;
+const uniqueTasks=events=>[...new Map(events.map(event=>[event.key,event])).values()];
+const favicon=document.createElement('link');favicon.rel='icon';favicon.type='image/png';document.head.append(favicon);
+let faviconCount=-1;
+function updateNotice(){
+ unread=uniqueTasks(unread);
+ document.title='Мои задачи';
+ if(faviconCount!==unread.length){
+  faviconCount=unread.length;
+  const canvas=document.createElement('canvas');canvas.width=32;canvas.height=32;
+  const ctx=canvas.getContext('2d');ctx.fillStyle=unread.length?'#b42318':'#2458be';ctx.beginPath();ctx.roundRect(0,0,32,32,7);ctx.fill();
+  ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold '+(unread.length>99?15:unread.length>9?21:25)+'px Arial';
+  ctx.fillText(unread.length?(unread.length>99?'99+':String(unread.length)):'✓',16,17);
+  favicon.href=canvas.toDataURL('image/png');favicon.dataset.count=String(unread.length);
+ }
+}
+updateNotice();
+function notificationButton(){
+ const enabled=readPref('notifications')==='on';
+ $('enable-notifications').textContent=enabled?'Выключить уведомления':'Включить уведомления';
+ $('notification-help').textContent=enabled?'Системные уведомления включены. Держи страницу открытой.':'Новые READY TO TEST отмечаются на странице.';
+}
+function detectReady(next){
+ if(!next.historyCheckedAt||!Array.isArray(next.readyEvents))return;
+ const key=noticeKey();let previous=parsePref(key,{seen:[],unread:[]});
+ if(!previous.legacyMigrated){const legacy=parsePref('ready.'+(configuration.account?.username||'local')+'.'+selectedUser,null);previous.unread=[...(previous.unread||[]),...(legacy?.unread||[]).map(x=>({...x,id:'legacy:'+x.key,url:next.issues.find(i=>i.key===x.key)?.url||'',at:null}))];}
+ const seen=new Set(previous.seen||[]);
+ const added=next.readyEvents.filter(event=>!seen.has(event.id));
+ unread=previous.unread||[];
+ for(const event of added){seen.add(event.id);unread.push(event)}
+ unread=uniqueTasks(unread);
+ if(next.lastSuccess&&!next.error&&Array.isArray(next.issues)){
+  const readyKeys=new Set(next.issues.filter(issue=>issue.status==='READY TO TEST').map(issue=>issue.key));
+  unread=unread.filter(event=>readyKeys.has(event.key));
+ }
+ savePref(key,JSON.stringify({seen:[...seen],unread,legacyMigrated:true}));updateNotice();
+ if(added.length&&readPref('notifications')==='on'&&'Notification' in window&&Notification.permission==='granted'){
+  const tasks=uniqueTasks(added);
+  try{const notification=new Notification('READY TO TEST · '+tasks.length,{body:tasks.slice(0,3).map(x=>x.key+' — '+x.summary).join('\n'),tag:'jira-ready-'+selectedUser});notification.onclick=()=>{window.focus();$('list').scrollIntoView({behavior:'smooth',block:'start'});notification.close()}}catch{}
+ }
+}
+function acknowledgeCard(key,card){
+ const previous=parsePref(noticeKey(),null);
+ unread=unread.filter(event=>event.key!==key);
+ if(previous)savePref(noticeKey(),JSON.stringify({...previous,unread}));
+ card.classList.remove('new-task');card.querySelector('.new-label')?.remove();updateNotice();
+}
+$('enable-notifications').onclick=async()=>{
+ if(readPref('notifications')==='on'){savePref('notifications','off');notificationButton();return}
+ if(!('Notification' in window)){$('notification-help').textContent='Браузер не поддерживает системные уведомления. Отметки на странице работают.';return}
+ try{const permission=await Notification.requestPermission();if(permission==='granted'){savePref('notifications','on');notificationButton()}else{$('notification-help').textContent='Разреши уведомления в настройках браузера. Отметки на странице работают.'}}catch{$('notification-help').textContent='Не удалось включить уведомления. Отметки на странице работают.'}
+};
+notificationButton();
+if(!['review','todo','release','build'].includes(tab))tab='review';
+$('release-key').value=releaseKey;
+$('sort').value=readPref('sort','updated-desc');if(!$('sort').value)$('sort').value='updated-desc';
+const statusByTab={review:readPref('status.review'),todo:readPref('status.todo')};
+const date=value=>new Date(value).toLocaleString('ru-RU');
+function node(tag,cls,text){const n=document.createElement(tag);n.className=cls;n.textContent=text;return n}
+function statusBadge(status){
+ const name=String(status||'Не указан'),key=name.trim().toUpperCase();
+ const hues={
+  'READY TO TEST':145,'TESTING':275,
+  'СДЕЛАТЬ':220,'TO DO':220,
+  'В РАБОТЕ':212,'IN PROGRESS':212,
+  'RETURN IN DEVELOPMENT':28,'RETURN TO DEVELOPMENT':28,
+  'CODE REVIEW':52,'REVIEW':185,
+  'BLOCKED':0,'ЗАБЛОКИРОВАНО':0,
+  'REOPENED':330,'ОТКРЫТО':175
+ };
+ let hue=hues[key];if(hue===undefined){let hash=2166136261;for(const char of key)hash=Math.imul(hash^char.codePointAt(0),16777619)>>>0;hue=(hash%360000)/1000;}
+ const saturation=['СДЕЛАТЬ','TO DO'].includes(key)?10:75;
+ const badge=node('span','status',name);badge.style.setProperty('--status-h',hue);badge.style.setProperty('--status-s',saturation+'%');return badge;
+}
+const accentPalette={
+ blue:{name:'Сине-серый',solid:'#52657d',light:'#52657d',dark:'#aebbc9'},
+ purple:{name:'Приглушённый фиолетовый',solid:'#684f86',light:'#684f86',dark:'#b9a5ce'},
+ teal:{name:'Серо-зелёный',solid:'#4e716b',light:'#4e716b',dark:'#a4c0ba'},
+ orange:{name:'Тёплый серый',solid:'#806b55',light:'#806b55',dark:'#c7b59e'},
+ pink:{name:'Пыльная роза',solid:'#805d6d',light:'#805d6d',dark:'#c6aab6'},
+ graphite:{name:'Графитовый',solid:'#57565c',light:'#57565c',dark:'#c4c2c8'}
+};
+const systemTheme=matchMedia('(prefers-color-scheme: dark)');
+let themeChoice=readPref('theme','dark'),accentChoice=readPref('accent','purple');if(readPref('appearanceStyleVersion')!=='2'){themeChoice='dark';accentChoice='purple';savePref('theme',themeChoice);savePref('accent',accentChoice);savePref('appearanceStyleVersion','2')}
+if(!['system','light','dark'].includes(themeChoice))themeChoice='system';if(!accentPalette[accentChoice])accentChoice='blue';
+function applyAppearance(){
+ const dark=themeChoice==='dark'||(themeChoice==='system'&&systemTheme.matches),palette=accentPalette[accentChoice];
+ document.documentElement.dataset.theme=dark?'dark':'light';document.documentElement.style.colorScheme=dark?'dark':'light';
+ document.documentElement.style.setProperty('--accent',palette.solid);document.documentElement.style.setProperty('--accent-link',dark?palette.dark:palette.light);
+ $('theme').value=themeChoice;for(const button of $('accent-colors').children)button.setAttribute('aria-pressed',String(button.dataset.color===accentChoice));
+}
+for(const [key,palette] of Object.entries(accentPalette)){const button=node('button','accent-swatch','');button.type='button';button.title=palette.name;button.setAttribute('aria-label',palette.name);button.dataset.color=key;button.style.setProperty('--swatch',palette.solid);button.onclick=()=>{accentChoice=key;savePref('accent',key);applyAppearance()};$('accent-colors').append(button)}
+$('theme').onchange=()=>{themeChoice=$('theme').value;savePref('theme',themeChoice);applyAppearance()};systemTheme.addEventListener('change',()=>{if(themeChoice==='system')applyAppearance()});applyAppearance();
+function render(){
+ $('tasks-view').hidden=tab==='release'||tab==='build';$('release-view').hidden=tab!=='release';$('build-view').hidden=tab!=='build';
+ for(const id of ['review','todo','release-tab','build-tab'])$(id).setAttribute('aria-selected',String(tab===(id==='release-tab'?'release':id==='build-tab'?'build':id)));
+ if(tab==='release'){renderRelease();return}if(tab==='build'){renderBuilder();return}
+ $('owner').textContent='Задачи выбранного пользователя';
+ const review=data.issues.filter(x=>['READY TO TEST','TESTING'].includes(x.status));const todo=data.issues.filter(x=>!['READY TO TEST','TESTING'].includes(x.status));
+ $('review').textContent=`На проверке · ${review.length}`;$('todo').textContent=`Прочие статусы · ${todo.length}`;
+ const items=tab==='review'?review:todo;
+ const statuses=[...new Set(items.map(x=>x.status))].sort((a,b)=>a.localeCompare(b,'ru'));
+ const selectedStatus=statusByTab[tab];if(selectedStatus&&!statuses.includes(selectedStatus))statuses.push(selectedStatus);
+ const statusSignature=JSON.stringify([statuses,selectedStatus]);
+ if($('status-filter').dataset.signature!==statusSignature){$('status-filter').replaceChildren(new Option('Все статусы вкладки',''),...statuses.map(s=>new Option(s,s)));$('status-filter').value=selectedStatus;$('status-filter').dataset.signature=statusSignature}
+ const query=$('search').value.toLowerCase().trim();const rows=items.filter(x=>(!selectedStatus||x.status===selectedStatus)&&(x.key+' '+x.summary).toLowerCase().includes(query));
+ const sort=$('sort').value;
+ rows.sort((a,b)=>{let result=0;if(sort==='updated-desc')result=Date.parse(b.updated)-Date.parse(a.updated);else if(sort==='updated-asc')result=Date.parse(a.updated)-Date.parse(b.updated);else if(sort==='key-desc')result=b.key.localeCompare(a.key,'en',{numeric:true});else if(sort==='key-asc')result=a.key.localeCompare(b.key,'en',{numeric:true});else if(sort==='summary')result=a.summary.localeCompare(b.summary,'ru');else if(sort==='status')result=a.status.localeCompare(b.status,'ru');return result||a.key.localeCompare(b.key,'en',{numeric:true})});
+ $('count').textContent='';
+ const signature=JSON.stringify([tab,selectedUser,query,selectedStatus,sort,rows,data.lastSuccess,unread]);if(signature===lastRender)return;lastRender=signature;
+ $('list').replaceChildren();for(const x of rows){const card=node('article','card'+(unread.some(i=>i.key===x.key)?' new-task':''),''),top=node('div','top','');card.dataset.key=x.key;card.addEventListener('mouseenter',()=>acknowledgeCard(x.key,card));card.addEventListener('focusin',()=>acknowledgeCard(x.key,card));card.addEventListener('pointerdown',()=>acknowledgeCard(x.key,card));if(unread.some(i=>i.key===x.key))card.append(node('span','new-label','Новая на проверке'));top.append(node('span','key',x.key+' · '+x.type),statusBadge(x.status));const link=node('a','title',x.summary);link.href=x.url;link.target='_blank';link.rel='noopener noreferrer';const meta=node('div','meta','');meta.append(node('span','',`Исполнитель: ${x.assignee}`),node('span','author',`Автор: ${x.author || 'Не указан'}`),node('span','',`Приоритет: ${x.priority || '—'}`),node('span','',`Изменено: ${date(x.updated)}`));card.append(top,link,meta);$('list').append(card)}
+ $('empty').hidden=rows.length>0;$('empty').textContent=!selectedUser?'Выбери пользователя':data.lastSuccess?(query||selectedStatus?'Ничего не найдено':'Задач нет'):data.error?'Данные не получены':'Ожидание данных Jira…';
+}
+function changeTab(next){const previous=tab;tab=next;savePref('tab',tab);if(tab==='release'||tab==='build'){clearTimeout(timer);requestNumber++}render();if((previous==='release'||previous==='build')&&tab!=='release'&&tab!=='build'&&selectedUser)poll()}
+for(const id of ['review','todo'])$(id).onclick=()=>changeTab(id);$('release-tab').onclick=()=>changeTab('release');$('build-tab').onclick=()=>changeTab('build');$('search').oninput=render;
+$('status-filter').onchange=()=>{statusByTab[tab]=$('status-filter').value;savePref('status.'+tab,statusByTab[tab]);render()};
+$('sort').onchange=()=>{savePref('sort',$('sort').value);render()};
+function releaseProgressKey(){return 'release-checks-v1.'+(configuration.account?.username||'local')+'.'+(releaseSnapshot?.issue.key||releaseKey)}
+function releaseProgress(){return parsePref(releaseProgressKey(),{})}
+function persistReleaseProgress(key,patch){const all=releaseProgress();all[key]={...(all[key]||{included:true,result:'todo'}),...patch};savePref(releaseProgressKey(),JSON.stringify(all));renderRelease()}
+const releaseResults={todo:'Не проверено',passed:'Пройдено',defect:'Дефект',blocked:'Заблокировано'};
+function appendGitMetadata(target,repositories,gitlabConfigured,gitlabStatus){
+ const section=node('div','release-git',''),label=node('span','release-git-label','Git:');section.append(label);
+ if(repositories===null){section.append(document.createTextNode(' данные Git недоступны.'));target.append(section);return}
+ if(!repositories.length){
+  const messages={
+   'no-match':'ветка или MR с ключом не найдены в названии/описании; merge не подтверждён.',
+   skipped:'поиск GitLab пропущен из-за лимита; merge не проверен.',
+   error:'GitLab не ответил; merge не проверен.',
+   checking:'идёт поиск в GitLab…',
+   'not-configured':'ветка не привязана в Jira; GitLab не настроен.'
+  };
+  section.append(document.createTextNode(messages[gitlabStatus]||(gitlabConfigured?'данные о ветке/MR не найдены.':'ветки не привязаны в Jira.')));target.append(section);return
+ }
+ const mergeLabels={merged:'MR вмерджен',opened:'MR открыт',closed:'MR закрыт',locked:'MR заблокирован'};
+ for(const repo of repositories){
+  const group=node('span','release-git-repo',''),name=node('span','release-git-label',repo.name+':');group.append(name);
+  for(const branch of repo.branches){
+   const safeUrl=(()=>{try{const value=new URL(branch.url);return ['http:','https:'].includes(value.protocol)?value.href:''}catch{return ''}})();
+   const mrNumber=branch.iid||safeUrl.match(/\/merge_requests\/(\d+)(?:[/?#]|$)/)?.[1];
+   const direction=branch.targetBranch?`${branch.name} → ${branch.targetBranch}`:branch.name;
+   const label=mrNumber?`!${mrNumber} · ${direction}`:direction;
+   const stateClass=branch.mergeState&&mergeLabels[branch.mergeState]?` mr-${branch.mergeState}`:'';
+   const item=safeUrl?node('a','release-git-branch'+stateClass,label):node('span','release-git-branch'+stateClass,label);
+   if(safeUrl){item.href=safeUrl;item.target='_blank';item.rel='noopener noreferrer'}
+   const stateLabel=mergeLabels[branch.mergeState]||'Статус MR неизвестен';
+   if(mrNumber||branch.mergeState){item.title=stateLabel+(branch.mergedAt?' · Дата merge: '+date(branch.mergedAt):'');item.setAttribute('aria-label',label+' · '+stateLabel)}
+   group.append(item)
+  }
+  section.append(group)
+ }
+ const mergeCheckMessages={
+  'no-match':'MR по ключу не найден; его статус неизвестен.',
+  skipped:'проверка MR пропущена из-за лимита.',
+  error:'не удалось проверить статус MR в GitLab.',
+  checking:'проверяется статус MR…',
+  'not-configured':'статус MR не проверен: GitLab не настроен.'
+ };
+ if(mergeCheckMessages[gitlabStatus])section.append(node('span','release-git-repo',mergeCheckMessages[gitlabStatus]));
+ target.append(section)
+}
+function renderRelease(){
+ const message=$('release-message'),error=$('release-error'),summary=$('release-summary'),parent=$('release-parent'),list=$('release-list');
+ $('release-load').disabled=releaseLoading;$('release-load').textContent=releaseLoading?'Загрузка…':'Загрузить';
+ error.hidden=!releaseError;error.textContent=releaseError;parent.hidden=!releaseSnapshot;summary.hidden=!releaseSnapshot;list.replaceChildren();
+ if(!releaseSnapshot){message.textContent=releaseLoading?'Загружаю релизную задачу и связанные задачи…':'Введи ключ Jira. Будут показаны подзадачи и связанные с релизом задачи.';return}
+ message.textContent='Данные Jira обновлены: '+date(releaseSnapshot.fetchedAt)+' · отметки проверки хранятся только в этом браузере.';
+ const p=releaseSnapshot.issue;parent.replaceChildren();const top=node('div','top','');top.append(node('span','key',p.key+' · '+[p.project,p.type].filter(Boolean).join(' · ')),statusBadge(p.status));const link=node('a','title',p.summary||'(без названия)');link.href=p.url;link.target='_blank';link.rel='noopener noreferrer';const meta=node('div','meta','');meta.append(node('span','',`Исполнитель: ${p.assignee}`),node('span','','Изменено: '+date(p.updated)));if(p.fixVersions.length)meta.append(node('span','','Fix Version: '+p.fixVersions.join(', ')));parent.append(top,link,meta);appendGitMetadata(parent,p.gitRepositories,releaseSnapshot.gitlabConfigured,releaseSnapshot.gitlabErrors);
+ const all=releaseProgress(),items=releaseSnapshot.related.map(issue=>{const saved=all[issue.key]||{included:true,result:'todo'};const stale=saved.result!=='todo'&&saved.checkedIssueUpdated&&Date.parse(issue.updated)>Date.parse(saved.checkedIssueUpdated);return {issue,saved,stale}}),included=items.filter(x=>x.saved.included!==false),counts={todo:0,passed:0,defect:0,blocked:0,stale:0};for(const x of included){if(x.stale)counts.stale++;else counts[x.saved.result||'todo']=(counts[x.saved.result||'todo']||0)+1}
+ summary.textContent=`В регрессе: ${included.length} · Не проверено: ${counts.todo} · Пройдено: ${counts.passed} · Дефект: ${counts.defect} · Заблокировано: ${counts.blocked} · Нужна перепроверка: ${counts.stale}`;
+ if(releaseSnapshot.inaccessibleCount||releaseSnapshot.truncated||releaseSnapshot.gitlabErrors||releaseSnapshot.gitlabSkipped){const caveat=node('p','release-relations','');const parts=[];if(releaseSnapshot.inaccessibleCount)parts.push(`Не удалось загрузить ${releaseSnapshot.inaccessibleCount} связанных задач (возможно, нет доступа или задачи удалены).`);if(releaseSnapshot.truncated)parts.push('Показаны первые 100 связанных задач.');if(releaseSnapshot.gitlabErrors)parts.push(`GitLab не ответил для ${releaseSnapshot.gitlabErrors} задач.`);if(releaseSnapshot.gitlabSkipped)parts.push(`Прямой поиск GitLab пропущен для ещё ${releaseSnapshot.gitlabSkipped} задач, чтобы ограничить число запросов.`);caveat.textContent=parts.join(' ');summary.append(caveat)}
+ if(!items.length){list.append(node('p','card','Подзадач и связанных задач не найдено.'));return}
+ for(const {issue,saved,stale} of items){const card=node('article','card'+(saved.included===false?' release-dim':''),''),row=node('div','release-row',''),left=node('div','',''),middle=node('div','',''),right=node('div','',''),head=node('div','top','');head.append(node('span','key',issue.key+' · '+issue.type),statusBadge(issue.status));const a=node('a','release-issue-title',issue.summary||'(без названия)');a.href=issue.url;a.target='_blank';a.rel='noopener noreferrer';const relations=node('div','release-relations',issue.relations.join(' · '));const meta=node('div','release-relations release-meta',`Исполнитель: ${issue.assignee} · Приоритет: ${issue.priority||'—'} · Изменено: ${date(issue.updated)}${issue.fixVersions?.length?' · Fix Version: '+issue.fixVersions.join(', '):''}`);left.append(head,a,relations,meta);appendGitMetadata(left,issue.gitRepositories,releaseSnapshot.gitlabConfigured,issue.gitlabStatus);
+ const check=node('label','release-check',''),include=document.createElement('input');include.type='checkbox';include.checked=saved.included!==false;include.onchange=()=>persistReleaseProgress(issue.key,{included:include.checked});check.append(include,document.createTextNode('В регресс'));const select=document.createElement('select');select.className='release-result';for(const [value,label] of Object.entries(releaseResults))select.add(new Option(label,value));select.value=saved.result||'todo';select.onchange=()=>{const value=select.value;persistReleaseProgress(issue.key,{result:value,checkedAt:value==='todo'?null:new Date().toISOString(),checkedIssueUpdated:value==='todo'?null:issue.updated})};middle.append(check,select);if(stale)middle.append(node('div','release-stale','Задача изменилась после проверки — проверь повторно.'));
+ const noteLabel=node('label','release-note','Заметка QA · только в этом браузере');const note=document.createElement('input');note.type='text';note.maxLength=500;note.placeholder='Что проверено или что мешает';note.value=saved.note||'';note.onchange=()=>persistReleaseProgress(issue.key,{note:note.value});noteLabel.append(note);right.append(noteLabel);row.append(left,middle,right);card.append(row);list.append(card)}
+}
+async function loadRelease(){const key=$('release-key').value.trim().toUpperCase();$('release-key').value=key;releaseKey=key;savePref('releaseKey',key);if(!/^[A-Z][A-Z0-9_]*-\d+$/.test(key)){releaseSnapshot=null;releaseError='Введи ключ Jira, например ECP-6376.';renderRelease();return}if(!configuration.configured){releaseError='Сначала добавь токен в настройках профиля.';renderRelease();return}const sequence=++releaseSequence;releaseLoading=true;releaseError='';renderRelease();try{const response=await fetch('/api/release?key='+encodeURIComponent(key),{signal:AbortSignal.timeout(30000)}),result=await response.json();if(sequence!==releaseSequence)return;if(!response.ok)throw Error(result.error||'Не удалось загрузить релизную задачу.');releaseSnapshot=result;releaseError=''}catch(error){if(sequence!==releaseSequence)return;releaseSnapshot=null;releaseError=error.name==='TimeoutError'?'Jira не ответила за 30 секунд. Попробуй ещё раз.':error.message}finally{if(sequence===releaseSequence){releaseLoading=false;renderRelease()}}}
+$('release-form').onsubmit=event=>{event.preventDefault();loadRelease()};
+function builderFiltered(){if(!builderCandidates)return[];return builderCandidates.issues.filter(issue=>issue.key!==builder?.issue.key&&(!builderLabels.size||issue.labels.some(label=>builderLabels.has(label))))}
+function renderBuilder(){
+ const error=$('builder-error'),controls=$('builder-controls'),list=$('builder-list'),labels=$('builder-labels'),summary=$('builder-summary'),action=$('builder-link');
+ error.hidden=!builderError;error.textContent=builderError;controls.hidden=!builder; $('builder-load').disabled=builderLoading;$('builder-load').textContent=builderLoading?'Загрузка…':'Загрузить версии';$('builder-find').disabled=!builder||builderLoading||!$('builder-version').value;$('builder-link').disabled=builderSaving;
+ $('builder-message').textContent=builderLoading?'Загружаю релиз и версии проекта…':builderFeedback|| (builder?'Выбери Fix Version; по умолчанию выбрана версия самой релизной задачи.':'Укажи релизную задачу. Найду версии проекта и задачи в выбранной версии.');
+ if(!builder)return;
+ $('builder-parent').textContent=`${builder.issue.key} · ${builder.issue.summary} · проект ${builder.issue.project} · связей уже есть: ${builder.linkedKeys.length}`;
+ const selectedVersion=$('builder-version').value;labels.replaceChildren();
+ if(builderCandidates){const available=[...new Set(builderCandidates.issues.flatMap(issue=>issue.labels))].sort((a,b)=>a.localeCompare(b,'ru'));for(const label of available){const wrapper=node('label','', ''),input=document.createElement('input');input.type='checkbox';input.checked=builderLabels.has(label);input.onchange=()=>{input.checked?builderLabels.add(label):builderLabels.delete(label);renderBuilder()};wrapper.append(input,document.createTextNode(label));labels.append(wrapper)}}
+ const rows=builderFiltered(),linked=new Set(builderCandidates?.linkedKeys||[]);list.replaceChildren();summary.hidden=!builderCandidates;action.hidden=!builderCandidates;
+ if(!builderCandidates)return;
+ const already=rows.filter(issue=>linked.has(issue.key)).length,selected=rows.filter(issue=>!linked.has(issue.key)&&builderSelected.has(issue.key)).length;
+ summary.textContent=`Версия: ${$('builder-version').selectedOptions[0]?.textContent||selectedVersion} · Найдено: ${rows.length}${builderCandidates.truncated?' (показаны первые 1000)':''} · Уже связано: ${already} · Будет связано: ${selected}`;
+ action.textContent=builderSaving?'Создаю связи…':`Связать выбранные задачи (${selected})`;action.disabled=builderSaving||!selected||!builder.relation;
+ for(const issue of rows){const isLinked=linked.has(issue.key),card=node('article','card builder-card',''),pick=node('label','builder-pick',''),check=document.createElement('input');check.type='checkbox';check.checked=!isLinked&&builderSelected.has(issue.key);check.disabled=isLinked;check.onchange=()=>{check.checked?builderSelected.add(issue.key):builderSelected.delete(issue.key);renderBuilder()};pick.append(check,document.createTextNode(isLinked?'Уже связано':'Связать'));
+  const body=node('div','',''),head=node('div','top','');head.append(node('span','key',issue.key+' · '+issue.type),statusBadge(issue.status));const title=node('a','release-issue-title',issue.summary||'(без названия)');title.href=issue.url;title.target='_blank';title.rel='noopener noreferrer';const meta=node('p','',`Метки: ${issue.labels.join(', ')||'—'} · Исполнитель: ${issue.assignee} · Приоритет: ${issue.priority||'—'}`);body.append(head,title,meta);card.append(pick,body);list.append(card)
+ }
+ if(!rows.length)list.append(node('p','card','По этой версии и выбранным меткам задач не найдено.'));
+}
+let builderFeedback='';
+async function loadBuilder(){const key=$('builder-key').value.trim().toUpperCase();$('builder-key').value=key;savePref('builderKey',key);builderError='';builderFeedback='';builderCandidates=null;builderLabels.clear();builderSelected.clear();if(!/^[A-Z][A-Z0-9_]*-\d+$/.test(key)){builder=null;builderError='Введи ключ релизной задачи, например ECP-5242.';renderBuilder();return}if(!configuration.configured){builder=null;builderError='Сначала добавь токен в настройках профиля.';renderBuilder();return}builderLoading=true;renderBuilder();try{const response=await fetch('/api/release-builder?key='+encodeURIComponent(key),{signal:AbortSignal.timeout(30000)}),result=await response.json();if(!response.ok)throw Error(result.error||'Не удалось загрузить версии проекта.');builder=result;const select=$('builder-version');select.replaceChildren(...builder.versions.map(version=>new Option(version.name,version.id)));const parentVersion=builder.issue.fixVersions.find(version=>builder.versions.some(item=>item.id===version.id));if(parentVersion)select.value=parentVersion.id;builderFeedback=builder.relation?'':'В Jira нет связи «relates to». Можно просмотреть состав, создание связей недоступно.';renderBuilder();if(select.value)await loadBuilderCandidates()}catch(error){builder=null;builderError=error.name==='TimeoutError'?'Jira не ответила за 30 секунд. Попробуй ещё раз.':error.message}finally{builderLoading=false;renderBuilder()}}
+async function loadBuilderCandidates(){if(!builder)return;builderError='';builderFeedback='';builderCandidates=null;builderSelected.clear();renderBuilder();try{const response=await fetch('/api/release-candidates?key='+encodeURIComponent(builder.issue.key)+'&versionId='+encodeURIComponent($('builder-version').value),{signal:AbortSignal.timeout(30000)}),result=await response.json();if(!response.ok)throw Error(result.error||'Не удалось загрузить задачи версии.');builderCandidates=result;const linked=new Set(result.linkedKeys);builderSelected=new Set(result.issues.filter(issue=>issue.key!==builder.issue.key&&!linked.has(issue.key)).map(issue=>issue.key))}catch(error){builderError=error.name==='TimeoutError'?'Jira не ответила за 30 секунд. Попробуй ещё раз.':error.message}renderBuilder()}
+$('builder-form').onsubmit=event=>{event.preventDefault();loadBuilder()};$('builder-find').onclick=loadBuilderCandidates;$('builder-version').onchange=()=>{builderCandidates=null;builderLabels.clear();renderBuilder()};
+$('builder-link').onclick=async()=>{const rows=builderFiltered(),linked=new Set(builderCandidates?.linkedKeys||[]),issueKeys=rows.filter(issue=>!linked.has(issue.key)&&builderSelected.has(issue.key)).map(issue=>issue.key);if(!issueKeys.length||!builder)return;if(!confirm(`Связать ${issueKeys.length} задач с ${builder.issue.key} связью «relates to»? Уже связанные задачи будут пропущены.`))return;builderSaving=true;builderError='';builderFeedback='';renderBuilder();try{const response=await fetch('/api/release-links',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':configuration.csrf},body:JSON.stringify({key:builder.issue.key,versionId:$('builder-version').value,labels:[...builderLabels],issueKeys}),signal:AbortSignal.timeout(120000)}),result=await response.json();if(!response.ok)throw Error(result.error||'Не удалось создать связи.');builderFeedback=`Создано связей: ${result.created.length} · уже были связаны: ${result.skipped.length}${result.failed.length?` · ошибки: ${result.failed.join(', ')}`:''}`;await loadBuilderCandidates()}catch(error){builderError=error.name==='TimeoutError'?'Операция заняла больше двух минут. Проверь связи в Jira перед повтором.':error.message}finally{builderSaving=false;renderBuilder()}};
+function closeOptions(){userOptions=[];activeOption=-1;$('user-options').replaceChildren();$('user-options').hidden=true;$('username').setAttribute('aria-expanded','false');$('username').removeAttribute('aria-activedescendant')}
+function clearSelection(){selectedUser='';selectedName='';savePref('selectedUser','null');unread=[];updateNotice();clearTimeout(timer);requestNumber++;data={issues:[],lastSuccess:null};lastRender='';$('error').hidden=true;$('connection').textContent='';render()}
+function selectUser(user,restore=false){clearSelection();selectedUser=user.username;selectedName=user.displayName;savePref('selectedUser',JSON.stringify(user));unread=parsePref(noticeKey(),null)?.unread||[];updateNotice();$('username').value=selectedName+' ('+selectedUser+')';searchSequence++;clearTimeout(searchTimer);closeOptions();if(!restore){statusByTab.review='';statusByTab.todo='';for(const id of ['review','todo'])savePref('status.'+id,'')}$('user-help').textContent='Поиск по задачам пользователя включён.';$('connection').textContent='Подключение к Jira…';render();if(tab!=='release'&&tab!=='build')poll()}
+function highlightOption(){[...$('user-options').children].forEach((el,i)=>el.setAttribute('aria-selected',String(i===activeOption)));if(activeOption>=0){const el=$('user-options').children[activeOption];$('username').setAttribute('aria-activedescendant',el.id);el.scrollIntoView({block:'nearest'})}}
+async function searchUsers(query,sequence){
+ try{const response=await fetch('/api/users?query='+encodeURIComponent(query),{signal:AbortSignal.timeout(22000)});const result=await response.json();if(sequence!==searchSequence)return;if(!response.ok)throw Error(result.error||'Не удалось найти пользователей');userOptions=result.users;activeOption=-1;$('user-options').replaceChildren();for(const [i,user] of userOptions.entries()){const option=node('button','user-option','');option.type='button';option.id='user-option-'+i;option.setAttribute('role','option');option.setAttribute('aria-selected','false');option.tabIndex=-1;option.append(node('span','',user.displayName),node('small','',user.username));option.onmousedown=e=>e.preventDefault();option.onclick=()=>selectUser(user);$('user-options').append(option)}$('user-options').hidden=!userOptions.length;$('username').setAttribute('aria-expanded',String(userOptions.length>0));$('user-help').textContent=userOptions.length?'Выбери пользователя из списка.':'Пользователи не найдены.'}
+ catch(error){if(sequence!==searchSequence)return;closeOptions();$('user-help').textContent=error.name==='TimeoutError'?'Jira не ответила. Повтори поиск.':error.message}
+}
+$('username').oninput=()=>{const query=$('username').value.trim();clearSelection();closeOptions();clearTimeout(searchTimer);const sequence=++searchSequence;if(!configuration.configured){$('user-help').textContent='Сначала добавь токен в настройках профиля.';return}if(query.length<2){$('user-help').textContent='Введи минимум 2 символа.';return}$('user-help').textContent='Поиск…';searchTimer=setTimeout(()=>searchUsers(query,sequence),300)};
+$('username').onkeydown=event=>{if(event.key==='Escape'){searchSequence++;clearTimeout(searchTimer);closeOptions();return}if(!userOptions.length)return;if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();activeOption=event.key==='ArrowDown'?(activeOption+1)%userOptions.length:(activeOption-1+userOptions.length)%userOptions.length;highlightOption()}else if(event.key==='Enter'){event.preventDefault();if(activeOption>=0)selectUser(userOptions[activeOption]);else if(userOptions.length===1)selectUser(userOptions[0])}};
+$('clear-user').onclick=()=>{searchSequence++;clearTimeout(searchTimer);closeOptions();clearSelection();$('username').value='';$('user-help').textContent='Введи минимум 2 символа и выбери пользователя из списка.';$('username').focus()};
+document.addEventListener('click',event=>{if(!event.target.closest('.user-picker')){searchSequence++;clearTimeout(searchTimer);closeOptions()}});
+async function poll(){
+ if(!selectedUser||tab==='release'||tab==='build')return;
+ const sequence=++requestNumber,user=selectedUser;
+ try{const r=await fetch('/api/state?user='+encodeURIComponent(user),{signal:AbortSignal.timeout(5000)});const next=await r.json();if(sequence!==requestNumber)return;if(!r.ok)throw Error(next.error||'Не удалось загрузить задачи');if(next.user!==user)return;data=next;detectReady(next);$('error').hidden=!(data.error||data.historyError);$('error').textContent=[data.error,data.historyError].filter(Boolean).join(' ');$('connection').textContent=(data.lastSuccess?'Обновлено: '+date(data.lastSuccess):'Подключение к Jira…')+' · Проверка раз в минуту';render()}
+ catch(error){if(sequence!==requestNumber)return;$('error').hidden=false;$('error').textContent=error.message.startsWith('Укажи')||error.message.startsWith('Слишком')?error.message:'Не удалось подключиться к программе. Проверь, что она запущена.'}
+ finally{if(sequence===requestNumber&&tab!=='release')timer=setTimeout(poll,5000)}
+}
+function openProfile(){
+ $('profile-token').value='';$('profile-gitlab-token').value='';$('profile-gitlab-base').value=configuration.gitlabBaseUrl||'';
+ $('profile-account').textContent=configuration.account?'Доступ к Jira: '+configuration.account.displayName+' ('+configuration.account.username+')':configuration.configured?'Токен настроен. При сохранении проверим его владельца.':'Добавь свой токен для подключения.';
+ $('token-help').textContent=configuration.configured?'Токен уже настроен. Оставь поле пустым, чтобы сохранить его, или введи новый.':'Введи свой Personal Access Token из профиля Jira.';
+ $('profile-token').required=!configuration.configured;$('gitlab-help').textContent=configuration.gitlabConfigured?'GitLab подключён. Оставь токен пустым, чтобы сохранить его.':'Необязательно. Нужен токен с правом read_api для поиска MR и веток.';$('profile-message').textContent='';$('profile-dialog').showModal();
+}
+$('profile-button').onclick=openProfile;
+$('profile-cancel').onclick=()=>{$('profile-token').value='';$('profile-gitlab-token').value='';$('profile-dialog').close()};
+$('profile-dialog').addEventListener('close',()=>{$('profile-token').value='';$('profile-gitlab-token').value=''});
+$('profile-form').onsubmit=async event=>{
+ event.preventDefault();$('profile-save').disabled=true;$('profile-cancel').disabled=true;$('profile-message').textContent='Проверка доступа…';
+ const body=JSON.stringify({token:$('profile-token').value,gitlabBaseUrl:$('profile-gitlab-base').value,gitlabToken:$('profile-gitlab-token').value});$('profile-token').value='';$('profile-gitlab-token').value='';
+ try{const response=await fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':configuration.csrf},body,signal:AbortSignal.timeout(30000)});const result=await response.json();if(!response.ok)throw Error(result.error||'Не удалось сохранить профиль');configuration=result;$('profile-dialog').close();$('clear-user').click()}
+ catch(error){$('profile-message').textContent=error.name==='TimeoutError'?'Проверка заняла слишком много времени. Проверь сеть и повтори.':error.message}
+ finally{$('profile-save').disabled=false;$('profile-cancel').disabled=false}
+};
+async function init(){try{const response=await fetch('/api/config');if(!response.ok)throw Error();configuration=await response.json();$('username').value='';$('builder-key').value=readPref('builderKey','');render();$('connection').textContent='';if(!configuration.configured)openProfile();else{const saved=parsePref('selectedUser',null);if(saved&&typeof saved.username==='string'&&typeof saved.displayName==='string')selectUser(saved,true);if(tab==='release'&&releaseKey)loadRelease();if(tab==='build'&&$('builder-key').value)loadBuilder()}}catch{$('error').hidden=false;$('error').textContent='Не удалось подключиться к программе. Перезагрузи страницу после запуска.'}}
+init();
+</script></html>
