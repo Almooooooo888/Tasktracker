@@ -1,6 +1,6 @@
 services:
   jira-board:
-    image: jira-board:1.18.0
+    image: jira-board:1.19.0
     build: .
     restart: unless-stopped
     ports:
@@ -10,6 +10,14 @@ services:
       LK_JIRA_TLS_SKIP_VERIFY: ${LK_JIRA_TLS_SKIP_VERIFY:-false}
       LK_GITLAB_BASE_URL: ${LK_GITLAB_BASE_URL:-}
       LK_GITLAB_TOKEN: ${LK_GITLAB_TOKEN:-}
+      LK_PG_HOST: ${LK_PG_HOST:-}
+      LK_PG_USER: ${LK_PG_USER:-}
+      LK_PG_PASSWORD: ${LK_PG_PASSWORD:-}
+      LK_PG_PORT: ${LK_PG_PORT:-5432}
+      LK_DB_INTERNAL: ${LK_DB_INTERNAL:-}
+      LK_SCHEMA_INTERNAL: ${LK_SCHEMA_INTERNAL:-}
+      LK_DB_EXTERNAL: ${LK_DB_EXTERNAL:-}
+      LK_SCHEMA_EXTERNAL: ${LK_SCHEMA_EXTERNAL:-}
       NODE_EXTRA_CA_CERTS: ${NODE_EXTRA_CA_CERTS:-}
     volumes:
       - profile:/data

@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { loadProfile, saveProfile, directory } from './profile.mjs';
 import {EventStore,scanReadyEvents} from './events.mjs';
+import { investigate, checkDatabaseConnection, diagnosticDefaults } from './investigation.mjs';
 const eventStore=new EventStore(directory);
 const require = createRequire(import.meta.url);
 const { fetch, Agent } = require('undici');
@@ -25,10 +26,11 @@ let profile = await loadProfile() || {
 };
 const csrf = randomBytes(32).toString('hex');
 let savingProfile = false;
+let investigationBusy = false;
 // Same internal certificate configuration as the existing LK connector.
 const dispatcher = new Agent({ connect: { rejectUnauthorized: process.env.LK_JIRA_TLS_SKIP_VERIFY !== 'true' } });
 const getGitLabConnection=()=>({base:(profile.gitlabBaseUrl||process.env.LK_GITLAB_BASE_URL||'').trim().replace(/\/$/,''),token:(profile.gitlabToken||process.env.LK_GITLAB_TOKEN||'').trim()});
-const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,version:'1.18.0', csrf});
+const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,pgHost:profile.pgHost||diagnosticDefaults.pgHost,pgUser:profile.pgUser||diagnosticDefaults.pgUser,pgConfigured:Boolean((profile.pgHost||diagnosticDefaults.pgHost)&&(profile.pgUser||diagnosticDefaults.pgUser)&&(profile.pgPassword||process.env.LK_PG_PASSWORD)),kubeconfig:profile.kubeconfig||diagnosticDefaults.kubeconfig,version:'1.19.0', csrf});
 const states = new Map();
 const refreshTimes = new WeakMap();
 const lastAccess = new WeakMap();
@@ -229,13 +231,28 @@ async function getReleaseSnapshot(key, connection) {
   try { return await pending; }
   finally { releasePending.delete(cacheKey); }
 }
+const listenPort = Number(process.env.LK_PORT || 18764);
+if (!Number.isInteger(listenPort) || listenPort < 1 || listenPort > 65535) throw new Error('Некорректный LK_PORT.');
 const server = http.createServer(async (req, res) => {
-  if (!['127.0.0.1:18764', 'localhost:18764'].includes(req.headers.host)) { res.writeHead(403); return res.end(); }
+  if (![ `127.0.0.1:${listenPort}`, `localhost:${listenPort}` ].includes(req.headers.host)) { res.writeHead(403); return res.end(); }
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
-  const url = new URL(req.url, 'http://127.0.0.1:18764');
+  const url = new URL(req.url, `http://127.0.0.1:${listenPort}`);
   const json=(code,data)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
+  if (req.method === 'GET' && url.pathname === '/api/investigation') {
+    const supplied = Buffer.from(String(req.headers['x-csrf-token'] || ''));
+    if (supplied.length !== csrf.length || !timingSafeEqual(supplied, Buffer.from(csrf))) return json(403,{error:'Перезагрузи страницу и повтори поиск.'});
+    const kind = url.searchParams.get('kind') || '';
+    const number = url.searchParams.get('number') || '';
+    const minutes = Number(url.searchParams.get('minutes') || 180);
+    if (!['request','notice'].includes(kind) || number.length > 120 || !Number.isInteger(minutes) || minutes < 1 || minutes > 1440) return json(400,{error:'Проверь вид карточки, номер и окно логов.'});
+    if (investigationBusy) return json(429,{error:'Предыдущий разбор ещё выполняется. Подожди его завершения.'});
+    investigationBusy = true;
+    try { return json(200, await investigate({kind,number,minutes,connection:profile})); }
+    catch(error) { return json(400,{error:error.message}); }
+    finally { investigationBusy = false; }
+  }
   if (req.method === 'POST' && url.pathname === '/api/profile') {
     const supplied=Buffer.from(String(req.headers['x-csrf-token']||''));
     if(req.headers.origin !== `http://${req.headers.host}` || supplied.length!==csrf.length || !timingSafeEqual(supplied,Buffer.from(csrf)))return json(403,{error:'Перезагрузи страницу и повтори сохранение.'});
@@ -268,6 +285,10 @@ const server = http.createServer(async (req, res) => {
         try{const response=await fetch(new URL('/api/v4/user',gitlabBase),{headers:{'PRIVATE-TOKEN':suppliedGitlabToken,Accept:'application/json'},redirect:'error',dispatcher,signal:AbortSignal.timeout(10000)});if(!response.ok)return json(400,{error:response.status===401||response.status===403?'GitLab не принял токен или не хватает прав read_api.':'Не удалось проверить доступ к GitLab (HTTP '+response.status+').'});const identity=await response.json();if(!identity.username)return json(400,{error:'GitLab не вернул пользователя токена.'});}catch(error){return json(400,{error:error.message.startsWith('GitLab')?error.message:'Не удалось подключиться к GitLab. Проверь адрес, сеть и сертификат.'});}
       }
       candidate.gitlabBaseUrl=gitlabBase;candidate.gitlabToken=gitlabToken;
+      const pgHost=String(input.pgHost||'').trim(),pgUser=String(input.pgUser||'').trim(),pgPassword=String(input.pgPassword||''),kubeconfig=String(input.kubeconfig||'').trim();
+      if(pgHost&&!/^[a-z0-9.-]{1,253}$/i.test(pgHost)||pgUser&&!/^[a-z0-9_.@-]{1,128}$/i.test(pgUser)||pgPassword.length>8000||/[\r\n]/.test(pgPassword)||kubeconfig.length>500||/[\r\n]/.test(kubeconfig))return json(400,{error:'Проверь адрес и учётную запись БД, пароль и путь к kubeconfig.'});
+      candidate.pgHost=pgHost||candidate.pgHost||'';candidate.pgUser=pgUser||candidate.pgUser||'';candidate.pgPassword=pgPassword||candidate.pgPassword||'';candidate.kubeconfig=kubeconfig||candidate.kubeconfig||'';
+      if((candidate.pgPassword||process.env.LK_PG_PASSWORD)&&(pgPassword||pgHost||pgUser)){try{await checkDatabaseConnection(candidate)}catch{return json(400,{error:'Не удалось подключиться к read-only БД. Проверь адрес, логин, пароль и сеть.'})}}
       try{await saveProfile(candidate);}catch{return json(500,{error:'Не удалось сохранить профиль на этом компьютере.'});}
       profile=candidate;states.clear();
       releaseCache.clear();
@@ -341,7 +362,7 @@ const server = http.createServer(async (req, res) => {
   res.writeHead(404); res.end();
 });
 server.on('error', () => process.exit(1));
-server.listen(18764, process.env.LK_LISTEN_HOST || '127.0.0.1', () => {
+server.listen(listenPort, process.env.LK_LISTEN_HOST || '127.0.0.1', () => {
   setInterval(() => {
     for (const state of states.values()) {
       if (Date.now() - lastAccess.get(state) > 300000) { if (!state.refreshing) states.delete(state.user); continue; }

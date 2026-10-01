@@ -6,6 +6,7 @@ node_modules/
 /profile.json
 /profile.dpapi
 /token.dpapi
+/diagnostics.local.json
 /logs/
 *.log
 /certs/*

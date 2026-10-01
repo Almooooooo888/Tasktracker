@@ -1,0 +1,13 @@
+{
+  "pgHost": "postgres.example.com",
+  "pgUser": "readonly-user",
+  "internalDatabase": "internal_db",
+  "internalSchema": "internal_schema",
+  "externalDatabase": "external_db",
+  "externalSchema": "external_schema",
+  "kubeconfig": "",
+  "podGroups": [
+    { "namespace": "internal-namespace", "prefixes": ["service-a-"] },
+    { "namespace": "external-namespace", "prefixes": ["service-b-"] }
+  ]
+}
