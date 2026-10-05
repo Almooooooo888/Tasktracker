@@ -30,7 +30,7 @@ let investigationBusy = false;
 // Same internal certificate configuration as the existing LK connector.
 const dispatcher = new Agent({ connect: { rejectUnauthorized: process.env.LK_JIRA_TLS_SKIP_VERIFY !== 'true' } });
 const getGitLabConnection=()=>({base:(profile.gitlabBaseUrl||process.env.LK_GITLAB_BASE_URL||'').trim().replace(/\/$/,''),token:(profile.gitlabToken||process.env.LK_GITLAB_TOKEN||'').trim()});
-const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,pgHost:profile.pgHost||diagnosticDefaults.pgHost,pgUser:profile.pgUser||diagnosticDefaults.pgUser,pgConfigured:Boolean((profile.pgHost||diagnosticDefaults.pgHost)&&(profile.pgUser||diagnosticDefaults.pgUser)&&(profile.pgPassword||process.env.LK_PG_PASSWORD)),kubeconfig:profile.kubeconfig||diagnosticDefaults.kubeconfig,version:'1.19.0', csrf});
+const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,pgHost:profile.pgHost||diagnosticDefaults.pgHost,pgUser:profile.pgUser||diagnosticDefaults.pgUser,pgConfigured:Boolean((profile.pgHost||diagnosticDefaults.pgHost)&&(profile.pgUser||diagnosticDefaults.pgUser)&&(profile.pgPassword||process.env.LK_PG_PASSWORD)),kubeconfig:profile.kubeconfig||diagnosticDefaults.kubeconfig,version:'1.20.0', csrf});
 const states = new Map();
 const refreshTimes = new WeakMap();
 const lastAccess = new WeakMap();
@@ -38,6 +38,7 @@ const releaseCache = new Map();
 const releasePending = new Map();
 const gitlabCache = new Map();
 const gitlabPending = new Map();
+const bugTypeCache = new WeakMap();
 function getState(username) {
   let state = states.get(username);
   if (!state) {
@@ -83,6 +84,28 @@ async function getVersionIssues(project,versionId,connection){
     if(!result.issues.length||issues.length>=1000)break;
   }while(startAt<total);
   return {issues:issues.slice(0,1000).map(issue=>({key:issue.key,summary:issue.fields?.summary||'',status:issue.fields?.status?.name||'',type:issue.fields?.issuetype?.name||'',priority:issue.fields?.priority?.name||'',assignee:issue.fields?.assignee?.displayName||'Не назначен',updated:issue.fields?.updated||'',labels:issue.fields?.labels||[],url:`${connection.base}/browse/${encodeURIComponent(issue.key)}`})),total,truncated:total>1000};
+}
+async function getCreatedBugs(startAt, connection) {
+  let cached = bugTypeCache.get(connection);
+  if (!cached || Date.now() - cached.at > 300000) {
+    const types = await jira('/rest/api/2/issuetype', undefined, connection);
+    if (!Array.isArray(types)) throw new Error('Jira не вернула типы задач.');
+    const ids = types.filter(type => /^(?:баг|bug|дефект|defect|ошибка)$/iu.test(String(type.name || '').trim()))
+      .map(type => String(type.id)).filter(id => /^\d+$/.test(id));
+    cached = {at:Date.now(), ids};
+    bugTypeCache.set(connection, cached);
+  }
+  if (!cached.ids.length) throw new Error('В Jira не найден тип задачи «Баг» или «Дефект».');
+  const jql = `reporter = currentUser() AND issuetype in (${cached.ids.join(',')}) ORDER BY created DESC`;
+  const page = await jira('/rest/api/2/search', {jql,startAt,maxResults:100,fields:['summary','status','issuetype','priority','assignee','created','updated']}, connection);
+  if (!Array.isArray(page.issues) || !Number.isInteger(page.total)) throw new Error('Jira вернула некорректный список багов.');
+  return {issues:page.issues.map(issue => ({
+    key:issue.key, url:`${connection.base}/browse/${encodeURIComponent(issue.key)}`,
+    summary:issue.fields?.summary || '(без названия)', status:issue.fields?.status?.name || 'Не указан',
+    type:issue.fields?.issuetype?.name || '', priority:issue.fields?.priority?.name || '',
+    assignee:issue.fields?.assignee?.displayName || 'Не назначен',
+    created:issue.fields?.created || '', updated:issue.fields?.updated || ''
+  })), total:page.total, startAt, fetchedAt:new Date().toISOString()};
 }
 async function gitlabIssueBranches(key) {
   const connection=getGitLabConnection();if (!connection.base || !connection.token) return {status:'not-configured',repositories:[]};
@@ -318,6 +341,20 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method !== 'GET') { res.writeHead(405); return res.end(); }
   if (url.pathname === '/api/config') return json(200,publicProfile());
+  if (url.pathname === '/api/my-bugs') {
+    if (!profile.token) return json(409,{error:'Добавь токен в настройках профиля.'});
+    const startAt=Number(url.searchParams.get('startAt') || 0);
+    if (!Number.isSafeInteger(startAt) || startAt < 0 || startAt > 100000) return json(400,{error:'Некорректная страница списка.'});
+    const connection=profile;
+    try {
+      const result=await getCreatedBugs(startAt,connection);
+      if (connection!==profile) return json(409,{error:'Профиль изменён. Обнови список.'});
+      return json(200,result);
+    } catch(error) {
+      const tls=tlsFailure(error);
+      return json(error.message.startsWith('Нет доступа')?403:502,{error:tls || (/^(Jira:|Нет доступа|В Jira|Jira не|Jira вернула)/.test(error.message)?error.message:'Не удалось загрузить созданные баги. Проверь подключение к Jira.')});
+    }
+  }
   if(url.pathname==='/api/release-builder'){
     if(!profile.token)return json(409,{error:'Добавь токен в настройках профиля.'});
     const key=(url.searchParams.get('key')||'').trim().toUpperCase();if(!/^[A-Z][A-Z0-9_]*-\d+$/.test(key))return json(400,{error:'Введи ключ релизной задачи.'});
