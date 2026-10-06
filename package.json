@@ -1,1 +1,1 @@
-{"name":"jira-board","version":"1.20.0","private":true,"type":"module","scripts":{"start":"node server.mjs"},"dependencies":{"pg":"8.16.3","undici":"7.29.1"},"engines":{"node":">=22"}}
+{"name":"jira-board","version":"1.21.0","private":true,"type":"module","scripts":{"start":"node server.mjs"},"dependencies":{"pg":"8.16.3","undici":"7.29.1"},"engines":{"node":">=22"}}

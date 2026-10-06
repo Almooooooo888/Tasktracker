@@ -5,6 +5,7 @@ import { randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { loadProfile, saveProfile, directory } from './profile.mjs';
 import {EventStore,scanReadyEvents} from './events.mjs';
 import { investigate, checkDatabaseConnection, diagnosticDefaults } from './investigation.mjs';
+import { validateLogin, discoverCalendar, readCalendar, calendarRange } from './calendar.mjs';
 const eventStore=new EventStore(directory);
 const require = createRequire(import.meta.url);
 const { fetch, Agent } = require('undici');
@@ -27,10 +28,12 @@ let profile = await loadProfile() || {
 const csrf = randomBytes(32).toString('hex');
 let savingProfile = false;
 let investigationBusy = false;
+let calendarSession = null;
+let calendarBusy = false;
 // Same internal certificate configuration as the existing LK connector.
 const dispatcher = new Agent({ connect: { rejectUnauthorized: process.env.LK_JIRA_TLS_SKIP_VERIFY !== 'true' } });
 const getGitLabConnection=()=>({base:(profile.gitlabBaseUrl||process.env.LK_GITLAB_BASE_URL||'').trim().replace(/\/$/,''),token:(profile.gitlabToken||process.env.LK_GITLAB_TOKEN||'').trim()});
-const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,pgHost:profile.pgHost||diagnosticDefaults.pgHost,pgUser:profile.pgUser||diagnosticDefaults.pgUser,pgConfigured:Boolean((profile.pgHost||diagnosticDefaults.pgHost)&&(profile.pgUser||diagnosticDefaults.pgUser)&&(profile.pgPassword||process.env.LK_PG_PASSWORD)),kubeconfig:profile.kubeconfig||diagnosticDefaults.kubeconfig,version:'1.20.0', csrf});
+const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,pgHost:profile.pgHost||diagnosticDefaults.pgHost,pgUser:profile.pgUser||diagnosticDefaults.pgUser,pgConfigured:Boolean((profile.pgHost||diagnosticDefaults.pgHost)&&(profile.pgUser||diagnosticDefaults.pgUser)&&(profile.pgPassword||process.env.LK_PG_PASSWORD)),kubeconfig:profile.kubeconfig||diagnosticDefaults.kubeconfig,calendarConnected:Boolean(calendarSession),calendarEmail:calendarSession?.email||'',version:'1.21.0', csrf});
 const states = new Map();
 const refreshTimes = new WeakMap();
 const lastAccess = new WeakMap();
@@ -276,6 +279,25 @@ const server = http.createServer(async (req, res) => {
     catch(error) { return json(400,{error:error.message}); }
     finally { investigationBusy = false; }
   }
+  if (req.method === 'POST' && ['/api/calendar/login','/api/calendar/logout'].includes(url.pathname)) {
+    const supplied=Buffer.from(String(req.headers['x-csrf-token']||''));
+    if(req.headers.origin!==`http://${req.headers.host}`||supplied.length!==csrf.length||!timingSafeEqual(supplied,Buffer.from(csrf)))return json(403,{error:'Перезагрузи страницу и повтори действие.'});
+    if(calendarBusy)return json(409,{error:'Предыдущий запрос календаря ещё выполняется.'});
+    if(url.pathname==='/api/calendar/logout'){calendarSession=null;return json(200,{connected:false})}
+    if(!String(req.headers['content-type']).startsWith('application/json'))return json(415,{error:'Ожидается JSON.'});
+    let bytes=0,chunks=[];for await(const chunk of req){bytes+=chunk.length;if(bytes>12000)return json(413,{error:'Слишком большой запрос.'});chunks.push(chunk)}
+    let input;try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'))}catch{return json(400,{error:'Некорректные данные входа.'})}
+    let login,month;
+    try{login=validateLogin(input);month=String(input.month||'');calendarRange(month)}catch(error){return json(400,{error:error.message})}
+    calendarBusy=true;
+    try{
+      const ewsUrl=await discoverCalendar(login),session={...login,ewsUrl};
+      const result=await readCalendar(session,month);
+      calendarSession=session;
+      return json(200,{...result,calendarEmail:login.email});
+    }catch(error){return json(502,{error:error.message})}
+    finally{calendarBusy=false}
+  }
   if (req.method === 'POST' && url.pathname === '/api/profile') {
     const supplied=Buffer.from(String(req.headers['x-csrf-token']||''));
     if(req.headers.origin !== `http://${req.headers.host}` || supplied.length!==csrf.length || !timingSafeEqual(supplied,Buffer.from(csrf)))return json(403,{error:'Перезагрузи страницу и повтори сохранение.'});
@@ -313,7 +335,7 @@ const server = http.createServer(async (req, res) => {
       candidate.pgHost=pgHost||candidate.pgHost||'';candidate.pgUser=pgUser||candidate.pgUser||'';candidate.pgPassword=pgPassword||candidate.pgPassword||'';candidate.kubeconfig=kubeconfig||candidate.kubeconfig||'';
       if((candidate.pgPassword||process.env.LK_PG_PASSWORD)&&(pgPassword||pgHost||pgUser)){try{await checkDatabaseConnection(candidate)}catch{return json(400,{error:'Не удалось подключиться к read-only БД. Проверь адрес, логин, пароль и сеть.'})}}
       try{await saveProfile(candidate);}catch{return json(500,{error:'Не удалось сохранить профиль на этом компьютере.'});}
-      profile=candidate;states.clear();
+      profile=candidate;states.clear();calendarSession=null;
       releaseCache.clear();
       gitlabCache.clear();
       return json(200,publicProfile());
@@ -341,6 +363,16 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method !== 'GET') { res.writeHead(405); return res.end(); }
   if (url.pathname === '/api/config') return json(200,publicProfile());
+  if (url.pathname === '/api/calendar') {
+    if(!calendarSession)return json(409,{error:'Сначала войди в календарь Exchange.'});
+    const month=url.searchParams.get('month')||'';
+    try{calendarRange(month)}catch(error){return json(400,{error:error.message})}
+    if(calendarBusy)return json(429,{error:'Календарь уже загружается.'});
+    calendarBusy=true;
+    try{return json(200,await readCalendar(calendarSession,month))}
+    catch(error){return json(502,{error:error.message})}
+    finally{calendarBusy=false}
+  }
   if (url.pathname === '/api/my-bugs') {
     if (!profile.token) return json(409,{error:'Добавь токен в настройках профиля.'});
     const startAt=Number(url.searchParams.get('startAt') || 0);

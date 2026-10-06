@@ -6,6 +6,8 @@
   "externalDatabase": "external_db",
   "externalSchema": "external_schema",
   "kubeconfig": "",
+  "exchangeDomain": "example.com",
+  "exchangeAutodiscoverUrl": "https://autodiscover.example.com/autodiscover/autodiscover.xml",
   "podGroups": [
     { "namespace": "internal-namespace", "prefixes": ["service-a-"] },
     { "namespace": "external-namespace", "prefixes": ["service-b-"] }
