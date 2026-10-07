@@ -1,83 +1,59 @@
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-
-const runFile = promisify(execFile);
-
-export const STANDS = Object.freeze([
-  { key: 'dev', name: 'DEV', namespace: 'development' },
-  { key: 'dev-3', name: 'DEV-3', namespace: 'development-dev-3' },
-  { key: 'qa-2', name: 'QA-2', namespace: 'development-qa-2' },
-  { key: 'qa-3', name: 'QA-3', namespace: 'development-qa-3' }
+// ЛК service scope mirrors modules/lk.json in the separately installed QA Workspace.
+export const STANDS=Object.freeze(['dev','dev-1','dev-2','dev-3','qa-1','qa-2','qa-3'].map(key=>({key,name:key.toUpperCase()})));
+export const LK_SERVICES=Object.freeze([
+  {name:'audit-portal',path:'digital/backend/audit-portal'},
+  {name:'audit-portal-external',path:'digital/backend/audit-portal-external'},
+  {name:'api-gateway',path:'digital/backend/api-gateway'},
+  {name:'dictionary-service',path:'digital/backend/dictionary-service'},
+  {name:'flow-integration-service',path:'digital/backend/integration-services/flow-integration-service'},
+  {name:'crypto-signature-service',path:'digital/backend/security/crypto-signature-service'},
+  {name:'crypto-tsl-loader',path:'digital/backend/security/crypto-tsl-loader'},
+  {name:'digital-ui (FE)',path:'digital/frontend/digital-ui'}
 ]);
 
-export function imageVersion(image) {
-  const name=String(image||'').split('/').at(-1)||'';
-  const digest=name.indexOf('@sha256:');
-  if(digest>=0)return {service:name.slice(0,digest),version:'sha256:'+name.slice(digest+8,digest+20),tag:'',digest:name.slice(digest+1)};
-  const colon=name.lastIndexOf(':');
-  return colon>=0?{service:name.slice(0,colon),version:name.slice(colon+1),tag:name.slice(colon+1),digest:''}:{service:name,version:'без тега',tag:'',digest:''};
+export function deploymentView(environment,projectUrl){
+  const deployment=environment.last_deployment;
+  if(!deployment)return {state:environment.state==='stopped'?'stopped':'no-deployment'};
+  const sha=/^[0-9a-f]{40}$/i.test(deployment.sha||'')?deployment.sha:'';
+  const ref=String(deployment.ref||'');
+  const tag=deployment.deployable?.tag;
+  return {state:environment.state==='stopped'?'stopped':deployment.status==='success'?'success':deployment.status||'unknown',ref,refType:tag===true?'tag':tag===false?'branch':'unknown',sha,finishedAt:deployment.deployable?.finished_at||'',deploymentId:deployment.id||null,commitUrl:sha?`${projectUrl}/-/commit/${sha}`:'',environmentUrl:`${projectUrl}/-/environments/${environment.id}`};
 }
 
-const deploymentName = name => String(name||'').replace(/-deployment$/,'');
-
-export function summarizeNamespace(data,stand) {
-  const items=Array.isArray(data?.items)?data.items:[];
-  const deployments=items.filter(item=>item.kind==='Deployment');
-  const pods=items.filter(item=>item.kind==='Pod'&&item.metadata?.deletionTimestamp==null);
-  const byDeployment=new Map(deployments.map(deploy=>[deploy.metadata.name,[]]));
-  const names=[...byDeployment.keys()].sort((a,b)=>b.length-a.length);
-  for(const pod of pods){
-    const owner=pod.metadata?.ownerReferences?.find(value=>value.kind==='ReplicaSet')?.name||'';
-    const deployment=names.find(name=>owner.startsWith(name+'-'));
-    if(deployment)byDeployment.get(deployment).push(pod);
-  }
-  const services=deployments.map(deploy=>{
-    const related=byDeployment.get(deploy.metadata.name)||[];
-    const desired=Number(deploy.spec?.replicas??1),ready=Number(deploy.status?.readyReplicas||0);
-    const containers=(deploy.spec?.template?.spec?.containers||[]).map(container=>{
-      const running=new Map();
-      for(const pod of related){
-        if(pod.status?.phase!=='Running')continue;
-        const actual=pod.spec?.containers?.find(value=>value.name===container.name)?.image;
-        if(actual)running.set(actual,(running.get(actual)||0)+1);
-      }
-      return {name:container.name,image:container.image,...imageVersion(container.image),running:[...running].sort(([a],[b])=>a.localeCompare(b)).map(([image,pods])=>({image,version:imageVersion(image).version,pods}))};
-    });
-    const transition=containers.some(container=>container.running.some(item=>item.image!==container.image));
-    const pending=Number(deploy.metadata?.generation||0)>Number(deploy.status?.observedGeneration||0)||ready<desired;
-    const sha=String(deploy.metadata?.annotations?.['app.gitlab.com/commit-sha']||deploy.spec?.template?.metadata?.annotations?.['app.gitlab.com/commit-sha']||'');
-    return {name:deploymentName(deploy.metadata.name),deployment:deploy.metadata.name,namespace:stand.namespace,desired,ready,pods:related.length,containers,transition,pending,sha:/^[0-9a-f]{7,40}$/i.test(sha)?sha:''};
-  }).sort((a,b)=>a.name.localeCompare(b.name,'en'));
-  return {key:stand.key,name:stand.name,namespace:stand.namespace,services,checkedAt:new Date().toISOString(),error:null};
-}
-
-export function attachGitProjects(snapshot,projects,baseUrl) {
-  const lookup=new Map();
-  for(const project of projects){
-    const key=String(project.path||'').toLowerCase().replaceAll('_','-');
-    if(!key)continue;
-    let url='';
-    try{const parsed=new URL(project.web_url);if(parsed.protocol==='https:'&&parsed.origin===new URL(baseUrl).origin)url=parsed.href}catch{}
-    if(!url)continue;
-    if(lookup.has(key))lookup.set(key,null);
-    else lookup.set(key,url);
-  }
-  return {...snapshot,stands:snapshot.stands.map(stand=>({...stand,services:stand.services.map(service=>({...service,containers:service.containers.map(container=>({...container,projectUrl:lookup.get(container.service.toLowerCase().replaceAll('_','-'))||''}))}))}))};
-}
-
-export async function readStands(kubeconfig,{executable=process.env.LK_KUBECTL||'kubectl',context=process.env.LK_KUBE_CONTEXT||'',run=runFile}={}) {
-  if(!kubeconfig)return {stands:STANDS.map(stand=>({...stand,services:[],error:'Kubernetes не настроен: укажи kubeconfig в профиле.'})),checkedAt:new Date().toISOString()};
-  const stands=await Promise.all(STANDS.map(async stand=>{
-    const args=['--kubeconfig',kubeconfig];if(context)args.push('--context',context);
-    args.push('-n',stand.namespace,'get','deployments,pods','-o','json','--request-timeout=15s');
-    try{
-      const {stdout}=await run(executable,args,{windowsHide:true,timeout:20000,maxBuffer:16*1024*1024});
-      return summarizeNamespace(JSON.parse(stdout),stand);
-    }catch(error){
-      const detail=String(error.stderr||error.message||'').trim();
-      const reason=/Forbidden/i.test(detail)?'Нет прав на чтение Deployment или pod в этом namespace.':/timed out|timeout/i.test(detail)?'Kubernetes не ответил за 20 секунд.':'Не удалось прочитать Kubernetes. Проверь VPN и kubeconfig.';
-      return {...stand,services:[],checkedAt:new Date().toISOString(),error:reason};
-    }
+async function limited(items,limit,task){
+  let next=0;
+  const results=new Array(items.length);
+  await Promise.all(Array.from({length:Math.min(limit,items.length)},async()=>{
+    while(next<items.length){const index=next++;results[index]=await task(items[index])}
   }));
-  return {stands,checkedAt:new Date().toISOString()};
+  return results;
+}
+
+export async function readGitLabStands({base,token},{fetcher=fetch,dispatcher,services=LK_SERVICES,stands=STANDS}={}){
+  const checkedAt=new Date().toISOString();
+  if(!base||!token)return {checkedAt,source:'gitlab',stands:stands.map(stand=>({...stand,services:[]})),error:'GitLab не настроен в профиле.'};
+  const origin=new URL(base);
+  if(origin.protocol!=='https:')throw Error('Для GitLab нужен HTTPS-адрес.');
+  const request=async path=>{
+    const response=await fetcher(new URL(path,origin),{headers:{'PRIVATE-TOKEN':token,Accept:'application/json'},redirect:'error',dispatcher,signal:AbortSignal.timeout(12000)});
+    if(!response.ok)throw Error(`GitLab HTTP ${response.status}`);
+    return response.json();
+  };
+  const projects=await limited(services,5,async service=>{
+    const url=`${origin.origin}/${service.path}`;
+    const prefix=`/api/v4/projects/${encodeURIComponent(service.path)}/environments`;
+    try{
+      const environments=await request(`${prefix}?per_page=100`);
+      if(!Array.isArray(environments))throw Error('Некорректный ответ GitLab');
+      return {service,url,prefix,environments};
+    }catch(error){return {service,url,prefix,error:error.message,environments:[]}}
+  });
+  const jobs=projects.flatMap(project=>stands.map(stand=>({project,stand,environment:project.environments.find(item=>item.name===stand.key)})));
+  const details=await limited(jobs,8,async({project,environment})=>{
+    if(project.error)return {state:'error',error:project.error};
+    if(!environment)return {state:'no-environment'};
+    try{return deploymentView(await request(`${project.prefix}/${environment.id}`),project.url)}
+    catch(error){return {state:'error',error:error.message}}
+  });
+  return {checkedAt:new Date().toISOString(),source:'gitlab',stands:stands.map((stand,standIndex)=>({...stand,services:projects.map((project,index)=>({name:project.service.name,projectUrl:project.url,...details[index*stands.length+standIndex]}))}))};
 }
