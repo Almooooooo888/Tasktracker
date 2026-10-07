@@ -35,46 +35,51 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 .stands-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0 14px}.stands-toolbar p{font-size:13px;line-height:1.5}.stands-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}.stands-tabs button{padding:9px 15px;font-weight:650}.stands-tabs button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:white}.stands-search{max-width:380px;margin:0 0 18px}.stands-search input{margin:0}.stand-summary{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.stand-summary span{padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:var(--surface);font-size:12px;color:var(--muted)}.stand-list{display:grid;gap:8px}.stand-row{display:grid;grid-template-columns:minmax(160px,1.2fr) minmax(150px,.9fr) minmax(160px,1fr) 100px minmax(120px,.75fr);gap:12px;align-items:center;padding:13px 15px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}.stand-row.changed{border-left:4px solid var(--accent)}.stand-row.pending{border-color:#bd914c}.stand-row strong{overflow-wrap:anywhere}.stand-row small{display:block;margin-top:4px;color:var(--muted);font-size:11px;overflow-wrap:anywhere}.stand-version{font-weight:700;color:var(--accent-link)}.stand-running{font-size:12px;line-height:1.5}.stand-target{font-size:12px;color:var(--muted);overflow-wrap:anywhere}.stand-ready{font-weight:700}.stand-ready.warn{color:#bd914c}.stand-git a{color:var(--accent-link);text-decoration:none;font-weight:600}.stand-git a:hover{text-decoration:underline}.stand-message{padding:15px;border:1px solid var(--border);border-radius:9px;background:var(--surface);line-height:1.5}.stand-message.error{background:var(--error-bg);color:var(--error-text)}@media(max-width:800px){.stand-row{grid-template-columns:1fr 1fr;gap:8px}.stand-row>div:first-child{grid-column:1/-1}.stand-git{grid-column:1/-1}}
 .stand-ref{font-weight:700;color:var(--accent-link);overflow-wrap:anywhere}.stand-kind{display:inline-block;margin-bottom:5px;padding:3px 7px;border-radius:6px;background:color-mix(in srgb,var(--accent) 16%,var(--surface));font-size:11px;color:var(--accent-link)}.stand-sha{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}.stand-muted{color:var(--muted);font-size:12px}.stand-state{font-size:12px;font-weight:700;color:#4c9b70}.stand-state.warn{color:#bd914c}.stand-row a{color:var(--accent-link);text-decoration:none}.stand-row a:hover{text-decoration:underline}
 .hosts-note{line-height:1.6;margin:18px 0}.hosts-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.hosts-row{display:grid;grid-template-columns:minmax(130px,220px) minmax(210px,1fr) auto;gap:10px;align-items:end;margin-bottom:10px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}.hosts-row label{margin:0}.hosts-row input{margin:0}.hosts-row button{padding:12px}.hosts-other{margin-top:24px;border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--surface)}.hosts-other pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.5}.hosts-other summary{cursor:pointer}.hosts-empty{padding:18px;border:1px solid var(--border);border-radius:10px;margin-bottom:12px}#hosts-save{background:var(--accent);border-color:var(--accent);color:white}#hosts-message{margin:14px 0;line-height:1.5}#hosts-message.error{color:var(--error-text)}@media(max-width:650px){.hosts-row{grid-template-columns:1fr}.hosts-row button{justify-self:start}}
-/* Optional visual concept. The classic interface remains available through the header switch. */
-.brand{display:flex;align-items:center;gap:10px}.brand-mark{display:inline-grid;place-items:center;width:29px;height:29px;flex:none;border-radius:9px;background:linear-gradient(145deg,#35dfa0,#0a8064);color:#fff;font-size:21px;font-weight:800;box-shadow:0 5px 13px #07825b45}
-#design-toggle{margin-top:8px;border-color:#327b68;color:#0d8062;font-weight:700}#design-toggle[aria-pressed=true]{background:#143f33;border-color:#237858;color:#b8f7d6}
-:root[data-design=mock]{--page:#0b1314;--surface:#142022;--surface-hover:#1e3030;--text:#ecf7f1;--muted:#9aafa7;--border:#2c4440;--notice-bg:#133428;--notice-border:#327958;--notice-text:#c5f2d9;--error-bg:#3b2b23;--error-text:#f2c5a7}
-:root[data-design=mock] body{background:radial-gradient(ellipse 60% 30% at 58% -10%,#1e5043 0%,transparent 72%),radial-gradient(ellipse 40% 25% at 100% 100%,#12342e 0%,transparent 80%),var(--page);letter-spacing:.005em}
-:root[data-design=mock] .app-shell{grid-template-columns:250px minmax(0,1fr)}
-:root[data-design=mock] .sidebar{background:linear-gradient(180deg,#101f1f 0%,#0c1718 100%);border-right:1px solid #2c4540;padding:30px 18px;box-shadow:12px 0 38px #0002;z-index:1}
-:root[data-design=mock] .brand{padding:2px 10px 27px;font-size:22px;letter-spacing:-.035em;color:#effff4}
-:root[data-design=mock] .brand-mark{width:35px;height:35px;border-radius:11px;font-size:24px;box-shadow:0 0 20px #1bc28b50}
-:root[data-design=mock] .sidebar-group{padding-top:25px;color:#729787;font-weight:700;letter-spacing:.16em}
-:root[data-design=mock] .tabs{gap:3px}:root[data-design=mock] .tabs button{border-radius:11px;color:#afc7bc;font-weight:580;transition:background .23s ease,color .23s ease,transform .23s ease,box-shadow .23s ease}
-:root[data-design=mock] .tabs button:hover{background:#1b332e;color:#edfff5;transform:translateX(3px)}
-:root[data-design=mock] .tabs button[aria-selected=true]{background:linear-gradient(95deg,#1b5d47,#203d37);color:#d7ffeb;box-shadow:inset 3px 0 #42e4a4,0 6px 18px #0002}
-:root[data-design=mock] .app-shell main{max-width:1320px;padding:0 42px;margin:35px auto 90px}
-:root[data-design=mock] header{padding:0 0 26px;border-bottom:1px solid #36544b;align-items:flex-start}
-:root[data-design=mock] h1{font-size:clamp(29px,2.5vw,38px);font-weight:760;letter-spacing:-.04em;margin:2px 0 7px}
-:root[data-design=mock] #owner{font-size:14px;color:#93b2a3}
-:root[data-design=mock] .header-tools{align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-:root[data-design=mock] .header-tools #connection{max-width:260px;color:#8dbba1}
-:root[data-design=mock] button{transition:background .22s ease,border-color .22s ease,color .22s ease,box-shadow .22s ease,transform .22s ease}
-:root[data-design=mock] button:hover:not(:disabled){border-color:#51b88e}
-:root[data-design=mock] #design-toggle{background:#173b30;color:#baf8d8;border:1px solid #399b70;box-shadow:0 0 0 1px #42e4a415}
-:root[data-design=mock] #design-toggle:hover{background:#225442;box-shadow:0 0 20px #36d69b30;transform:translateY(-2px)}
+/* Optional editorial workbench preview; the classic interface stays one click away. */
+.brand{display:flex;align-items:center;gap:10px}.brand-mark{display:inline-grid;place-items:center;width:29px;height:29px;flex:none;border-radius:7px;background:#34425c;color:#fff;font-size:21px;font-weight:800}
+#design-toggle{margin-top:8px;border-color:#6b7bbb;color:#4059c8;font-weight:650}#design-toggle[aria-pressed=true]{background:#e9edfb;border-color:#b7c2ee;color:#344cbc}
+:root[data-design=mock]{--page:#f5f6f8;--surface:#fff;--surface-hover:#eef1f6;--text:#1e2731;--muted:#687480;--border:#dbe0e6;--notice-bg:#eaf5ee;--notice-border:#a3ceb1;--notice-text:#256041;--error-bg:#fff2e8;--error-text:#945c29}
+:root[data-design=mock] body{background:var(--page);font-family:'Segoe UI Variable','Segoe UI',sans-serif;color:var(--text)}
+:root[data-design=mock] .app-shell{grid-template-columns:226px minmax(0,1fr)}
+:root[data-design=mock] .sidebar{padding:32px 16px;background:var(--page);border-right:1px solid #e0e4e9}
+:root[data-design=mock] .brand{padding:0 13px 31px;font:700 20px 'Bahnschrift','Segoe UI Variable',sans-serif;letter-spacing:-.035em;color:#252d38}
+:root[data-design=mock] .brand-mark{width:31px;height:31px;border-radius:8px;background:#33416b;font:700 21px 'Segoe UI',sans-serif}
+:root[data-design=mock] .sidebar-group{padding:21px 13px 7px;color:#75808b;text-transform:none;letter-spacing:0;font-size:11px;font-weight:700}
+:root[data-design=mock] .tabs{gap:2px}:root[data-design=mock] .tabs button{padding:10px 13px;border-radius:7px;color:#525e6b;font-size:13px;font-weight:570;transition:background .16s ease,color .16s ease,box-shadow .16s ease}
+:root[data-design=mock] .tabs button:hover{background:#e9edf2;color:#202c39}
+:root[data-design=mock] .tabs button[aria-selected=true]{background:#e9edfa;color:#334bb3;box-shadow:inset 3px 0 #4059c8}
+:root[data-design=mock] .app-shell main{max-width:1380px;padding:0 45px;margin:36px auto 80px}
+:root[data-design=mock] header{padding-bottom:23px;border-bottom:1px solid #dfe3e8;align-items:flex-start}
+:root[data-design=mock] h1{font:700 clamp(29px,2.6vw,38px) 'Bahnschrift','Segoe UI Variable',sans-serif;letter-spacing:-.035em;line-height:1.12;margin:0 0 7px}
+:root[data-design=mock] #owner{font-size:13px;line-height:1.5}
+:root[data-design=mock] .header-tools{align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+:root[data-design=mock] .header-tools #connection{max-width:260px;color:#64717f}
+:root[data-design=mock] button{transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease}
+:root[data-design=mock] button:hover:not(:disabled){border-color:#a9b4c3}
+:root[data-design=mock] #design-toggle{background:#e9edfa;color:#344db8;border:1px solid #c4cdef;font-weight:650}
+:root[data-design=mock] #design-toggle:hover{background:#dfe6fb;border-color:#9caeeb}
 :root[data-design=mock] #profile-button{margin-top:8px}
-:root[data-design=mock] .appearance{margin:24px 0 25px;background:#122021;border-color:#2a4a3f;border-radius:14px}
-:root[data-design=mock] .appearance summary{color:#a4d8bd}
-:root[data-design=mock] input,:root[data-design=mock] select{background:#101c1e;border:1px solid #345148;border-radius:10px}
-:root[data-design=mock] input:focus,:root[data-design=mock] select:focus{border-color:#4de2aa;box-shadow:0 0 0 3px #31d69d24;outline:0}
-:root[data-design=mock] .card,:root[data-design=mock] .bug-row,:root[data-design=mock] .stand-row,:root[data-design=mock] .calendar-entry,:root[data-design=mock] .calendar-day,:root[data-design=mock] .builder-summary,:root[data-design=mock] .release-summary{background:linear-gradient(145deg,#182829,#142122);border:1px solid #335047;border-radius:15px;box-shadow:0 9px 30px #00000016;transition:transform .24s ease,border-color .24s ease,box-shadow .24s ease,background .24s ease}
-:root[data-design=mock] .card:hover,:root[data-design=mock] .bug-row:hover,:root[data-design=mock] .stand-row:hover,:root[data-design=mock] .calendar-day:hover{border-color:#4b9a77;box-shadow:0 15px 34px #0003,0 0 0 1px #46d89c18;transform:translateY(-2px)}
-:root[data-design=mock] .card{padding:23px 25px;margin-bottom:13px}
+:root[data-design=mock] .appearance{display:none}
+:root[data-design=mock] .bugs-day{display:grid;grid-template-columns:minmax(160px,195px) minmax(0,1fr);column-gap:23px;margin:28px 0 31px}
+:root[data-design=mock] .bugs-day h2{grid-column:1;align-self:start;position:sticky;top:26px;display:flex;flex-direction:column;gap:7px;padding:3px 0 0;border:0;font:650 16px 'Bahnschrift','Segoe UI Variable',sans-serif;line-height:1.3;text-wrap:balance}
+:root[data-design=mock] .bugs-day h2 small{font:500 12px 'Segoe UI Variable','Segoe UI',sans-serif;color:#75818d}
+:root[data-design=mock] .bugs-day .bugs-list{grid-column:2}
+:root[data-design=mock] input,:root[data-design=mock] select{background:#fff;border:1px solid #ced6df;border-radius:8px;color:#23303d}
+:root[data-design=mock] input:focus,:root[data-design=mock] select:focus{border-color:#5d74cf;box-shadow:0 0 0 3px #4059c824;outline:0}
+:root[data-design=mock] .card,:root[data-design=mock] .bug-row,:root[data-design=mock] .stand-row,:root[data-design=mock] .calendar-entry,:root[data-design=mock] .calendar-day,:root[data-design=mock] .builder-summary,:root[data-design=mock] .release-summary{background:#fff;border:1px solid #dfe4e9;border-radius:9px;box-shadow:none;transition:border-color .16s ease,background .16s ease}
+:root[data-design=mock] .card:hover,:root[data-design=mock] .bug-row:hover,:root[data-design=mock] .stand-row:hover,:root[data-design=mock] .calendar-day:hover{border-color:#a4b4ce;background:#fbfcff}
+:root[data-design=mock] .card{padding:20px 22px;margin-bottom:9px}
 :root[data-design=mock] .title,:root[data-design=mock] .bug-title,:root[data-design=mock] .release-issue-title{font-weight:680;letter-spacing:-.012em}
-:root[data-design=mock] .status{border-radius:999px}
-:root[data-design=mock] .filters{gap:14px}:root[data-design=mock] .filters label{color:#a6c1b4}
-:root[data-design=mock] .user-row>button,:root[data-design=mock] #profile-save,:root[data-design=mock] .builder-action{background:linear-gradient(130deg,#20b985,#087e61);border-color:#2cca98;color:#fff;font-weight:700;box-shadow:0 8px 20px #0b9e7133}
-:root[data-design=mock] .user-row>button:hover,:root[data-design=mock] #profile-save:hover,:root[data-design=mock] .builder-action:hover{box-shadow:0 11px 25px #13c18645;transform:translateY(-2px)}
-:root[data-design=mock] section:not([hidden]){animation:mock-enter .32s ease-out both}
-@keyframes mock-enter{from{opacity:.65;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+:root[data-design=mock] .status{border-radius:5px}
+:root[data-design=mock] .filters{gap:12px}:root[data-design=mock] .filters label{color:#627181}
+:root[data-design=mock] .user-row>button,:root[data-design=mock] #profile-save,:root[data-design=mock] .builder-action{background:#4059c8;border-color:#4059c8;color:#fff;font-weight:650;box-shadow:none}
+:root[data-design=mock] .user-row>button:hover,:root[data-design=mock] #profile-save:hover,:root[data-design=mock] .builder-action:hover{background:#3249af;border-color:#3249af}
+:root[data-design=mock] section:not([hidden]){animation:workbench-reveal .16s ease-out both}
+@keyframes workbench-reveal{from{opacity:.76}to{opacity:1}}
 @media(max-width:1050px){:root[data-design=mock] .app-shell main{padding:0 25px}}
-@media(max-width:760px){:root[data-design=mock] .app-shell{display:block}:root[data-design=mock] .sidebar{position:static;height:auto;padding:14px 16px}:root[data-design=mock] .brand{padding:2px 0 12px}:root[data-design=mock] .tabs button:hover{transform:none}:root[data-design=mock] .app-shell main{padding:0 16px;margin:24px auto}:root[data-design=mock] header{gap:14px;flex-wrap:wrap}:root[data-design=mock] .header-tools{justify-content:flex-start}:root[data-design=mock] .header-tools #connection{text-align:left}}
+@media(max-width:960px){:root[data-design=mock] .bugs-day{display:block}:root[data-design=mock] .bugs-day h2{position:static;flex-direction:row;align-items:baseline;padding:0 0 10px;border-bottom:1px solid var(--border)}}
+@media(max-width:760px){:root[data-design=mock] .app-shell{display:block}:root[data-design=mock] .sidebar{position:static;height:auto;padding:14px 16px}:root[data-design=mock] .brand{padding:2px 0 12px}:root[data-design=mock] .app-shell main{padding:0 16px;margin:24px auto}:root[data-design=mock] header{gap:14px;flex-wrap:wrap}:root[data-design=mock] .header-tools{justify-content:flex-start}:root[data-design=mock] .header-tools #connection{text-align:left}}
+@media(max-width:500px){:root[data-design=mock] .header-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}:root[data-design=mock] .header-tools #connection{grid-column:1/-1;max-width:none}:root[data-design=mock] .header-tools button{margin:0;padding:10px 8px;font-size:13px}}
 @media(prefers-reduced-motion:reduce){:root[data-design=mock] *, :root[data-design=mock] *::before,:root[data-design=mock] *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style><div class="app-shell"><aside class="sidebar"><div class="brand"><span class="brand-mark" aria-hidden="true">✓</span><span>Taskboard</span></div><nav class="tabs" aria-label="Разделы"><div class="sidebar-group">Задачи</div><button id="review" aria-selected="true">На проверке</button><button id="todo" aria-selected="false">Прочие статусы</button><button id="bugs-tab" aria-selected="false">Созданные баги</button><div class="sidebar-group">Планирование</div><button id="calendar-tab" aria-selected="false">Календарь</button><button id="stands-tab" aria-selected="false">Стенды</button><button id="hosts-tab" aria-selected="false">Hosts</button><div class="sidebar-group">Релизы</div><button id="release-tab" aria-selected="false">Регресс</button><button id="build-tab" aria-selected="false">Собрать релиз</button><div class="sidebar-group">Диагностика</div><button id="investigation-tab" aria-selected="false">Разбор обращений</button></nav></aside><main><header><div><h1 id="page-title">Мои задачи</h1><p id="owner">Задачи выбранного пользователя</p></div><div class="header-tools"><div id="connection">Подключение…</div><button id="design-toggle" type="button" aria-pressed="false">Новый дизайн</button><button id="profile-button">Настройки профиля</button></div></header>
 <details class="appearance"><summary>Внешний вид</summary><div class="appearance-body"><label for="theme">Тема<select id="theme"><option value="system">Как в системе</option><option value="light">Светлая</option><option value="dark">Тёмная</option></select></label><fieldset><legend>Цвет интерфейса</legend><div id="accent-colors"></div></fieldset></div></details>
@@ -129,18 +134,14 @@ const parsePref=(key,fallback)=>{try{return JSON.parse(readPref(key))??fallback}
 const noticeKey=()=> 'ready-events-v2.'+(configuration.account?.username||'local')+'.'+selectedUser;
 const uniqueTasks=events=>[...new Map(events.map(event=>[event.key,event])).values()];
 const favicon=document.createElement('link');favicon.rel='icon';favicon.type='image/png';document.head.append(favicon);
-let faviconCount=-1;
 function updateNotice(){
  unread=uniqueTasks(unread);
  document.title='Мои задачи';
- if(faviconCount!==unread.length){
-  faviconCount=unread.length;
+ if(!favicon.dataset.ready){
   const canvas=document.createElement('canvas');canvas.width=32;canvas.height=32;
-  const ctx=canvas.getContext('2d');const green=ctx.createLinearGradient(0,0,32,32);green.addColorStop(0,'#31df96');green.addColorStop(1,'#087e61');ctx.fillStyle=green;ctx.beginPath();ctx.roundRect(0,0,32,32,8);ctx.fill();
-  ctx.strokeStyle='#083c35';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.strokeRect(8,7,16,19);ctx.beginPath();ctx.moveTo(11,7);ctx.lineTo(21,7);ctx.stroke();
-  ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(11,17);ctx.lineTo(14.5,20.5);ctx.lineTo(21,13);ctx.stroke();
-  if(unread.length){ctx.fillStyle='#fbfbf5';ctx.beginPath();ctx.arc(25,25,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='#0b6d55';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 8px Arial';ctx.fillText(unread.length>9?'9+':String(unread.length),25,25.5)}
-  favicon.href=canvas.toDataURL('image/png');favicon.dataset.count=String(unread.length);
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#149b6b';ctx.beginPath();ctx.roundRect(0,0,32,32,7);ctx.fill();
+  ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(8,16);ctx.lineTo(13.5,21);ctx.lineTo(24,10);ctx.stroke();
+  favicon.href=canvas.toDataURL('image/png');favicon.dataset.ready='1';
  }
 }
 updateNotice();
@@ -397,7 +398,7 @@ let themeChoice=readPref('theme','dark'),accentChoice=readPref('accent','purple'
 let designMock=readPref('designMock','off')==='on';
 if(!['system','light','dark'].includes(themeChoice))themeChoice='system';if(!accentPalette[accentChoice])accentChoice='blue';
 function applyAppearance(){
- const dark=designMock||themeChoice==='dark'||(themeChoice==='system'&&systemTheme.matches),palette=designMock?{solid:'#19b886',dark:'#6ce5b4'}:accentPalette[accentChoice];
+ const dark=!designMock&&(themeChoice==='dark'||(themeChoice==='system'&&systemTheme.matches)),palette=designMock?{solid:'#4059c8',light:'#344cbc'}:accentPalette[accentChoice];
  document.documentElement.dataset.theme=dark?'dark':'light';document.documentElement.dataset.design=designMock?'mock':'classic';document.documentElement.style.colorScheme=dark?'dark':'light';
  document.documentElement.style.setProperty('--accent',palette.solid);document.documentElement.style.setProperty('--accent-link',dark?palette.dark:palette.light);
  $('theme').value=themeChoice;for(const button of $('accent-colors').children)button.setAttribute('aria-pressed',String(button.dataset.color===accentChoice));
