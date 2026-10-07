@@ -5,7 +5,7 @@ import { randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { loadProfile, saveProfile, directory } from './profile.mjs';
 import {EventStore,scanReadyEvents} from './events.mjs';
 import { investigate, checkDatabaseConnection, diagnosticDefaults } from './investigation.mjs';
-import { validateLogin, discoverCalendar, readCalendar, calendarRange } from './calendar.mjs';
+import { validateLogin, discoverCalendar, readCalendar, readCalendarAttendees, calendarRange, validateCalendarMailbox, validateCalendarItemId } from './calendar.mjs';
 const eventStore=new EventStore(directory);
 const require = createRequire(import.meta.url);
 const { fetch, Agent } = require('undici');
@@ -33,7 +33,7 @@ let calendarBusy = false;
 // Same internal certificate configuration as the existing LK connector.
 const dispatcher = new Agent({ connect: { rejectUnauthorized: process.env.LK_JIRA_TLS_SKIP_VERIFY !== 'true' } });
 const getGitLabConnection=()=>({base:(profile.gitlabBaseUrl||process.env.LK_GITLAB_BASE_URL||'').trim().replace(/\/$/,''),token:(profile.gitlabToken||process.env.LK_GITLAB_TOKEN||'').trim()});
-const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,pgHost:profile.pgHost||diagnosticDefaults.pgHost,pgUser:profile.pgUser||diagnosticDefaults.pgUser,pgConfigured:Boolean((profile.pgHost||diagnosticDefaults.pgHost)&&(profile.pgUser||diagnosticDefaults.pgUser)&&(profile.pgPassword||process.env.LK_PG_PASSWORD)),kubeconfig:profile.kubeconfig||diagnosticDefaults.kubeconfig,calendarConnected:Boolean(calendarSession),calendarEmail:calendarSession?.email||'',version:'1.21.0', csrf});
+const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,pgHost:profile.pgHost||diagnosticDefaults.pgHost,pgUser:profile.pgUser||diagnosticDefaults.pgUser,pgConfigured:Boolean((profile.pgHost||diagnosticDefaults.pgHost)&&(profile.pgUser||diagnosticDefaults.pgUser)&&(profile.pgPassword||process.env.LK_PG_PASSWORD)),kubeconfig:profile.kubeconfig||diagnosticDefaults.kubeconfig,calendarConnected:Boolean(calendarSession),calendarEmail:calendarSession?.email||'',version:'1.22.0', csrf});
 const states = new Map();
 const refreshTimes = new WeakMap();
 const lastAccess = new WeakMap();
@@ -363,13 +363,22 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method !== 'GET') { res.writeHead(405); return res.end(); }
   if (url.pathname === '/api/config') return json(200,publicProfile());
+  if (url.pathname === '/api/calendar/attendees') {
+    if(!calendarSession)return json(409,{error:'Сначала войди в календарь Exchange.'});
+    let id;try{id=validateCalendarItemId(url.searchParams.get('id')||'')}catch(error){return json(400,{error:error.message})}
+    if(calendarBusy)return json(429,{error:'Календарь уже загружается.'});
+    calendarBusy=true;
+    try{return json(200,await readCalendarAttendees(calendarSession,id))}
+    catch(error){return json(502,{error:error.message})}
+    finally{calendarBusy=false}
+  }
   if (url.pathname === '/api/calendar') {
     if(!calendarSession)return json(409,{error:'Сначала войди в календарь Exchange.'});
     const month=url.searchParams.get('month')||'';
-    try{calendarRange(month)}catch(error){return json(400,{error:error.message})}
+    let mailbox;try{calendarRange(month);mailbox=validateCalendarMailbox(url.searchParams.get('mailbox')||calendarSession.email)}catch(error){return json(400,{error:error.message})}
     if(calendarBusy)return json(429,{error:'Календарь уже загружается.'});
     calendarBusy=true;
-    try{return json(200,await readCalendar(calendarSession,month))}
+    try{return json(200,await readCalendar(calendarSession,month,mailbox))}
     catch(error){return json(502,{error:error.message})}
     finally{calendarBusy=false}
   }

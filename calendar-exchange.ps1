@@ -21,6 +21,15 @@ function Value-Of($node, [string]$name) {
     return $child.InnerText
 }
 
+function Mailbox-Of($node) {
+    if ($null -eq $node) { return $null }
+    $mailbox = $node.SelectSingleNode("./*[local-name()='Mailbox']")
+    if ($null -eq $mailbox) { return $null }
+    $email = Value-Of $mailbox 'EmailAddress'
+    if (-not $email) { return $null }
+    return @{ name = Value-Of $mailbox 'Name'; email = $email }
+}
+
 try {
     $inputData = [Console]::In.ReadToEnd() | ConvertFrom-Json
     $secret = ConvertTo-SecureString ([string]$inputData.password) -AsPlainText -Force
@@ -38,7 +47,9 @@ try {
         $uri = [string]$inputData.ewsUrl
         $start = [Security.SecurityElement]::Escape([string]$inputData.start)
         $end = [Security.SecurityElement]::Escape([string]$inputData.end)
-        $body = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"><soap:Header><t:RequestServerVersion Version="Exchange2013"/></soap:Header><soap:Body><m:FindItem Traversal="Shallow"><m:ItemShape><t:BaseShape>IdOnly</t:BaseShape><t:AdditionalProperties><t:FieldURI FieldURI="item:Subject"/><t:FieldURI FieldURI="calendar:Start"/><t:FieldURI FieldURI="calendar:End"/><t:FieldURI FieldURI="calendar:IsAllDayEvent"/><t:FieldURI FieldURI="calendar:Location"/></t:AdditionalProperties></m:ItemShape><m:CalendarView MaxEntriesReturned="500" StartDate="' + $start + '" EndDate="' + $end + '"/><m:ParentFolderIds><t:DistinguishedFolderId Id="calendar"/></m:ParentFolderIds></m:FindItem></soap:Body></soap:Envelope>'
+        $mailbox = [Security.SecurityElement]::Escape([string]$inputData.mailbox)
+        $folder = if ([string]::Equals([string]$inputData.mailbox, [string]$inputData.email, [StringComparison]::OrdinalIgnoreCase)) { '<t:DistinguishedFolderId Id="calendar"/>' } else { '<t:DistinguishedFolderId Id="calendar"><t:Mailbox><t:EmailAddress>' + $mailbox + '</t:EmailAddress></t:Mailbox></t:DistinguishedFolderId>' }
+        $body = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"><soap:Header><t:RequestServerVersion Version="Exchange2013"/></soap:Header><soap:Body><m:FindItem Traversal="Shallow"><m:ItemShape><t:BaseShape>IdOnly</t:BaseShape><t:AdditionalProperties><t:FieldURI FieldURI="item:Subject"/><t:FieldURI FieldURI="calendar:Start"/><t:FieldURI FieldURI="calendar:End"/><t:FieldURI FieldURI="calendar:IsAllDayEvent"/><t:FieldURI FieldURI="calendar:Location"/></t:AdditionalProperties></m:ItemShape><m:CalendarView MaxEntriesReturned="500" StartDate="' + $start + '" EndDate="' + $end + '"/><m:ParentFolderIds>' + $folder + '</m:ParentFolderIds></m:FindItem></soap:Body></soap:Envelope>'
         $response = Invoke-WebRequest -Uri $uri -Method Post -ContentType 'text/xml; charset=utf-8' -Body $body -Credential $credential -UseBasicParsing -MaximumRedirection 0 -TimeoutSec 20 -Headers @{ SOAPAction = 'http://schemas.microsoft.com/exchange/services/2006/messages/FindItem' }
         $xml = Read-Xml ([string]$response.Content)
         $result = $xml.SelectSingleNode("//*[local-name()='FindItemResponseMessage']")
@@ -56,6 +67,26 @@ try {
             }
         })
         @{ events = $events; limited = $events.Count -ge 500 } | ConvertTo-Json -Compress -Depth 6
+
+    } elseif ($inputData.operation -eq 'attendees') {
+        $uri = [string]$inputData.ewsUrl
+        $itemId = [Security.SecurityElement]::Escape([string]$inputData.itemId)
+        $body = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"><soap:Header><t:RequestServerVersion Version="Exchange2013"/></soap:Header><soap:Body><m:GetItem><m:ItemShape><t:BaseShape>IdOnly</t:BaseShape><t:AdditionalProperties><t:FieldURI FieldURI="calendar:Organizer"/><t:FieldURI FieldURI="calendar:RequiredAttendees"/><t:FieldURI FieldURI="calendar:OptionalAttendees"/></t:AdditionalProperties></m:ItemShape><m:ItemIds><t:ItemId Id="' + $itemId + '"/></m:ItemIds></m:GetItem></soap:Body></soap:Envelope>'
+        $response = Invoke-WebRequest -Uri $uri -Method Post -ContentType 'text/xml; charset=utf-8' -Body $body -Credential $credential -UseBasicParsing -MaximumRedirection 0 -TimeoutSec 20 -Headers @{ SOAPAction = 'http://schemas.microsoft.com/exchange/services/2006/messages/GetItem' }
+        $xml = Read-Xml ([string]$response.Content)
+        $result = $xml.SelectSingleNode("//*[local-name()='GetItemResponseMessage']")
+        if ($null -eq $result -or $result.Attributes['ResponseClass'].Value -ne 'Success' -or (Value-Of $result 'ResponseCode') -ne 'NoError') { throw 'CalendarRejected' }
+        $item = $result.SelectSingleNode("./*[local-name()='Items']/*[local-name()='CalendarItem']")
+        if ($null -eq $item) { throw 'CalendarRejected' }
+        $organizer = Mailbox-Of ($item.SelectSingleNode("./*[local-name()='Organizer']"))
+        $attendees = @()
+        foreach ($group in @('RequiredAttendees', 'OptionalAttendees')) {
+            foreach ($entry in $item.SelectNodes("./*[local-name()='$group']/*[local-name()='Attendee']")) {
+                $person = Mailbox-Of $entry
+                if ($person) { $attendees += @{ name = $person.name; email = $person.email; type = if ($group -eq 'RequiredAttendees') { 'required' } else { 'optional' }; response = Value-Of $entry 'ResponseType' } }
+            }
+        }
+        @{ organizer = $organizer; attendees = @($attendees) } | ConvertTo-Json -Compress -Depth 6
     } else { throw 'InvalidOperation' }
 } catch {
     $status = $null

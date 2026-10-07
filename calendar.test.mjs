@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 process.env.LK_EXCHANGE_DOMAIN='example.com';
 process.env.LK_EXCHANGE_AUTODISCOVER_URL='https://autodiscover.example.com/autodiscover/autodiscover.xml';
-const {calendarRange, exchangeConfiguration, validateEwsUrl, validateLogin}=await import('./calendar.mjs');
+const {calendarRange, exchangeConfiguration, validateEwsUrl, validateLogin, validateCalendarMailbox, validateCalendarItemId}=await import('./calendar.mjs');
 
 test('calendar month range crosses year boundary', () => {
   assert.deepEqual(calendarRange('2026-12'), {
@@ -31,4 +31,11 @@ test('calendar login requires a mailbox, login and password', () => {
   });
   assert.throws(() => validateLogin({email:'bad',username:'user',password:'secret'}));
   assert.throws(() => validateLogin({email:'user@example.com',username:'user\nadmin',password:'secret'}));
+});
+
+test('shared calendar mailbox and meeting id are validated before EWS requests', () => {
+  assert.equal(validateCalendarMailbox(' colleague@example.com '),'colleague@example.com');
+  for(const address of ['bad','person@example.com<xml>','person@example.com\n'])assert.throws(()=>validateCalendarMailbox(address));
+  assert.equal(validateCalendarItemId('AAMkAAAB=='),'AAMkAAAB==');
+  for(const id of ['short','<ItemId/>','a'.repeat(1025)])assert.throws(()=>validateCalendarItemId(id));
 });

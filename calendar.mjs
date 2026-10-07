@@ -57,6 +57,16 @@ export function validateLogin({email,username,password}) {
   return {email:email.trim(),username:username.trim(),password};
 }
 
+export function validateCalendarMailbox(email) {
+  if (typeof email !== 'string' || email.length > 254 || /[\r\n\x00-\x1f]/.test(email) || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email.trim())) throw new Error('Некорректный адрес календаря участника.');
+  return email.trim();
+}
+
+export function validateCalendarItemId(id) {
+  if (typeof id !== 'string' || id.length < 8 || id.length > 1024 || !/^[A-Za-z0-9+/=_-]+$/.test(id)) throw new Error('Некорректный идентификатор встречи.');
+  return id;
+}
+
 export async function exchangeRequest(input) {
   if (process.platform !== 'win32') throw new Error('Календарь Exchange пока доступен только в локальном Windows-запуске.');
   const script=fileURLToPath(new URL('./calendar-exchange.ps1',import.meta.url));
@@ -85,9 +95,16 @@ export async function discoverCalendar(login) {
   return validateEwsUrl(result.ewsUrl);
 }
 
-export async function readCalendar(session,month) {
+export async function readCalendar(session,month,mailbox=session.email) {
   const range=calendarRange(month);
-  const result=await exchangeRequest({operation:'events',...session,...range});
+  mailbox=validateCalendarMailbox(mailbox);
+  const result=await exchangeRequest({operation:'events',...session,...range,mailbox});
   if(!Array.isArray(result.events))throw new Error('Exchange вернул некорректный список событий.');
-  return {month,events:result.events,limited:Boolean(result.limited),checkedAt:new Date().toISOString()};
+  return {month,mailbox,events:result.events,limited:Boolean(result.limited),checkedAt:new Date().toISOString()};
+}
+
+export async function readCalendarAttendees(session,id) {
+  const result=await exchangeRequest({operation:'attendees',...session,itemId:validateCalendarItemId(id)});
+  if(!Array.isArray(result.attendees))throw new Error('Exchange вернул некорректный состав встречи.');
+  return {itemId:id,organizer:result.organizer||null,attendees:result.attendees};
 }
