@@ -480,6 +480,7 @@ const server = http.createServer(async (req, res) => {
     catch(error){const tls=tlsFailure(error);return json(error.message.startsWith('Нет доступа')?403:502,{error:tls|| (error.message.startsWith('Нет доступа')||error.message.startsWith('Jira:')?error.message:'Не удалось загрузить релизную задачу. Проверь ключ, права Jira и соединение.')});}
   }
   if (req.url === '/health') { res.setHeader('Content-Type', 'application/json'); return res.end('{"app":"jira-board"}'); }
+  if (req.url === '/assets/anime-qa-duo.png') { try { const image=await readFile(new URL('./assets/anime-qa-duo.png', import.meta.url)); res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=86400'); return res.end(image); } catch { res.writeHead(404); return res.end(); } }
   if (req.url === '/') { try { const html=await readFile(new URL('./index.html', import.meta.url)); res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(html); } catch { res.writeHead(500); return res.end(); } }
   res.writeHead(404); res.end();
 });
