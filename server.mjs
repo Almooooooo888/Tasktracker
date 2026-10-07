@@ -6,7 +6,7 @@ import { loadProfile, saveProfile, directory } from './profile.mjs';
 import {EventStore,scanReadyEvents} from './events.mjs';
 import { investigate, checkDatabaseConnection, diagnosticDefaults } from './investigation.mjs';
 import { validateLogin, discoverCalendar, readCalendar, readCalendarAttendees, calendarRange, validateCalendarMailbox, validateCalendarItemId } from './calendar.mjs';
-import { readGitLabStands } from './stands.mjs';
+import { readGitLabStands, readGitLabStandActivity } from './stands.mjs';
 import { readHosts, saveHosts } from './hosts.mjs';
 const eventStore=new EventStore(directory);
 const require = createRequire(import.meta.url);
@@ -45,13 +45,19 @@ const releasePending = new Map();
 const gitlabCache = new Map();
 const gitlabPending = new Map();
 const bugTypeCache = new WeakMap();
-let standCache=null,standPending=null;
+let standCache=null,standPending=null,standActivityCache=null,standActivityPending=null;
 async function currentStands(force=false){
   if(!force&&standCache&&Date.now()-standCache.at<30000)return standCache.data;
   if(standPending)return standPending;
   const connection=getGitLabConnection();
   standPending=readGitLabStands(connection,{fetcher:fetch,dispatcher}).then(data=>{standCache={at:Date.now(),data};return data}).finally(()=>{standPending=null});
   return standPending;
+}
+async function currentStandActivity(force=false){
+  if(!force&&standActivityCache&&Date.now()-standActivityCache.at<10000)return standActivityCache.data;
+  if(standActivityPending)return standActivityPending;
+  standActivityPending=readGitLabStandActivity(getGitLabConnection(),{fetcher:fetch,dispatcher}).then(data=>{standActivityCache={at:Date.now(),data};return data}).finally(()=>{standActivityPending=null});
+  return standActivityPending;
 }
 function getState(username) {
   let state = states.get(username);
@@ -367,7 +373,7 @@ const server = http.createServer(async (req, res) => {
       profile=candidate;states.clear();calendarSession=null;
       releaseCache.clear();
       gitlabCache.clear();
-      standCache=null;
+      standCache=null;standActivityCache=null;
       return json(200,publicProfile());
     } catch { return json(400,{error:'Не удалось сохранить профиль.'}); }
     finally { savingProfile=false; }
@@ -396,6 +402,10 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === '/api/stands') {
     try{return json(200,await currentStands(url.searchParams.get('refresh')==='1'))}
     catch{return json(502,{error:'Не удалось прочитать выкладки GitLab. Проверь подключение и адрес в профиле.'})}
+  }
+  if (url.pathname === '/api/stands/activity') {
+    try{return json(200,await currentStandActivity(url.searchParams.get('refresh')==='1'))}
+    catch{return json(502,{error:'Не удалось прочитать активные pipeline GitLab.'})}
   }
   if (url.pathname === '/api/calendar/attendees') {
     if(!calendarSession)return json(409,{error:'Сначала войди в календарь Exchange.'});
