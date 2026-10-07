@@ -110,16 +110,79 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 :root[data-design=mock] .hosts-row,:root[data-design=mock] .hosts-other{border-radius:9px;box-shadow:0 2px 12px #20304d08}
 :root[data-design=mock] dialog{border-radius:13px;box-shadow:0 24px 80px #101b3445}
 :root[data-design=mock] dialog[open]{animation:dialog-arrive .25s cubic-bezier(.2,.8,.2,1) both}:root[data-design=mock] dialog[open]::backdrop{animation:backdrop-arrive .25s ease both}
+/* The workbench shares the existing dark palette; surfaces use restrained depth and the accent stays selective. */
+:root[data-design=mock]{--page:#171717;--surface:#212123;--surface-hover:#2a292d;--text:#ebeaed;--muted:#a9a5af;--border:#3a383e;--notice-bg:#222c28;--notice-border:#476757;--notice-text:#c7dbc9;--error-bg:#302620;--error-text:#e6c5a9}
+:root[data-design=mock] .workspace-bar{background:#1d1c20;color:var(--text);border-bottom-color:var(--border)}
+:root[data-design=mock] .workspace-logo{border-right-color:var(--border);color:var(--muted)}
+:root[data-design=mock] .workspace-logo-mark{background:#34845e}
+:root[data-design=mock] .workspace-logo-divider{background:#555159}
+:root[data-design=mock] .workspace-path,:root[data-design=mock] .workspace-person{color:var(--muted)}
+:root[data-design=mock] .workspace-path strong{color:var(--text)}
+:root[data-design=mock] .sidebar{background:#1d1c20;border-right-color:var(--border)}
+:root[data-design=mock] .sidebar-group,:root[data-design=mock] .sidebar-footer{color:#918c98}
+:root[data-design=mock] .tabs button{color:#c4c0ca}
+:root[data-design=mock] .tabs button:hover{background:#29272d;color:var(--text)}
+:root[data-design=mock] .nav-indicator{background:#312b38;box-shadow:inset 3px 0 var(--accent-link)}
+:root[data-design=mock] header{border-bottom-color:var(--border)}
+:root[data-design=mock] #owner,:root[data-design=mock] .header-tools #connection{color:var(--muted)}
+:root[data-design=mock] button:hover:not(:disabled){border-color:#69636f}
+:root[data-design=mock] #design-toggle{background:#302a38;color:#d9c9eb;border-color:#665773}
+:root[data-design=mock] #design-toggle:hover{background:#3c3246;border-color:#937aa7}
+:root[data-design=mock] .task-control-panel,:root[data-design=mock] .release-controls,:root[data-design=mock] .builder-controls,:root[data-design=mock] .investigation-form{background:var(--surface);border-color:var(--border);box-shadow:0 8px 28px #0002}
+:root[data-design=mock] .task-control-intro{border-bottom-color:var(--border)}
+:root[data-design=mock] .task-control-intro strong{color:var(--text)}
+:root[data-design=mock] .task-control-intro span,:root[data-design=mock] .filters label{color:var(--muted)}
+:root[data-design=mock] input,:root[data-design=mock] select{background:#1b1b1d;border-color:#49464e;color:var(--text)}
+:root[data-design=mock] input:focus,:root[data-design=mock] select:focus{border-color:var(--accent-link);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent-link) 22%,transparent)}
+:root[data-design=mock] .user-row>button,:root[data-design=mock] #profile-save,:root[data-design=mock] .builder-action{background:var(--accent);border-color:var(--accent)}
+:root[data-design=mock] .user-row>button:hover,:root[data-design=mock] #profile-save:hover,:root[data-design=mock] .builder-action:hover{background:color-mix(in srgb,var(--accent) 78%,white);border-color:color-mix(in srgb,var(--accent) 78%,white)}
+:root[data-design=mock] .task-control-panel .user-row>button{background:#29272c;border-color:var(--border);color:var(--text)}
+:root[data-design=mock] .task-control-panel .user-row>button:hover{background:#343138;border-color:#706878}
+:root[data-design=mock] .card,:root[data-design=mock] .bug-row,:root[data-design=mock] .stand-row,:root[data-design=mock] .calendar-entry,:root[data-design=mock] .calendar-day,:root[data-design=mock] .builder-summary,:root[data-design=mock] .release-summary{background:var(--surface);border-color:var(--border);box-shadow:0 3px 16px #0002}
+:root[data-design=mock] .card:hover,:root[data-design=mock] .bug-row:hover,:root[data-design=mock] .stand-row:hover,:root[data-design=mock] .calendar-day:hover{border-color:#746783;box-shadow:0 8px 24px #0003}
+:root[data-design=mock] .bugs-day h2 small{color:var(--muted)}
+:root[data-design=mock] .calendar-day.selected{background:#2d2634;border-color:var(--accent-link);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent-link) 24%,transparent)}
+:root[data-design=mock] .calendar-day.selected:hover{background:#352b3c}
+:root[data-design=mock] .calendar-people{box-shadow:0 3px 16px #0002}
+:root[data-design=mock] .stands-tabs{background:#2b292e}
+:root[data-design=mock] .stands-tabs button{color:#bbb5c1}
+:root[data-design=mock] .stands-tabs button[aria-pressed=true]{background:#47404e;color:#f2eaf7;box-shadow:0 2px 7px #0004}
+:root[data-design=mock] .hosts-row,:root[data-design=mock] .hosts-other{box-shadow:0 3px 16px #0002}
+:root[data-design=mock] dialog{box-shadow:0 30px 90px #0009}
+@media(max-width:760px){:root[data-design=mock] .sidebar{border-bottom-color:var(--border)}:root[data-design=mock] .tabs button[aria-selected=true]{background:#312b38;box-shadow:inset 0 -3px var(--accent-link)}}
 @keyframes dialog-arrive{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes backdrop-arrive{from{opacity:0}to{opacity:1}}
-.app-shell.mode-arrive{animation:mode-arrive .28s ease-out both}:root[data-design=mock] .view-arrive{animation:view-arrive .34s cubic-bezier(.16,1,.3,1) both}
+.app-shell.mode-arrive{animation:mode-arrive .28s ease-out both}:root[data-design=mock] .view-arrive{animation:view-arrive .44s cubic-bezier(.16,1,.3,1) both}
 @keyframes mode-arrive{from{opacity:.6}to{opacity:1}}@keyframes view-arrive{from{opacity:.55;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+/* Motion follows navigation and selection, while static reading surfaces stay still. */
+:root[data-design=mock] .heading-arrive{animation:heading-arrive .3s cubic-bezier(.2,.8,.2,1) both}
+@keyframes heading-arrive{from{opacity:.3;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+:root[data-design=mock] .view-arrive .task-control-panel,:root[data-design=mock] .view-arrive .filters,:root[data-design=mock] .view-arrive .bugs-toolbar,:root[data-design=mock] .view-arrive .calendar-actions,:root[data-design=mock] .view-arrive .calendar-people,:root[data-design=mock] .view-arrive .stands-toolbar,:root[data-design=mock] .view-arrive .stands-tabs,:root[data-design=mock] .view-arrive .release-controls,:root[data-design=mock] .view-arrive .builder-controls,:root[data-design=mock] .view-arrive .investigation-form{animation:element-arrive .28s .04s cubic-bezier(.2,.8,.2,1) both}
+:root[data-design=mock] .view-arrive .card:nth-child(-n+5),:root[data-design=mock] .view-arrive .bug-row:nth-child(-n+5),:root[data-design=mock] .view-arrive .stand-row:nth-child(-n+5),:root[data-design=mock] .view-arrive .calendar-entry:nth-child(-n+5){animation:element-arrive .25s cubic-bezier(.2,.8,.2,1) both}
+:root[data-design=mock] .view-arrive .card:nth-child(2),:root[data-design=mock] .view-arrive .bug-row:nth-child(2),:root[data-design=mock] .view-arrive .stand-row:nth-child(2),:root[data-design=mock] .view-arrive .calendar-entry:nth-child(2){animation-delay:.04s}
+:root[data-design=mock] .view-arrive .card:nth-child(3),:root[data-design=mock] .view-arrive .bug-row:nth-child(3),:root[data-design=mock] .view-arrive .stand-row:nth-child(3),:root[data-design=mock] .view-arrive .calendar-entry:nth-child(3){animation-delay:.08s}
+:root[data-design=mock] .view-arrive .card:nth-child(4),:root[data-design=mock] .view-arrive .bug-row:nth-child(4),:root[data-design=mock] .view-arrive .stand-row:nth-child(4),:root[data-design=mock] .view-arrive .calendar-entry:nth-child(4){animation-delay:.11s}
+:root[data-design=mock] .view-arrive .card:nth-child(5),:root[data-design=mock] .view-arrive .bug-row:nth-child(5),:root[data-design=mock] .view-arrive .stand-row:nth-child(5),:root[data-design=mock] .view-arrive .calendar-entry:nth-child(5){animation-delay:.14s}
+@keyframes element-arrive{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+:root[data-design=mock] .nav-icon{transition:transform .25s cubic-bezier(.2,.8,.2,1),color .2s ease}
+:root[data-design=mock] .tabs button:hover .nav-icon{transform:translateX(3px)}
+:root[data-design=mock] button:active:not(:disabled){transform:scale(.975)}
+:root[data-design=mock] .card,:root[data-design=mock] .bug-row,:root[data-design=mock] .stand-row,:root[data-design=mock] .calendar-day,:root[data-design=mock] .calendar-person{transition:transform .24s cubic-bezier(.2,.8,.2,1),background .2s ease,border-color .2s ease,box-shadow .24s ease}
+:root[data-design=mock] .card:has(a):hover,:root[data-design=mock] .bug-row:hover,:root[data-design=mock] .stand-row:hover{transform:translateY(-2px)}
+:root[data-design=mock] .calendar-day:hover{transform:translateY(-2px)}
+:root[data-design=mock] .calendar-person:hover{transform:translateX(3px)}
+:root[data-design=mock] .calendar-day.selected{animation:day-select .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes day-select{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent-link) 38%,transparent)}to{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent-link) 24%,transparent)}}
+:root[data-design=mock] .calendar-event{transition:background .2s ease,transform .2s ease}
+:root[data-design=mock] .calendar-event:hover{transform:translateX(2px)}
+:root[data-design=mock] .stand-row.changed{animation:stand-update .65s ease-out}
+@keyframes stand-update{from{background:color-mix(in srgb,var(--accent) 25%,var(--surface))}to{background:var(--surface)}}
 :root[data-design=mock] ::view-transition-old(root),:root[data-design=mock] ::view-transition-new(root){animation-duration:.23s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
 @media(max-width:1120px){:root[data-design=mock] .task-control-panel{grid-template-columns:1fr}:root[data-design=mock] .notification-controls{grid-column:1;grid-row:4;max-width:none;justify-content:flex-start;margin-top:14px}:root[data-design=mock] .notification-controls span{text-align:left}}
 @media(max-width:1250px){:root[data-design=mock] #calendar-view:not([hidden]){grid-template-columns:1fr}:root[data-design=mock] .calendar-people{position:static;grid-row:2}}
 @media(max-width:980px){:root[data-design=mock] .bugs-day{display:block}:root[data-design=mock] .bugs-day h2{position:static;flex-direction:row;align-items:baseline;padding:0 0 10px;border-bottom:1px solid var(--border)}}
 @media(max-width:760px){:root[data-design=mock] .app-shell{display:block}:root[data-design=mock] .workspace-bar{height:55px}:root[data-design=mock] .workspace-logo{width:auto;padding:0 16px;border:0}:root[data-design=mock] .workspace-logo-divider,:root[data-design=mock] .workspace-logo>span:last-child,:root[data-design=mock] .workspace-path,:root[data-design=mock] .workspace-person{display:none}:root[data-design=mock] .sidebar{position:static;height:auto;padding:8px 12px;overflow:visible;border-right:0;border-bottom:1px solid #364258}:root[data-design=mock] .sidebar-group,:root[data-design=mock] .sidebar-footer{display:none}:root[data-design=mock] .tabs{flex-direction:row;gap:4px;overflow-x:auto}:root[data-design=mock] .tabs button{flex:none;width:auto;padding:9px 11px;white-space:nowrap}:root[data-design=mock] .nav-indicator{display:none}:root[data-design=mock] .tabs button[aria-selected=true]{background:#3a4970;box-shadow:inset 0 -3px #8ea4ff}:root[data-design=mock] .app-shell main{padding:25px 16px 70px}:root[data-design=mock] header{gap:16px;flex-wrap:wrap}:root[data-design=mock] .header-tools{justify-content:flex-start}:root[data-design=mock] .header-tools #connection{text-align:left}:root[data-design=mock] .task-control-panel{padding:18px}:root[data-design=mock] .task-control-intro{display:block}:root[data-design=mock] .task-control-intro span{display:block;margin-top:5px}:root[data-design=mock] .filters{grid-template-columns:1fr}}
-@media(max-width:760px){:root[data-design=mock] .tabs{scrollbar-width:none}:root[data-design=mock] .tabs::-webkit-scrollbar{display:none}}
+@media(max-width:760px){:root[data-design=mock] .tabs{scrollbar-width:none}:root[data-design=mock] .tabs::-webkit-scrollbar{display:none}:root[data-design=mock] .sidebar{border-bottom-color:var(--border)}:root[data-design=mock] .tabs button[aria-selected=true]{background:#312b38;box-shadow:inset 0 -3px var(--accent-link)}}
 @media(max-width:500px){:root[data-design=mock] .header-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}:root[data-design=mock] .header-tools #connection{grid-column:1/-1;max-width:none}:root[data-design=mock] .header-tools button{margin:0;padding:10px 8px;font-size:13px}:root[data-design=mock] .user-row{flex-wrap:wrap}:root[data-design=mock] .user-row .user-picker{min-width:100%}:root[data-design=mock] .user-row>button{width:100%}}
 @media(prefers-reduced-motion:reduce){:root[data-design=mock] *, :root[data-design=mock] *::before,:root[data-design=mock] *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style><div class="app-shell"><div class="workspace-bar"><div class="workspace-logo"><span class="workspace-logo-mark" aria-hidden="true">✓</span><strong>Taskboard</strong><span class="workspace-logo-divider"></span><span>ЛК / QA</span></div><div class="workspace-path"><span id="workspace-section">Задачи</span><span aria-hidden="true">/</span><strong id="workspace-location">На проверке</strong></div><div id="workspace-person" class="workspace-person"></div></div><aside class="sidebar"><div class="brand"><span class="brand-mark" aria-hidden="true">✓</span><span>Taskboard</span></div><nav class="tabs" aria-label="Разделы"><div class="sidebar-group">Задачи</div><button id="review" aria-selected="true">На проверке</button><button id="todo" aria-selected="false">Прочие статусы</button><button id="bugs-tab" aria-selected="false">Созданные баги</button><div class="sidebar-group">Планирование</div><button id="calendar-tab" aria-selected="false">Календарь</button><button id="stands-tab" aria-selected="false">Стенды</button><button id="hosts-tab" aria-selected="false">Hosts</button><div class="sidebar-group">Релизы</div><button id="release-tab" aria-selected="false">Регресс</button><button id="build-tab" aria-selected="false">Собрать релиз</button><div class="sidebar-group">Диагностика</div><button id="investigation-tab" aria-selected="false">Разбор обращений</button></nav><div class="sidebar-footer"><span class="sidebar-footer-mark" aria-hidden="true"></span><span>Рабочее пространство ЛК</span></div></aside><main><header><div class="header-intro"><h1 id="page-title">Мои задачи</h1><p id="owner">Задачи выбранного пользователя</p></div><div class="header-tools"><div id="connection">Подключение…</div><button id="design-toggle" type="button" aria-pressed="false">Новый дизайн</button><button id="profile-button">Настройки профиля</button></div></header>
@@ -177,7 +240,7 @@ const navigation=document.querySelector('.tabs'),navIndicator=document.createEle
 function moveNavIndicator(){const active=navigation.querySelector('button[aria-selected=true]');if(!active)return;navIndicator.style.width=active.offsetWidth+'px';navIndicator.style.height=active.offsetHeight+'px';navIndicator.style.transform=`translate(${active.offsetLeft}px,${active.offsetTop}px)`;navIndicator.style.opacity='1';if(document.documentElement.dataset.design==='mock'&&matchMedia('(max-width:760px)').matches){const target=Math.max(0,active.offsetLeft-(navigation.clientWidth-active.offsetWidth)/2);if(Math.abs(navigation.scrollLeft-target)>6)navigation.scrollLeft=target}}
 window.addEventListener('resize',()=>requestAnimationFrame(moveNavIndicator));
 function restartAnimation(element,className){if(!element)return;element.classList.remove(className);void element.offsetWidth;element.classList.add(className);const finish=event=>{if(event.target!==element)return;element.classList.remove(className);element.removeEventListener('animationend',finish)};element.addEventListener('animationend',finish)}
-function animateActiveView(){restartAnimation(document.querySelector('.app-shell main>section:not([hidden])'),'view-arrive')}
+function animateActiveView(){restartAnimation(document.querySelector('.header-intro'),'heading-arrive');restartAnimation(document.querySelector('.app-shell main>section:not([hidden])'),'view-arrive')}
 const readPref=(key,fallback='')=>{try{return localStorage.getItem('jira-board.'+key)??fallback}catch{return fallback}};
 const savePref=(key,value)=>{try{localStorage.setItem('jira-board.'+key,value)}catch{}};
 let tab=readPref('tab','review'),selectedUser='',selectedName='',data={issues:[],lastSuccess:null},lastRender='',timer,requestNumber=0,configuration={},searchTimer,searchSequence=0,userOptions=[],activeOption=-1;
@@ -457,7 +520,7 @@ let themeChoice=readPref('theme','dark'),accentChoice=readPref('accent','purple'
 let designMock=readPref('designMock','off')==='on';
 if(!['system','light','dark'].includes(themeChoice))themeChoice='system';if(!accentPalette[accentChoice])accentChoice='blue';
 function applyAppearance(){
- const dark=!designMock&&(themeChoice==='dark'||(themeChoice==='system'&&systemTheme.matches)),palette=designMock?{solid:'#4059c8',light:'#344cbc'}:accentPalette[accentChoice];
+ const dark=designMock||themeChoice==='dark'||(themeChoice==='system'&&systemTheme.matches),palette=accentPalette[accentChoice];
  document.documentElement.dataset.theme=dark?'dark':'light';document.documentElement.dataset.design=designMock?'mock':'classic';document.documentElement.style.colorScheme=dark?'dark':'light';
  document.documentElement.style.setProperty('--accent',palette.solid);document.documentElement.style.setProperty('--accent-link',dark?palette.dark:palette.light);
  $('theme').value=themeChoice;for(const button of $('accent-colors').children)button.setAttribute('aria-pressed',String(button.dataset.color===accentChoice));
