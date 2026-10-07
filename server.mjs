@@ -7,6 +7,7 @@ import {EventStore,scanReadyEvents} from './events.mjs';
 import { investigate, checkDatabaseConnection, diagnosticDefaults } from './investigation.mjs';
 import { validateLogin, discoverCalendar, readCalendar, readCalendarAttendees, calendarRange, validateCalendarMailbox, validateCalendarItemId } from './calendar.mjs';
 import { readGitLabStands } from './stands.mjs';
+import { readHosts, saveHosts } from './hosts.mjs';
 const eventStore=new EventStore(directory);
 const require = createRequire(import.meta.url);
 const { fetch, Agent } = require('undici');
@@ -28,13 +29,14 @@ let profile = await loadProfile() || {
 };
 const csrf = randomBytes(32).toString('hex');
 let savingProfile = false;
+let savingHosts = false;
 let investigationBusy = false;
 let calendarSession = null;
 let calendarBusy = false;
 // Same internal certificate configuration as the existing LK connector.
 const dispatcher = new Agent({ connect: { rejectUnauthorized: process.env.LK_JIRA_TLS_SKIP_VERIFY !== 'true' } });
 const getGitLabConnection=()=>({base:(profile.gitlabBaseUrl||process.env.LK_GITLAB_BASE_URL||'').trim().replace(/\/$/,''),token:(profile.gitlabToken||process.env.LK_GITLAB_TOKEN||'').trim()});
-const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,pgHost:profile.pgHost||diagnosticDefaults.pgHost,pgUser:profile.pgUser||diagnosticDefaults.pgUser,pgConfigured:Boolean((profile.pgHost||diagnosticDefaults.pgHost)&&(profile.pgUser||diagnosticDefaults.pgUser)&&(profile.pgPassword||process.env.LK_PG_PASSWORD)),kubeconfig:profile.kubeconfig||diagnosticDefaults.kubeconfig,calendarConnected:Boolean(calendarSession),calendarEmail:calendarSession?.email||'',version:'1.24.0', csrf});
+const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,pgHost:profile.pgHost||diagnosticDefaults.pgHost,pgUser:profile.pgUser||diagnosticDefaults.pgUser,pgConfigured:Boolean((profile.pgHost||diagnosticDefaults.pgHost)&&(profile.pgUser||diagnosticDefaults.pgUser)&&(profile.pgPassword||process.env.LK_PG_PASSWORD)),kubeconfig:profile.kubeconfig||diagnosticDefaults.kubeconfig,calendarConnected:Boolean(calendarSession),calendarEmail:calendarSession?.email||'',version:'1.25.0', csrf});
 const states = new Map();
 const refreshTimes = new WeakMap();
 const lastAccess = new WeakMap();
@@ -275,6 +277,24 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
   const url = new URL(req.url, `http://127.0.0.1:${listenPort}`);
   const json=(code,data)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
+  if(url.pathname==='/api/hosts'){
+    const supplied=Buffer.from(String(req.headers['x-csrf-token']||''));
+    if(supplied.length!==csrf.length||!timingSafeEqual(supplied,Buffer.from(csrf)))return json(403,{error:'Перезагрузи страницу и повтори действие.'});
+    if(process.platform!=='win32')return json(501,{error:'Редактирование системного hosts доступно только в локальном Windows-запуске.'});
+    if(req.method==='GET'){
+      try{return json(200,await readHosts())}catch(error){return json(500,{error:error.message})}
+    }
+    if(req.method!=='POST')return json(405,{error:'Метод не поддерживается.'});
+    if(req.headers.origin!==`http://${req.headers.host}`)return json(403,{error:'Запрос не из Taskboard.'});
+    if(!String(req.headers['content-type']).startsWith('application/json'))return json(415,{error:'Ожидается JSON.'});
+    if(savingHosts)return json(409,{error:'Предыдущее сохранение hosts ещё выполняется.'});
+    savingHosts=true;
+    try{
+      let bytes=0,chunks=[];for await(const chunk of req){bytes+=chunk.length;if(bytes>16000)return json(413,{error:'Слишком много записей.'});chunks.push(chunk)}
+      let input;try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'))}catch{return json(400,{error:'Некорректные данные hosts.'})}
+      try{return json(200,await saveHosts(input,{directory}))}catch(error){return json(400,{error:error.message})}
+    }finally{savingHosts=false}
+  }
   if (req.method === 'GET' && url.pathname === '/api/investigation') {
     const supplied = Buffer.from(String(req.headers['x-csrf-token'] || ''));
     if (supplied.length !== csrf.length || !timingSafeEqual(supplied, Buffer.from(csrf))) return json(403,{error:'Перезагрузи страницу и повтори поиск.'});
