@@ -6,6 +6,7 @@ import { loadProfile, saveProfile, directory } from './profile.mjs';
 import {EventStore,scanReadyEvents} from './events.mjs';
 import { investigate, checkDatabaseConnection, diagnosticDefaults } from './investigation.mjs';
 import { validateLogin, discoverCalendar, readCalendar, readCalendarAttendees, calendarRange, validateCalendarMailbox, validateCalendarItemId } from './calendar.mjs';
+import { readStands, attachGitProjects } from './stands.mjs';
 const eventStore=new EventStore(directory);
 const require = createRequire(import.meta.url);
 const { fetch, Agent } = require('undici');
@@ -33,7 +34,7 @@ let calendarBusy = false;
 // Same internal certificate configuration as the existing LK connector.
 const dispatcher = new Agent({ connect: { rejectUnauthorized: process.env.LK_JIRA_TLS_SKIP_VERIFY !== 'true' } });
 const getGitLabConnection=()=>({base:(profile.gitlabBaseUrl||process.env.LK_GITLAB_BASE_URL||'').trim().replace(/\/$/,''),token:(profile.gitlabToken||process.env.LK_GITLAB_TOKEN||'').trim()});
-const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,pgHost:profile.pgHost||diagnosticDefaults.pgHost,pgUser:profile.pgUser||diagnosticDefaults.pgUser,pgConfigured:Boolean((profile.pgHost||diagnosticDefaults.pgHost)&&(profile.pgUser||diagnosticDefaults.pgUser)&&(profile.pgPassword||process.env.LK_PG_PASSWORD)),kubeconfig:profile.kubeconfig||diagnosticDefaults.kubeconfig,calendarConnected:Boolean(calendarSession),calendarEmail:calendarSession?.email||'',version:'1.22.0', csrf});
+const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,pgHost:profile.pgHost||diagnosticDefaults.pgHost,pgUser:profile.pgUser||diagnosticDefaults.pgUser,pgConfigured:Boolean((profile.pgHost||diagnosticDefaults.pgHost)&&(profile.pgUser||diagnosticDefaults.pgUser)&&(profile.pgPassword||process.env.LK_PG_PASSWORD)),kubeconfig:profile.kubeconfig||diagnosticDefaults.kubeconfig,calendarConnected:Boolean(calendarSession),calendarEmail:calendarSession?.email||'',version:'1.23.0', csrf});
 const states = new Map();
 const refreshTimes = new WeakMap();
 const lastAccess = new WeakMap();
@@ -42,6 +43,33 @@ const releasePending = new Map();
 const gitlabCache = new Map();
 const gitlabPending = new Map();
 const bugTypeCache = new WeakMap();
+let standCache=null,standPending=null,projectCache=null,projectPending=null;
+async function currentStands(){
+  if(standCache&&Date.now()-standCache.at<12000)return standCache.data;
+  if(standPending)return standPending;
+  standPending=readStands(profile.kubeconfig||diagnosticDefaults.kubeconfig).then(data=>{standCache={at:Date.now(),data};return data}).finally(()=>{standPending=null});
+  return standPending;
+}
+async function gitlabProjects(){
+  const connection=getGitLabConnection();if(!connection.base||!connection.token)return null;
+  const key=connection.base+'|'+connection.token;
+  if(projectCache?.key===key&&Date.now()-projectCache.at<900000)return projectCache.projects;
+  if(projectPending)return projectPending;
+  projectPending=(async()=>{
+    const projects=[];
+    for(let page=1;page<=20;page++){
+      const endpoint=new URL('/api/v4/groups/digital/projects',connection.base);
+      endpoint.searchParams.set('include_subgroups','true');endpoint.searchParams.set('simple','true');endpoint.searchParams.set('per_page','100');endpoint.searchParams.set('page',String(page));
+      const response=await fetch(endpoint,{headers:{'PRIVATE-TOKEN':connection.token,Accept:'application/json'},redirect:'error',dispatcher,signal:AbortSignal.timeout(10000)});
+      if(!response.ok)throw Error('GitLab HTTP '+response.status);
+      const rows=await response.json();if(!Array.isArray(rows))throw Error('GitLab вернул некорректный список проектов.');
+      projects.push(...rows.map(item=>({path:item.path,web_url:item.web_url})));
+      if(rows.length<100)break;
+    }
+    projectCache={key,at:Date.now(),projects};return projects;
+  })().catch(()=>{projectCache={key,at:Date.now(),projects:null};return null}).finally(()=>{projectPending=null});
+  return projectPending;
+}
 function getState(username) {
   let state = states.get(username);
   if (!state) {
@@ -338,6 +366,7 @@ const server = http.createServer(async (req, res) => {
       profile=candidate;states.clear();calendarSession=null;
       releaseCache.clear();
       gitlabCache.clear();
+      standCache=null;projectCache=null;
       return json(200,publicProfile());
     } catch { return json(400,{error:'Не удалось сохранить профиль.'}); }
     finally { savingProfile=false; }
@@ -363,6 +392,14 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method !== 'GET') { res.writeHead(405); return res.end(); }
   if (url.pathname === '/api/config') return json(200,publicProfile());
+  if (url.pathname === '/api/stands') {
+    if(!projectCache||Date.now()-projectCache.at>=900000)void gitlabProjects();
+    const snapshot=await currentStands();
+    const connection=getGitLabConnection();
+    const projects=projectCache?.projects;
+    const data=projects?attachGitProjects(snapshot,projects,connection.base):snapshot;
+    return json(200,{...data,gitlab:!connection.base||!connection.token?'not-configured':projects?'matched':projectPending?'loading':'unavailable'});
+  }
   if (url.pathname === '/api/calendar/attendees') {
     if(!calendarSession)return json(409,{error:'Сначала войди в календарь Exchange.'});
     let id;try{id=validateCalendarItemId(url.searchParams.get('id')||'')}catch(error){return json(400,{error:error.message})}
