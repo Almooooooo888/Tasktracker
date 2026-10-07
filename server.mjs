@@ -5,7 +5,7 @@ import { randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { loadProfile, saveProfile, directory } from './profile.mjs';
 import {EventStore,scanReadyEvents} from './events.mjs';
 import { investigate, checkDatabaseConnection, diagnosticDefaults } from './investigation.mjs';
-import { validateLogin, discoverCalendar, readCalendar, readCalendarAttendees, calendarRange, validateCalendarMailbox, validateCalendarItemId } from './calendar.mjs';
+import { validateLogin, discoverCalendar, readCalendar, readCalendarAttendees, readAvailability, availabilityRequest, calendarRange, validateCalendarMailbox, validateCalendarItemId } from './calendar.mjs';
 import { readGitLabStands, readGitLabStandActivity } from './stands.mjs';
 import { readHosts, saveHosts } from './hosts.mjs';
 const eventStore=new EventStore(directory);
@@ -331,6 +331,19 @@ const server = http.createServer(async (req, res) => {
       calendarSession=session;
       return json(200,{...result,calendarEmail:login.email});
     }catch(error){return json(502,{error:error.message})}
+    finally{calendarBusy=false}
+  }
+  if(req.method==='POST'&&url.pathname==='/api/calendar/availability'){
+    const supplied=Buffer.from(String(req.headers['x-csrf-token']||''));
+    if(req.headers.origin!==`http://${req.headers.host}`||supplied.length!==csrf.length||!timingSafeEqual(supplied,Buffer.from(csrf)))return json(403,{error:'Перезагрузи страницу и повтори действие.'});
+    if(!calendarSession)return json(409,{error:'Сначала войди в календарь Exchange.'});
+    if(calendarBusy)return json(409,{error:'Календарь уже загружается. Повтори через несколько секунд.'});
+    if(!String(req.headers['content-type']).startsWith('application/json'))return json(415,{error:'Ожидается JSON.'});
+    let bytes=0,chunks=[];for await(const chunk of req){bytes+=chunk.length;if(bytes>3000)return json(413,{error:'Слишком большой запрос.'});chunks.push(chunk)}
+    let input,request;try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'));request=availabilityRequest(input.date,input.mailboxes)}catch(error){return json(400,{error:error.message})}
+    calendarBusy=true;
+    try{return json(200,await readAvailability(calendarSession,request.date,request.mailboxes))}
+    catch(error){return json(502,{error:error.message})}
     finally{calendarBusy=false}
   }
   if (req.method === 'POST' && url.pathname === '/api/profile') {

@@ -68,6 +68,29 @@ try {
         })
         @{ events = $events; limited = $events.Count -ge 500 } | ConvertTo-Json -Compress -Depth 6
 
+    } elseif ($inputData.operation -eq 'availability') {
+        $uri = [string]$inputData.ewsUrl
+        $mailboxes = foreach ($email in $inputData.mailboxes) {
+            $address = [Security.SecurityElement]::Escape([string]$email)
+            '<t:MailboxData><t:Email><t:Address>' + $address + '</t:Address></t:Email><t:AttendeeType>Required</t:AttendeeType><t:ExcludeConflicts>false</t:ExcludeConflicts></t:MailboxData>'
+        }
+        $start = [Security.SecurityElement]::Escape([string]$inputData.start)
+        $end = [Security.SecurityElement]::Escape([string]$inputData.end)
+        $zone = '<t:TimeZone><t:Bias>-180</t:Bias><t:StandardTime><t:Bias>0</t:Bias><t:Time>00:00:00</t:Time><t:DayOrder>1</t:DayOrder><t:Month>1</t:Month><t:DayOfWeek>Sunday</t:DayOfWeek></t:StandardTime><t:DaylightTime><t:Bias>0</t:Bias><t:Time>00:00:00</t:Time><t:DayOrder>1</t:DayOrder><t:Month>7</t:Month><t:DayOfWeek>Sunday</t:DayOfWeek></t:DaylightTime></t:TimeZone>'
+        $body = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages"><soap:Header><t:RequestServerVersion Version="Exchange2013"/></soap:Header><soap:Body><m:GetUserAvailabilityRequest>' + $zone + '<m:MailboxDataArray>' + ($mailboxes -join '') + '</m:MailboxDataArray><t:FreeBusyViewOptions><t:TimeWindow><t:StartTime>' + $start + '</t:StartTime><t:EndTime>' + $end + '</t:EndTime></t:TimeWindow><t:MergedFreeBusyIntervalInMinutes>30</t:MergedFreeBusyIntervalInMinutes><t:RequestedView>FreeBusyMerged</t:RequestedView></t:FreeBusyViewOptions></m:GetUserAvailabilityRequest></soap:Body></soap:Envelope>'
+        $response = Invoke-WebRequest -Uri $uri -Method Post -ContentType 'text/xml; charset=utf-8' -Body $body -Credential $credential -UseBasicParsing -MaximumRedirection 0 -TimeoutSec 20 -Headers @{ SOAPAction = 'http://schemas.microsoft.com/exchange/services/2006/messages/GetUserAvailability' }
+        $xml = Read-Xml ([string]$response.Content)
+        $responseNodes = $xml.SelectNodes("//*[local-name()='FreeBusyResponseArray']/*[local-name()='FreeBusyResponse']")
+        if ($null -eq $responseNodes -or $responseNodes.Count -eq 0) { throw 'AvailabilityRejected' }
+        $rows = @()
+        for ($i = 0; $i -lt @($inputData.mailboxes).Count; $i++) {
+            $entry = if ($i -lt $responseNodes.Count) { $responseNodes.Item($i) } else { $null }
+            $message = if ($entry) { $entry.SelectSingleNode("./*[local-name()='ResponseMessage']") } else { $null }
+            $view = if ($entry) { $entry.SelectSingleNode("./*[local-name()='FreeBusyView']") } else { $null }
+            $success = $message -and $message.Attributes['ResponseClass'] -and $message.Attributes['ResponseClass'].Value -eq 'Success' -and (Value-Of $message 'ResponseCode') -eq 'NoError'
+            $rows += @{ merged = if ($success -and $view) { Value-Of $view 'MergedFreeBusy' } else { '' }; error = -not $success }
+        }
+        @{ rows = $rows } | ConvertTo-Json -Compress -Depth 6
     } elseif ($inputData.operation -eq 'attendees') {
         $uri = [string]$inputData.ewsUrl
         $itemId = [Security.SecurityElement]::Escape([string]$inputData.itemId)
@@ -91,7 +114,7 @@ try {
 } catch {
     $status = $null
     if ($_.Exception.Response) { $status = [int]$_.Exception.Response.StatusCode }
-    $code = if ($status -eq 401 -or $status -eq 403) { 'AuthFailed' } elseif ($_.Exception.Message -eq 'NoEwsUrl') { 'NoEwsUrl' } elseif ($_.Exception.Message -eq 'CalendarRejected') { 'CalendarRejected' } else { 'ExchangeUnavailable' }
+    $code = if ($status -eq 401 -or $status -eq 403) { 'AuthFailed' } elseif ($_.Exception.Message -eq 'NoEwsUrl') { 'NoEwsUrl' } elseif ($_.Exception.Message -eq 'CalendarRejected') { 'CalendarRejected' } elseif ($_.Exception.Message -eq 'AvailabilityRejected') { 'AvailabilityRejected' } else { 'ExchangeUnavailable' }
     @{ error = $code } | ConvertTo-Json -Compress
     exit 1
 }

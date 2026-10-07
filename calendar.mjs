@@ -25,6 +25,7 @@ const exchangeErrors = {
   AuthFailed: 'Exchange не принял логин или пароль либо не разрешил доступ к календарю.',
   NoEwsUrl: 'Autodiscover не вернул адрес службы календаря EWS.',
   CalendarRejected: 'Exchange отклонил чтение календаря. Проверь права доступа к почтовому ящику.',
+  AvailabilityRejected: 'Exchange не ответил данными о занятости. Проверь доступность службы Free/Busy.',
   ExchangeUnavailable: 'Не удалось подключиться к Exchange. Проверь сеть, адрес и сертификат.'
 };
 
@@ -67,6 +68,25 @@ export function validateCalendarItemId(id) {
   return id;
 }
 
+export function availabilityRequest(date,mailboxes) {
+  if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Укажи дату для проверки занятости.');
+  const [year,month,day]=date.split('-').map(Number),actual=new Date(Date.UTC(year,month-1,day));
+  if(year<2020||year>2100||actual.getUTCFullYear()!==year||actual.getUTCMonth()!==month-1||actual.getUTCDate()!==day)throw new Error('Некорректная дата проверки занятости.');
+  if(!Array.isArray(mailboxes)||mailboxes.length<1||mailboxes.length>8)throw new Error('Укажи от 1 до 8 адресов коллег.');
+  const unique=[...new Set(mailboxes.map(value=>validateCalendarMailbox(value).toLowerCase()))];
+  if(unique.length!==mailboxes.length)throw new Error('Удали повторяющиеся адреса коллег.');
+  return {date,mailboxes:unique,start:`${date}T09:00:00`,end:`${date}T19:00:00`,intervalMinutes:30};
+}
+
+export function normalizeAvailability(request,result) {
+  if(!Array.isArray(result.rows)||result.rows.length!==request.mailboxes.length)throw new Error('Exchange вернул неполный ответ о занятости.');
+  return {date:request.date,intervalMinutes:request.intervalMinutes,startHour:9,rows:result.rows.map((row,index)=>{
+    const email=request.mailboxes[index],merged=typeof row.merged==='string'?row.merged:'';
+    if(row.error||merged.length!==20||/[^01234]/.test(merged))return {email,slots:[],error:'Занятость недоступна или не опубликована.'};
+    return {email,slots:[...merged].map(Number),error:null};
+  }),checkedAt:new Date().toISOString()};
+}
+
 export async function exchangeRequest(input) {
   if (process.platform !== 'win32') throw new Error('Календарь Exchange пока доступен только в локальном Windows-запуске.');
   const script=fileURLToPath(new URL('./calendar-exchange.ps1',import.meta.url));
@@ -107,4 +127,10 @@ export async function readCalendarAttendees(session,id) {
   const result=await exchangeRequest({operation:'attendees',...session,itemId:validateCalendarItemId(id)});
   if(!Array.isArray(result.attendees))throw new Error('Exchange вернул некорректный состав встречи.');
   return {itemId:id,organizer:result.organizer||null,attendees:result.attendees};
+}
+
+export async function readAvailability(session,date,mailboxes) {
+  const request=availabilityRequest(date,mailboxes);
+  const result=await exchangeRequest({operation:'availability',...session,...request});
+  return normalizeAvailability(request,result);
 }
