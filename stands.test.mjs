@@ -2,10 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {STANDS,LK_SERVICES,deploymentView,readGitLabStands} from './stands.mjs';
 
-test('ЛК scope contains only curated services and seven DEV/QA environments',()=>{
+test('ЛК catalog includes every unique repository in the QA-2/QA-3 deployment guide',()=>{
   assert.deepEqual(STANDS.map(stand=>stand.key),['dev','dev-1','dev-2','dev-3','qa-1','qa-2','qa-3']);
-  assert.equal(LK_SERVICES.length,8);
+  assert.deepEqual(LK_SERVICES.map(service=>service.name),[
+    'api-gateway','audit-portal','audit-portal-external','dictionary-service','comment-service',
+    'flow-integration-service','contour-sync-transfer','crypto-signature-service','crypto-tsl-loader',
+    'audit-interaction-card','digital-ui (FE)','audit-portal-external-ui','form-constructor'
+  ]);
   assert.ok(LK_SERVICES.every(service=>service.path.startsWith('digital/')));
+  assert.deepEqual(LK_SERVICES.find(service=>service.name==='comment-service').documentedFor,['qa-2','qa-3']);
 });
 
 test('GitLab deployment carries the deployed ref, commit and tag/branch kind',()=>{
