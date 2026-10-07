@@ -1,4 +1,4 @@
-<!doctype html><html lang="ru" data-design="mock" data-theme="dark" data-visual="standard"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Мои задачи</title>
+<!doctype html><html lang="ru" data-design="mock" data-theme="dark"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Мои задачи</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f5f6f8;color:#202632;font:15px 'Segoe UI',sans-serif}main{max-width:1180px;margin:24px auto;padding:0 28px}header{display:flex;justify-content:space-between;align-items:center;gap:20px}h1{font-size:30px;margin:0 0 8px}p{color:#647084;margin:0}.tabs{display:flex;gap:8px;margin:18px 0 14px}button{font:inherit;cursor:pointer;border:1px solid #d9dee7;border-radius:9px;padding:11px 18px;background:white;color:#344056}button[aria-selected=true]{background:#253e79;color:white;border-color:#253e79}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #7c9af0;outline-offset:3px}input{width:100%;font:inherit;padding:13px 16px;border:1px solid #d9dee7;border-radius:9px;background:white;margin-bottom:18px}.card{background:white;border:1px solid #e1e5eb;border-radius:12px;padding:20px;margin-bottom:12px}.top{display:flex;justify-content:space-between;gap:15px;align-items:center}.key{font-size:13px;color:#5b6b85}.title{display:block;font-size:18px;font-weight:600;color:#253e79;text-decoration:none;margin:12px 0}.title:hover{text-decoration:underline}.meta{font-size:13px;color:#697486;display:flex;flex-wrap:wrap;gap:18px}.status{font-size:12px;font-weight:600;border-radius:6px;padding:6px 9px;background:#edf0f5}.ready{background:#e7f3ee;color:#246647}.returned{background:#fff0dc;color:#9a4608}.testing{background:#e9edff;color:#404da4}#connection{font-size:13px;text-align:right;max-width:380px;line-height:1.6}#error{background:#fff1de;color:#84500b;border-radius:9px;padding:14px;margin:15px 0}#empty{padding:40px;text-align:center;color:#687487}@media(max-width:650px){main{margin:24px auto;padding:0 16px}header{display:block}#connection{text-align:left;margin-top:15px}.tabs{margin-top:24px}}
 .user-row{display:flex;gap:10px;align-items:end;margin-top:14px}.user-row label{flex:1;max-width:330px}label{display:flex;flex-direction:column;gap:7px;font-size:13px;color:#526075}.user-row input{margin:0}.user-row button{background:#253e79;color:white}#user-help{font-size:13px;line-height:1.6;margin-top:5px}.filters{display:grid;grid-template-columns:2fr 1fr 1.2fr;gap:12px;margin-bottom:14px}.filters input{margin:0}select{width:100%;min-width:0;font:inherit;border:1px solid #d9dee7;border-radius:9px;padding:13px 10px;background:white;color:#344056}select:focus-visible{outline:3px solid #7c9af0;outline-offset:3px}#count{font-size:13px;color:#697486;margin:0 0 12px}@media(max-width:650px){.filters{grid-template-columns:1fr}.user-row label{max-width:none}}
@@ -40,7 +40,7 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 /* Reversible product redesign: a compact QA workbench with a persistent application bar. */
 .workspace-bar,.sidebar-footer,.task-control-intro{display:none}
 .brand{display:flex;align-items:center;gap:10px}.brand-mark{display:inline-grid;place-items:center;width:29px;height:29px;flex:none;border-radius:7px;background:#34425c;color:#fff;font-size:21px;font-weight:800}
-.task-control-panel{display:contents}#design-toggle{margin-top:8px;border-color:#6b7bbb;color:#4059c8;font-weight:650}#design-toggle[aria-pressed=true]{background:#e9edfb;border-color:#b7c2ee;color:#344cbc}
+.task-control-panel{display:contents}
 .nav-icon{display:none;width:18px;height:18px;flex:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none}.nav-indicator{display:none}
 :root[data-design=mock]{--page:#f4f5f8;--surface:#fff;--surface-hover:#eef0f6;--text:#202735;--muted:#677386;--border:#e0e4ec;--notice-bg:#ecf6ef;--notice-border:#a8d2b6;--notice-text:#276744;--error-bg:#fff2e7;--error-text:#965d2e}
 :root[data-design=mock] body{background:var(--page);font-family:'Segoe UI Variable','Segoe UI',sans-serif;color:var(--text)}
@@ -72,8 +72,6 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 :root[data-design=mock] .header-tools #connection{max-width:250px;color:#6e7a8c}
 :root[data-design=mock] button{transition:background .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease}
 :root[data-design=mock] button:hover:not(:disabled){border-color:#a9b5ca}
-:root[data-design=mock] #design-toggle{background:#eef0f9;color:#344cb6;border:1px solid #c9d1ef;font-weight:650}
-:root[data-design=mock] #design-toggle:hover{background:#e2e7fa;border-color:#aab9eb}
 :root[data-design=mock] #profile-button{margin-top:8px}
 :root[data-design=mock] .appearance{display:none}
 :root[data-design=mock] .task-control-panel{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 18px;align-items:end;margin:28px 0 22px;padding:23px 26px 21px;background:#fff;border:1px solid #e0e4ec;border-radius:12px;box-shadow:0 4px 20px #2633540c}
@@ -128,8 +126,6 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 :root[data-design=mock] header{border-bottom-color:var(--border)}
 :root[data-design=mock] #owner,:root[data-design=mock] .header-tools #connection{color:var(--muted)}
 :root[data-design=mock] button:hover:not(:disabled){border-color:#69636f}
-:root[data-design=mock] #design-toggle{background:#302a38;color:#d9c9eb;border-color:#665773}
-:root[data-design=mock] #design-toggle:hover{background:#3c3246;border-color:#937aa7}
 :root[data-design=mock] .task-control-panel,:root[data-design=mock] .release-controls,:root[data-design=mock] .builder-controls,:root[data-design=mock] .investigation-form{background:var(--surface);border-color:var(--border);box-shadow:0 8px 28px #0002}
 :root[data-design=mock] .task-control-intro{border-bottom-color:var(--border)}
 :root[data-design=mock] .task-control-intro strong{color:var(--text)}
@@ -154,8 +150,8 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 @media(max-width:760px){:root[data-design=mock] .sidebar{border-bottom-color:var(--border)}:root[data-design=mock] .tabs button[aria-selected=true]{background:#312b38;box-shadow:inset 0 -3px var(--accent-link)}}
 @keyframes dialog-arrive{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes backdrop-arrive{from{opacity:0}to{opacity:1}}
-.app-shell.mode-arrive{animation:mode-arrive .28s ease-out both}:root[data-design=mock] .view-arrive{animation:view-arrive .44s cubic-bezier(.16,1,.3,1) both}
-@keyframes mode-arrive{from{opacity:.6}to{opacity:1}}@keyframes view-arrive{from{opacity:.55;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+:root[data-design=mock] .view-arrive{animation:view-arrive .28s cubic-bezier(.23,1,.32,1) both}
+@keyframes view-arrive{from{opacity:.55;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 /* Motion follows navigation and selection, while static reading surfaces stay still. */
 :root[data-design=mock] .heading-arrive{animation:heading-arrive .3s cubic-bezier(.2,.8,.2,1) both}
 @keyframes heading-arrive{from{opacity:.3;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
@@ -193,161 +189,29 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 @media(max-width:760px){:root[data-design=mock] .app-shell{display:block}:root[data-design=mock] .workspace-bar{height:55px}:root[data-design=mock] .workspace-logo{width:auto;padding:0 16px;border:0}:root[data-design=mock] .workspace-logo-divider,:root[data-design=mock] .workspace-logo>span:last-child,:root[data-design=mock] .workspace-path,:root[data-design=mock] .workspace-person{display:none}:root[data-design=mock] .sidebar{position:static;height:auto;padding:8px 12px;overflow:visible;border-right:0;border-bottom:1px solid #364258}:root[data-design=mock] .sidebar-group,:root[data-design=mock] .sidebar-footer{display:none}:root[data-design=mock] .tabs{flex-direction:row;gap:4px;overflow-x:auto}:root[data-design=mock] .tabs button{flex:none;width:auto;padding:9px 11px;white-space:nowrap}:root[data-design=mock] .nav-indicator{display:none}:root[data-design=mock] .tabs button[aria-selected=true]{background:#3a4970;box-shadow:inset 0 -3px #8ea4ff}:root[data-design=mock] .app-shell main{padding:25px 16px 70px}:root[data-design=mock] header{gap:16px;flex-wrap:wrap}:root[data-design=mock] .header-tools{justify-content:flex-start}:root[data-design=mock] .header-tools #connection{text-align:left}:root[data-design=mock] .task-control-panel{padding:18px}:root[data-design=mock] .task-control-intro{display:block}:root[data-design=mock] .task-control-intro span{display:block;margin-top:5px}:root[data-design=mock] .filters{grid-template-columns:1fr}}
 @media(max-width:760px){:root[data-design=mock] .tabs{scrollbar-width:none}:root[data-design=mock] .tabs::-webkit-scrollbar{display:none}:root[data-design=mock] .sidebar{border-bottom-color:var(--border)}:root[data-design=mock] .tabs button[aria-selected=true]{background:#312b38;box-shadow:inset 0 -3px var(--accent-link)}}
 @media(max-width:500px){:root[data-design=mock] .header-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}:root[data-design=mock] .header-tools #connection{grid-column:1/-1;max-width:none}:root[data-design=mock] .header-tools button{margin:0;padding:10px 8px;font-size:13px}:root[data-design=mock] .user-row{flex-wrap:wrap}:root[data-design=mock] .user-row .user-picker{min-width:100%}:root[data-design=mock] .user-row>button{width:100%}}
+/* Quiet, consistent feedback across the workbench. Content never moves on polling unless it changed. */
+:root[data-design=mock] .tabs button,:root[data-design=mock] .header-tools button,:root[data-design=mock] main button,:root[data-design=mock] dialog button{transition:transform .16s cubic-bezier(.23,1,.32,1),background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease,opacity .18s ease}
+:root[data-design=mock] .tabs button:hover,:root[data-design=mock] .header-tools button:hover{transform:translateX(2px)}
+:root[data-design=mock] .header-tools button:hover{transform:translateY(-1px)}
+:root[data-design=mock] button:disabled{cursor:not-allowed;opacity:.55;transform:none!important}
+:root[data-design=mock] button:focus-visible,:root[data-design=mock] a:focus-visible,:root[data-design=mock] input:focus-visible,:root[data-design=mock] select:focus-visible,:root[data-design=mock] summary:focus-visible{outline-offset:3px}
+:root[data-design=mock] .title,:root[data-design=mock] .bug-title,:root[data-design=mock] .release-issue-title,:root[data-design=mock] .stand-row a,:root[data-design=mock] .release-git-branch,:root[data-design=mock] .stand-activity-row a{transition:color .18s ease,opacity .18s ease,transform .2s cubic-bezier(.23,1,.32,1)}
+:root[data-design=mock] .title:hover,:root[data-design=mock] .bug-title:hover,:root[data-design=mock] .release-issue-title:hover,:root[data-design=mock] .stand-row a:hover,:root[data-design=mock] .stand-activity-row a:hover{opacity:.82}
+:root[data-design=mock] .release-git-branch:hover{transform:translateY(-1px)}
+:root[data-design=mock] .release-check,:root[data-design=mock] .builder-pick,:root[data-design=mock] .builder-labels label,:root[data-design=mock] .calendar-event,:root[data-design=mock] .stand-activity-row,:root[data-design=mock] .hosts-row{transition:transform .22s cubic-bezier(.23,1,.32,1),background-color .2s ease,border-color .2s ease,box-shadow .2s ease}
+:root[data-design=mock] .release-check:hover,:root[data-design=mock] .builder-pick:hover,:root[data-design=mock] .builder-labels label:hover,:root[data-design=mock] .stand-activity-row:hover{transform:translateX(2px)}
+:root[data-design=mock] .builder-pick:has(input:checked),:root[data-design=mock] .builder-labels label:has(input:checked){border-color:var(--accent-link);background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+:root[data-design=mock] .hosts-row:focus-within,:root[data-design=mock] .release-row:focus-within,:root[data-design=mock] .builder-card:focus-within{border-color:var(--accent-link)}
+:root[data-design=mock] details>summary{transition:color .18s ease,transform .2s cubic-bezier(.23,1,.32,1)}
+:root[data-design=mock] details>summary:hover{color:var(--accent-link);transform:translateX(2px)}
+:root[data-design=mock] details[open]>:not(summary){animation:element-arrive .22s cubic-bezier(.23,1,.32,1) both}
+:root[data-design=mock] .bug-status,:root[data-design=mock] .stand-state,:root[data-design=mock] .stand-kind,:root[data-design=mock] .release-stale{transition:color .2s ease,background-color .2s ease,opacity .2s ease}
+:root[data-design=mock] #empty:not([hidden]),:root[data-design=mock] #error:not([hidden]),:root[data-design=mock] .stand-message,:root[data-design=mock] .bugs-message,:root[data-design=mock] .investigation-note{animation:element-arrive .24s cubic-bezier(.23,1,.32,1) both}
+:root[data-design=mock] #investigation-result>.investigation-grid .card:nth-child(-n+4),:root[data-design=mock] #investigation-result>.investigation-section:nth-child(-n+4){animation:element-arrive .25s cubic-bezier(.23,1,.32,1) both}
+:root[data-design=mock] dialog[open]{animation:dialog-arrive .28s cubic-bezier(.23,1,.32,1) both}
+:root[data-design=mock] dialog[open]::backdrop{animation:backdrop-arrive .22s ease-out both}
 @media(prefers-reduced-motion:reduce){:root[data-design=mock] *, :root[data-design=mock] *::before,:root[data-design=mock] *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
-.anime-characters{display:none}
-/* Alternate anime visual system: saturated character art around a legible QA workbench. */
-:root[data-visual=anime]{--page:#0f1023;--surface:#1c1b37;--surface-hover:#292447;--text:#f8f4ff;--muted:#b7add2;--border:#51436e;--notice-bg:#1b393e;--notice-border:#4b9b9c;--notice-text:#c8ffff;--error-bg:#442435;--error-text:#ffd1db}
-:root[data-visual=anime] body{background:radial-gradient(ellipse 620px 520px at 95% 2%,#54316c54,transparent 80%),radial-gradient(ellipse 580px 420px at 20% 82%,#20577930,transparent 80%),var(--page);font-family:'Segoe UI Variable','Segoe UI',sans-serif}
-:root[data-visual=anime] .workspace-bar{background:linear-gradient(100deg,#1b153b,#161933 56%,#212147);border-bottom:1px solid #715599;box-shadow:0 6px 24px #09091b72}
-:root[data-visual=anime] .workspace-logo{border-right-color:#51436e}
-:root[data-visual=anime] .workspace-logo strong{font-weight:800;letter-spacing:-.04em}
-:root[data-visual=anime] .workspace-logo-mark{background:linear-gradient(145deg,#ff5e9e,#a64de2);box-shadow:0 0 0 3px #f278cf24,0 0 22px #de57f46b}
-:root[data-visual=anime] .workspace-logo-divider{background:#7f659b}
-:root[data-visual=anime] .sidebar{background:linear-gradient(175deg,#211b40,#16172e 60%,#14182d);border-right-color:#54406b}
-:root[data-visual=anime] .sidebar-group{color:#d69ac8;letter-spacing:.055em;text-transform:uppercase;font-size:10px}
-:root[data-visual=anime] .tabs button{color:#d3c8eb;border:1px solid transparent}
-:root[data-visual=anime] .tabs button:hover{background:#42315d;color:#fff;border-color:#694a84}
-:root[data-visual=anime] .tabs button[aria-selected=true]{color:#fff}
-:root[data-visual=anime] .nav-indicator{background:linear-gradient(95deg,#65347c,#433365);box-shadow:inset 3px 0 #ff7ebf,0 3px 14px #120a24a8}
-:root[data-visual=anime] .tabs button[aria-selected=true] .nav-icon{color:#7ef3ec;filter:drop-shadow(0 0 5px #6cebe688)}
-:root[data-visual=anime] .sidebar-footer{color:#b5a4c7}
-:root[data-visual=anime] .sidebar-footer-mark{background:#6cebe6;box-shadow:0 0 0 4px #6cebe633,0 0 13px #6cebe699}
-:root[data-visual=anime] .app-shell main{max-width:1520px;padding-top:27px}
-:root[data-visual=anime] header{position:relative;isolation:isolate;min-height:250px;overflow:hidden;align-items:flex-start;padding:30px 32px;border:1px solid #795191;border-radius:20px;background:radial-gradient(circle at 74% 85%,#8240a488,transparent 36%),radial-gradient(circle at 35% 20%,#2e5b9455,transparent 45%),linear-gradient(115deg,#242249,#382656 58%,#533467);box-shadow:0 18px 45px #08081b66,inset 0 1px #ffffff2c}
-:root[data-visual=anime] header::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:repeating-linear-gradient(125deg,transparent 0 20px,#ffffff05 21px 22px,transparent 23px 68px);mask-image:linear-gradient(to right,transparent 25%,black)}
-:root[data-visual=anime] header::after{content:'';position:absolute;right:17%;bottom:-138px;width:340px;height:340px;border:1px solid #f5a4ef48;border-radius:50%;box-shadow:0 0 0 27px #f5a4ef0c,0 0 0 55px #f5a4ef09;pointer-events:none}
-:root[data-visual=anime] .header-intro{position:relative;z-index:2;max-width:48%;padding-top:13px}
-:root[data-visual=anime] h1{font-family:'Bahnschrift','Segoe UI Variable',sans-serif;font-size:clamp(35px,3.2vw,48px);font-weight:800;letter-spacing:-.045em;text-shadow:0 3px 14px #20132c80}
-:root[data-visual=anime] #owner{color:#ded1ed;font-size:14px;line-height:1.55}
-:root[data-visual=anime] .anime-characters{display:block;position:absolute;z-index:1;right:20%;bottom:-97px;width:350px;height:auto;max-width:none;pointer-events:none;filter:drop-shadow(0 12px 22px #140d2e85);animation:anime-art-arrive .55s cubic-bezier(.16,1,.3,1) both}
-@keyframes anime-art-arrive{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-:root[data-visual=anime] .header-tools{position:relative;z-index:3;max-width:245px;align-items:flex-end}
-:root[data-visual=anime] .header-tools #connection{color:#d6c9e9;background:#20173b99;border:1px solid #86629e6c;border-radius:8px;padding:6px 9px}
-:root[data-visual=anime] .header-tools #connection:empty{display:none}
-:root[data-visual=anime] #design-toggle{background:linear-gradient(120deg,#ff67a7,#b753e5);border-color:#ffa3cb;color:#210f32;box-shadow:0 4px 18px #da4dc65c;font-weight:800}
-:root[data-visual=anime] #design-toggle:hover{background:linear-gradient(120deg,#ff83b8,#cd6df0);border-color:#ffd1e6}
-:root[data-visual=anime] #profile-button{background:#291d47d9;border-color:#a978bd;color:#f8eaff}
-:root[data-visual=anime] #profile-button:hover{background:#3e2b61}
-:root[data-visual=anime] .task-control-panel,:root[data-visual=anime] .release-controls,:root[data-visual=anime] .builder-controls,:root[data-visual=anime] .investigation-form{background:linear-gradient(145deg,#252044,#201d3e);border-color:#665081;box-shadow:0 12px 30px #07081755,inset 0 1px #ffffff17}
-:root[data-visual=anime] .task-control-intro{border-bottom-color:#644d7d}
-:root[data-visual=anime] .task-control-intro strong{color:#fff1ff;font-weight:750}
-:root[data-visual=anime] .task-control-intro span,:root[data-visual=anime] .filters label{color:#c9bbdd}
-:root[data-visual=anime] input,:root[data-visual=anime] select{background:#14152e;border-color:#6a527f;color:#fff8ff}
-:root[data-visual=anime] input:focus,:root[data-visual=anime] select:focus{border-color:#f587d0;box-shadow:0 0 0 3px #e974c638}
-:root[data-visual=anime] .user-row>button,:root[data-visual=anime] #profile-save,:root[data-visual=anime] .builder-action{background:linear-gradient(115deg,#aa49d9,#7b53d7);border-color:#bc74e9;color:#fff}
-:root[data-visual=anime] .task-control-panel .user-row>button{background:#302648;border-color:#70568a;color:#f1e5ff}
-:root[data-visual=anime] .card,:root[data-visual=anime] .bug-row,:root[data-visual=anime] .stand-row,:root[data-visual=anime] .calendar-entry,:root[data-visual=anime] .calendar-day,:root[data-visual=anime] .builder-summary,:root[data-visual=anime] .release-summary{background:#211e3d;border-color:#54476e;box-shadow:0 4px 18px #07081952}
-:root[data-visual=anime] .card:hover,:root[data-visual=anime] .bug-row:hover,:root[data-visual=anime] .stand-row:hover,:root[data-visual=anime] .calendar-day:hover{border-color:#d171c8;box-shadow:0 7px 25px #6d2f9545}
-:root[data-visual=anime] .card.new-task{border-color:#6de6db;box-shadow:inset 3px 0 #6de6db,0 0 19px #50d7d333}
-:root[data-visual=anime] .title,:root[data-visual=anime] .bug-title,:root[data-visual=anime] .stand-ref,:root[data-visual=anime] .release-issue-title{color:#ebb5ff}
-:root[data-visual=anime] .status{border-radius:7px}
-:root[data-visual=anime] .calendar-day.selected{background:#3d2c5b;border-color:#ee82d2;box-shadow:0 0 0 2px #ef84d337}
-:root[data-visual=anime] .calendar-people{background:#221e3d;border-color:#665081}
-:root[data-visual=anime] .stands-tabs{background:#312849;border:1px solid #604976}
-:root[data-visual=anime] .stands-tabs button{color:#cdbde0}
-:root[data-visual=anime] .stands-tabs button[aria-pressed=true]{background:#724398;color:#fff3ff;box-shadow:0 2px 8px #160c2e}
-:root[data-visual=anime] .stand-activity-panel{background:#392a48;border-color:#b07599}
-:root[data-visual=anime] .hosts-row,:root[data-visual=anime] .hosts-other,:root[data-visual=anime] dialog{background:#221e3d;border-color:#665081;color:var(--text)}
-:root[data-visual=anime] #user-options,:root[data-visual=anime] .user-row .user-option{background:#211d3a;color:var(--text)}
-:root[data-visual=anime] .user-row .user-option:hover,:root[data-visual=anime] .user-row .user-option[aria-selected=true]{background:#42305d;color:#fff}
-:root[data-visual=anime] button:focus-visible,:root[data-visual=anime] a:focus-visible,:root[data-visual=anime] input:focus-visible,:root[data-visual=anime] select:focus-visible{outline-color:#78eee9}
-@media(max-width:1120px){:root[data-visual=anime] .anime-characters{right:19%;width:300px;bottom:-66px}:root[data-visual=anime] .header-intro{max-width:45%}}
-@media(max-width:800px){:root[data-visual=anime] header{min-height:205px}:root[data-visual=anime] .anime-characters{right:-38px;width:240px;opacity:.72}:root[data-visual=anime] .header-intro{max-width:62%}}
-@media(max-width:760px){:root[data-visual=anime] .sidebar{border-bottom-color:#665081}:root[data-visual=anime] .tabs button[aria-selected=true]{background:#693a89;box-shadow:inset 0 -3px #ff7ebf}:root[data-visual=anime] header{padding:22px 20px;min-height:0}:root[data-visual=anime] .header-intro{max-width:100%;padding:0}:root[data-visual=anime] .anime-characters{display:none}:root[data-visual=anime] .header-tools{max-width:none;align-items:flex-start}:root[data-visual=anime] header::after{right:-150px}}
-@media(prefers-reduced-motion:reduce){:root[data-visual=anime] .anime-characters{animation:none}}
-/* TV animation pass: clean cels, ink lines and a consistent palette across every view. */
-:root[data-visual=anime]{--page:#101b31;--surface:#1d2b47;--surface-hover:#293c5c;--text:#fff8eb;--muted:#b9c9db;--border:#49617f;--notice-bg:#183e42;--notice-border:#70b9a4;--notice-text:#dcfff2;--error-bg:#4a2c3d;--error-text:#ffd8cf;--anime-coral:#ff727b;--anime-sky:#9adfff;--anime-yellow:#ffdc84;--anime-ink:#0b1730;--anime-cel:#263a5c}
-:root[data-visual=anime] body{background:radial-gradient(circle at 94% 18%,#4678b633,transparent 28%),linear-gradient(180deg,#172746,var(--page) 55%)}
-:root[data-visual=anime] .workspace-bar{background:#172644;border-bottom:2px solid #ff727b;box-shadow:0 4px 0 #0b1730}
-:root[data-visual=anime] .workspace-logo{border-right-color:#466188}
-:root[data-visual=anime] .workspace-logo-mark{background:#ff727b;color:#192744;box-shadow:3px 3px 0 #0b1730,0 0 0 1px #ffd5c5}
-:root[data-visual=anime] .workspace-path strong{color:#ffdc84}
-:root[data-visual=anime] .sidebar{background:#182946;border-right:2px solid #466188}
-:root[data-visual=anime] .sidebar-group{color:#ffb4a9}
-:root[data-visual=anime] .tabs button{color:#deebfa}
-:root[data-visual=anime] .tabs button:hover{background:#314c72;border-color:#729bc4}
-:root[data-visual=anime] .nav-indicator{background:#355885;box-shadow:inset 4px 0 #ff727b,3px 3px 0 #0b1730}
-:root[data-visual=anime] .tabs button[aria-selected=true] .nav-icon{color:#ffdc84;filter:none}
-:root[data-visual=anime] .sidebar-footer-mark{background:#80e6c6;box-shadow:0 0 0 4px #80e6c62b}
-:root[data-visual=anime] header{min-height:302px;padding:35px 34px;border:2px solid #94b9db;border-radius:17px;background:linear-gradient(118deg,#29436f 0 61%,#3b6599 61% 100%);box-shadow:5px 6px 0 #0b1730,inset 0 2px #d6efff5c}
-:root[data-visual=anime] header::before{z-index:0;background:repeating-linear-gradient(132deg,transparent 0 20px,#d6efff17 21px 22px,transparent 23px 54px);mask-image:linear-gradient(to right,transparent 45%,black)}
-:root[data-visual=anime] header::after{right:18%;bottom:-134px;width:390px;height:390px;border:2px solid #d7f5ff77;box-shadow:0 0 0 20px #d7f5ff0d,0 0 0 48px #d7f5ff0b}
-:root[data-visual=anime] .header-intro{max-width:55%;padding-top:4px}
-:root[data-visual=anime] h1{color:#fff8ec;text-shadow:3px 4px 0 #12264b;letter-spacing:-.035em}
-:root[data-visual=anime] #owner{color:#e4f1fc;max-width:48ch}
-:root[data-visual=anime] .anime-characters{right:1%;bottom:-40px;width:475px;filter:drop-shadow(4px 7px 0 #102241aa)}
-:root[data-visual=anime] .header-tools{position:absolute;left:34px;right:auto;bottom:24px;z-index:3;max-width:58%;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:9px}
-:root[data-visual=anime] .header-tools #connection:not(:empty){max-width:150px;background:#1b3150;border:1px solid #a8c9e0;border-radius:7px;color:#d9efff}
-:root[data-visual=anime] #design-toggle{background:#ffdc84;border:2px solid #fff0bb;color:#172a4b;box-shadow:3px 3px 0 #0b1730;font-weight:800}
-:root[data-visual=anime] #design-toggle:hover{background:#ffebb4;border-color:#fff7d8}
-:root[data-visual=anime] #profile-button{background:#25446e;border:2px solid #9bc6ed;color:#fff8eb;box-shadow:3px 3px 0 #0b1730}
-:root[data-visual=anime] #profile-button:hover{background:#345989}
-:root[data-visual=anime] button{border-width:1.5px}
-:root[data-visual=anime] .task-control-panel,:root[data-visual=anime] .release-controls,:root[data-visual=anime] .builder-controls,:root[data-visual=anime] .investigation-form{background:#263a5c;border:1.5px solid #7298bb;box-shadow:4px 4px 0 #0b1730}
-:root[data-visual=anime] .task-control-intro{border-bottom:1px solid #6e93b5}
-:root[data-visual=anime] .task-control-intro strong{color:#fff8eb}
-:root[data-visual=anime] .task-control-intro span,:root[data-visual=anime] .filters label{color:#cfdeed}
-:root[data-visual=anime] input,:root[data-visual=anime] select{background:#14243f;border:1.5px solid #779abc;color:#fff8eb}
-:root[data-visual=anime] input:focus,:root[data-visual=anime] select:focus{border-color:#ffdc84;box-shadow:0 0 0 3px #ffdc8440}
-:root[data-visual=anime] .user-row>button,:root[data-visual=anime] #profile-save,:root[data-visual=anime] .builder-action,:root[data-visual=anime] .investigation-form button,:root[data-visual=anime] #hosts-save{background:#ff727b;border:1.5px solid #ffb4aa;color:#182644;font-weight:750;box-shadow:2px 2px 0 #0b1730}
-:root[data-visual=anime] .user-row>button:hover,:root[data-visual=anime] #profile-save:hover,:root[data-visual=anime] .builder-action:hover,:root[data-visual=anime] .investigation-form button:hover,:root[data-visual=anime] #hosts-save:hover{background:#ff9092;border-color:#ffd1bf}
-:root[data-visual=anime] .task-control-panel .user-row>button{background:#335275;border-color:#8bb7d9;color:#fff8eb}
-:root[data-visual=anime] .card,:root[data-visual=anime] .bug-row,:root[data-visual=anime] .stand-row,:root[data-visual=anime] .calendar-entry,:root[data-visual=anime] .calendar-day,:root[data-visual=anime] .builder-summary,:root[data-visual=anime] .release-summary{background:#1e304f;border:1.5px solid #5d7fa3;border-radius:10px;box-shadow:3px 3px 0 #0b1730}
-:root[data-visual=anime] .card:hover,:root[data-visual=anime] .bug-row:hover,:root[data-visual=anime] .stand-row:hover,:root[data-visual=anime] .calendar-day:hover{border-color:#9adfff;box-shadow:4px 4px 0 #0b1730}
-:root[data-visual=anime] .card.new-task{border-color:#80e6c6;box-shadow:inset 4px 0 #80e6c6,3px 3px 0 #0b1730}
-:root[data-visual=anime] .key,:root[data-visual=anime] .calendar-event-time,:root[data-visual=anime] .stand-kind{color:#ffdc84}
-:root[data-visual=anime] .title,:root[data-visual=anime] .bug-title,:root[data-visual=anime] .stand-ref,:root[data-visual=anime] .release-issue-title,:root[data-visual=anime] .stand-row a{color:#9adfff}
-:root[data-visual=anime] .status{border-radius:5px;border-left-width:4px;box-shadow:2px 2px 0 #0b173055}
-:root[data-visual=anime] .bugs-day h2{color:#fff8eb;border-bottom:2px solid #ff727b}
-:root[data-visual=anime] .bugs-day h2::before{content:'';display:inline-block;width:10px;height:10px;background:#ffdc84;transform:rotate(45deg);margin:0 5px 1px 1px}
-:root[data-visual=anime] .bug-row{border-left:4px solid #ff727b}
-:root[data-visual=anime] .calendar-weekdays span{color:#ffdc84}
-:root[data-visual=anime] .calendar-day{background:#203453}
-:root[data-visual=anime] .calendar-day.selected,:root[data-visual=anime] .calendar-day.selected:hover{background:#34557d;border-color:#ffdc84;box-shadow:3px 3px 0 #0b1730,inset 0 0 0 1px #ffdc84}
-:root[data-visual=anime] .calendar-day.today .calendar-number{background:#ff727b;color:#172744}
-:root[data-visual=anime] .calendar-event{background:#324e71;border-left-color:#ff727b;color:#fff8eb}
-:root[data-visual=anime] .calendar-day.selected .calendar-event{background:#203d60}
-:root[data-visual=anime] .calendar-entry{border-left:4px solid #ff727b}
-:root[data-visual=anime] .calendar-details h2{border-bottom:2px solid #ff727b}
-:root[data-visual=anime] .calendar-people{background:#263a5c;border:1.5px solid #7298bb;box-shadow:4px 4px 0 #0b1730}
-:root[data-visual=anime] .calendar-person{background:#1b304e;border:1px solid #668caf}
-:root[data-visual=anime] .calendar-person:hover,:root[data-visual=anime] .calendar-person[aria-pressed=true]{background:#34557d;border-color:#ffdc84}
-:root[data-visual=anime] .stands-tabs{background:#193150;border:1px solid #668caf}
-:root[data-visual=anime] .stands-tabs button{color:#deebfa}
-:root[data-visual=anime] .stands-tabs button[aria-pressed=true]{background:#ffdc84;color:#172744;box-shadow:2px 2px 0 #0b1730}
-:root[data-visual=anime] .stand-summary span{background:#25456a;border-color:#719bc1;color:#e3effc}
-:root[data-visual=anime] .stand-kind{background:#385578;border:1px solid #7699bc}
-:root[data-visual=anime] .stand-row.changed{border-left:4px solid #ffdc84}
-:root[data-visual=anime] .stand-activity-panel{background:#364061;border:1.5px solid #ffdc84;box-shadow:4px 4px 0 #0b1730}
-:root[data-visual=anime] .stand-activity-row{background:#243753}
-:root[data-visual=anime] .stand-activity-row a{color:#fff8eb}
-:root[data-visual=anime] .stand-live{color:#ffdc84}
-:root[data-visual=anime] .pipeline-motion:before{background:#ffdc84}
-:root[data-visual=anime] .pipeline-motion:after{background:#ff727b;box-shadow:0 0 6px #ff727b}
-:root[data-visual=anime] .pipeline-motion span{border-color:#ffdc84}
-:root[data-visual=anime] .release-parent{border-left:4px solid #ff727b}
-:root[data-visual=anime] .release-relations,:root[data-visual=anime] .release-git-branch,:root[data-visual=anime] .builder-labels label,:root[data-visual=anime] .builder-pick{background:#2b4668;border-color:#6a91b5;color:#fff8eb}
-:root[data-visual=anime] .release-git-branch:hover,:root[data-visual=anime] .builder-labels label:hover,:root[data-visual=anime] .builder-pick:hover{border-color:#ffdc84}
-:root[data-visual=anime] .release-result{background:#14243f;border-color:#779abc}
-:root[data-visual=anime] .hosts-row,:root[data-visual=anime] .hosts-other,:root[data-visual=anime] .hosts-empty{background:#213654;border:1.5px solid #668caf;box-shadow:3px 3px 0 #0b1730}
-:root[data-visual=anime] .hosts-other summary{color:#ffdc84}
-:root[data-visual=anime] .investigation-section h2{color:#fff8eb;border-bottom:2px solid #ff727b;padding-bottom:8px}
-:root[data-visual=anime] .investigation-timeline li{border-left-color:#ff727b}
-:root[data-visual=anime] .investigation-timeline li::marker{color:#ffdc84}
-:root[data-visual=anime] .investigation-log{background:#101e36;border-color:#668caf;color:#dbefff}
-:root[data-visual=anime] .investigation-finding[data-level=confirmed]{border-left-color:#80e6c6}
-:root[data-visual=anime] .investigation-finding[data-level=possible]{border-left-color:#ffdc84}
-:root[data-visual=anime] dialog{background:#233858;border:2px solid #ffdc84;color:#fff8eb;box-shadow:7px 7px 0 #0b1730,0 24px 80px #020916aa}
-:root[data-visual=anime] dialog h2{color:#ffdc84}
-:root[data-visual=anime] dialog::backdrop{background:#061126cc}
-:root[data-visual=anime] #user-options,:root[data-visual=anime] .user-row .user-option{background:#1e3556;border-color:#668caf}
-:root[data-visual=anime] .user-row .user-option:hover,:root[data-visual=anime] .user-row .user-option[aria-selected=true]{background:#365a82}
-:root[data-visual=anime] #empty,:root[data-visual=anime] .stand-message,:root[data-visual=anime] .bugs-message{background:#213654;border:1px solid #668caf;border-radius:9px;padding:14px}
-:root[data-visual=anime] .stand-message.error,:root[data-visual=anime] .bugs-message.error{background:var(--error-bg);color:var(--error-text)}
-@media(max-width:1120px){:root[data-visual=anime] .anime-characters{right:-2%;width:390px;bottom:-30px}:root[data-visual=anime] .header-intro{max-width:56%}}
-@media(max-width:800px){:root[data-visual=anime] .anime-characters{right:-9%;width:300px;bottom:-15px}:root[data-visual=anime] .header-intro{max-width:62%}:root[data-visual=anime] .header-tools{max-width:62%}}
-@media(max-width:760px){:root[data-visual=anime] .sidebar{border-bottom-color:#668caf}:root[data-visual=anime] .tabs button[aria-selected=true]{background:#355885;box-shadow:inset 0 -3px #ff727b}:root[data-visual=anime] header{min-height:228px;padding:22px 20px}:root[data-visual=anime] .header-intro{max-width:100%}:root[data-visual=anime] .anime-characters{display:block;right:-44px;bottom:-12px;width:225px;opacity:.38}:root[data-visual=anime] .header-tools{position:relative;left:auto;bottom:auto;max-width:none;flex-wrap:wrap;margin-top:38px}:root[data-visual=anime] header::after{right:-160px}}
-</style><div class="app-shell"><div class="workspace-bar"><div class="workspace-logo"><span class="workspace-logo-mark" aria-hidden="true">✓</span><strong>Taskboard</strong><span class="workspace-logo-divider"></span><span>ЛК / QA</span></div><div class="workspace-path"><span id="workspace-section">Задачи</span><span aria-hidden="true">/</span><strong id="workspace-location">На проверке</strong></div><div id="workspace-person" class="workspace-person"></div></div><aside class="sidebar"><div class="brand"><span class="brand-mark" aria-hidden="true">✓</span><span>Taskboard</span></div><nav class="tabs" aria-label="Разделы"><div class="sidebar-group">Задачи</div><button id="review" aria-selected="true">На проверке</button><button id="todo" aria-selected="false">Прочие статусы</button><button id="bugs-tab" aria-selected="false">Созданные баги</button><div class="sidebar-group">Планирование</div><button id="calendar-tab" aria-selected="false">Календарь</button><button id="stands-tab" aria-selected="false">Стенды</button><button id="hosts-tab" aria-selected="false">Hosts</button><div class="sidebar-group">Релизы</div><button id="release-tab" aria-selected="false">Регресс</button><button id="build-tab" aria-selected="false">Собрать релиз</button><div class="sidebar-group">Диагностика</div><button id="investigation-tab" aria-selected="false">Разбор обращений</button></nav><div class="sidebar-footer"><span class="sidebar-footer-mark" aria-hidden="true"></span><span>Рабочее пространство ЛК</span></div></aside><main><header><div class="header-intro"><h1 id="page-title">Мои задачи</h1><p id="owner">Задачи выбранного пользователя</p></div><img class="anime-characters" src="/assets/anime-qa-duo-tv.png" alt="" aria-hidden="true" width="1536" height="1024"><div class="header-tools"><div id="connection">Подключение…</div><button id="design-toggle" type="button" aria-pressed="false">Новый дизайн</button><button id="profile-button">Настройки профиля</button></div></header>
+</style><div class="app-shell"><div class="workspace-bar"><div class="workspace-logo"><span class="workspace-logo-mark" aria-hidden="true">✓</span><strong>Taskboard</strong><span class="workspace-logo-divider"></span><span>ЛК / QA</span></div><div class="workspace-path"><span id="workspace-section">Задачи</span><span aria-hidden="true">/</span><strong id="workspace-location">На проверке</strong></div><div id="workspace-person" class="workspace-person"></div></div><aside class="sidebar"><div class="brand"><span class="brand-mark" aria-hidden="true">✓</span><span>Taskboard</span></div><nav class="tabs" aria-label="Разделы"><div class="sidebar-group">Задачи</div><button id="review" aria-selected="true">На проверке</button><button id="todo" aria-selected="false">Прочие статусы</button><button id="bugs-tab" aria-selected="false">Созданные баги</button><div class="sidebar-group">Планирование</div><button id="calendar-tab" aria-selected="false">Календарь</button><button id="stands-tab" aria-selected="false">Стенды</button><button id="hosts-tab" aria-selected="false">Hosts</button><div class="sidebar-group">Релизы</div><button id="release-tab" aria-selected="false">Регресс</button><button id="build-tab" aria-selected="false">Собрать релиз</button><div class="sidebar-group">Диагностика</div><button id="investigation-tab" aria-selected="false">Разбор обращений</button></nav><div class="sidebar-footer"><span class="sidebar-footer-mark" aria-hidden="true"></span><span>Рабочее пространство ЛК</span></div></aside><main><header><div class="header-intro"><h1 id="page-title">Мои задачи</h1><p id="owner">Задачи выбранного пользователя</p></div><div class="header-tools"><div id="connection">Подключение…</div><button id="profile-button">Настройки профиля</button></div></header>
 <details class="appearance"><summary>Внешний вид</summary><div class="appearance-body"><label for="theme">Тема<select id="theme"><option value="system">Как в системе</option><option value="light">Светлая</option><option value="dark">Тёмная</option></select></label><fieldset><legend>Цвет интерфейса</legend><div id="accent-colors"></div></fieldset></div></details>
 <section id="tasks-view"><div class="task-control-panel"><div class="task-control-intro"><strong>Рабочая очередь</strong><span>Выбери пользователя Jira, чтобы увидеть актуальные задачи.</span></div>
 <div class="user-row"><div class="user-picker"><label for="username">Пользователь<input id="username" placeholder="Начни вводить имя или фамилию" autocomplete="off" maxlength="100" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="user-options" aria-describedby="user-help"></label><div id="user-options" role="listbox" aria-label="Пользователи Jira" hidden></div></div><button id="clear-user" type="button">Сбросить</button></div>
@@ -584,7 +448,7 @@ function renderStandActivity(){
  const activity=standActivitySnapshot;if(!activity)return;
  const pipelines=activity.pipelines||[],deployments=activity.deployments||[];
  if(!pipelines.length&&!deployments.length){if(activity.partial)output.append(node('p','stand-message','Часть проектов GitLab не ответила. Активные pipeline могут быть показаны не полностью.'));return}
- const panel=node('section','stand-activity-panel',''),heading=node('h2','','');panel.append(heading);
+ const panel=node('section','stand-activity-panel',''),heading=node('h2','',''),activeCount=Math.max(pipelines.length,deployments.length),plural=new Intl.PluralRules('ru').select(activeCount),word=plural==='one'?'активный запуск':plural==='few'?'активных запуска':'активных запусков';heading.append(pipelineMotion(),document.createTextNode(`Сейчас в GitLab · ${activeCount} ${word}`));panel.append(heading);
  const list=node('div','stand-activity-list','');
  for(const pipeline of pipelines){
   const row=node('div','stand-activity-row',''),link=node('a','',`${pipeline.service} · ${pipeline.ref||'ref не указан'}`),matching=deployments.find(item=>item.service===pipeline.service&&item.sha&&item.sha===pipeline.sha);
@@ -593,7 +457,7 @@ function renderStandActivity(){
  for(const deployment of deployments.filter(item=>!pipelines.some(pipeline=>pipeline.service===item.service&&pipeline.sha&&pipeline.sha===item.sha))){
   const row=node('div','stand-activity-row',''),detail=node('div','',''),link=node('a','',`${deployment.service} · ${deployment.ref||'ref не указан'}`);link.href=deployment.environmentUrl;link.target='_blank';link.rel='noopener noreferrer';detail.append(link,node('small','',`${deployment.stand.toUpperCase()} · выкладка идёт`));row.append(pipelineMotion(),detail);list.append(row)
  }
- const count=list.children.length,form=new Intl.PluralRules('ru').select(count),word=form==='one'?'активный запуск':form==='few'?'активных запуска':'активных запусков';heading.append(pipelineMotion(),document.createTextNode(`Сейчас в GitLab · ${count} ${word}`));panel.append(list,node('p','stand-activity-note',activity.partial?'Часть проектов GitLab не ответила; список может быть неполным.':'Запуск pipeline ещё не означает выкладку на выбранный стенд. Окружение показывается только после записи GitLab о развёртывании.'));output.append(panel)
+ panel.append(list,node('p','stand-activity-note',activity.partial?'Часть проектов GitLab не ответила; список может быть неполным.':'Запуск pipeline ещё не означает выкладку на выбранный стенд. Окружение показывается только после записи GitLab о развёртывании.'));output.append(panel)
 }
 function renderStands(){
  for(const button of document.querySelectorAll('.stands-tabs button'))button.setAttribute('aria-pressed',String(button.dataset.stand===standSelected));
@@ -708,19 +572,16 @@ const accentPalette={
 };
 const systemTheme=matchMedia('(prefers-color-scheme: dark)');
 let themeChoice=readPref('theme','dark'),accentChoice=readPref('accent','purple');if(readPref('appearanceStyleVersion')!=='2'){themeChoice='dark';accentChoice='purple';savePref('theme',themeChoice);savePref('accent',accentChoice);savePref('appearanceStyleVersion','2')}
-let animeMode=readPref('designAnime','off')==='on';
 if(!['system','light','dark'].includes(themeChoice))themeChoice='system';if(!accentPalette[accentChoice])accentChoice='blue';
 function applyAppearance(){
  const palette=accentPalette[accentChoice];
- document.documentElement.dataset.theme='dark';document.documentElement.dataset.design='mock';document.documentElement.dataset.visual=animeMode?'anime':'standard';document.documentElement.style.colorScheme='dark';
- document.documentElement.style.setProperty('--accent',animeMode?'#ff727b':palette.solid);document.documentElement.style.setProperty('--accent-link',animeMode?'#9adfff':palette.dark);
+ document.documentElement.dataset.theme='dark';document.documentElement.dataset.design='mock';document.documentElement.style.colorScheme='dark';
+ document.documentElement.style.setProperty('--accent',palette.solid);document.documentElement.style.setProperty('--accent-link',palette.dark);
  $('theme').value=themeChoice;for(const button of $('accent-colors').children)button.setAttribute('aria-pressed',String(button.dataset.color===accentChoice));
- $('design-toggle').setAttribute('aria-pressed',String(animeMode));$('design-toggle').textContent=animeMode?'Обычный вид':'Новый дизайн';
  requestAnimationFrame(moveNavIndicator);
 }
 for(const [key,palette] of Object.entries(accentPalette)){const button=node('button','accent-swatch','');button.type='button';button.title=palette.name;button.setAttribute('aria-label',palette.name);button.dataset.color=key;button.style.setProperty('--swatch',palette.solid);button.onclick=()=>{accentChoice=key;savePref('accent',key);applyAppearance()};$('accent-colors').append(button)}
 $('theme').onchange=()=>{themeChoice=$('theme').value;savePref('theme',themeChoice);applyAppearance()};systemTheme.addEventListener('change',()=>{if(themeChoice==='system')applyAppearance()});applyAppearance();
-$('design-toggle').onclick=()=>{const update=()=>{animeMode=!animeMode;savePref('designAnime',animeMode?'on':'off');applyAppearance()};const motion=!matchMedia('(prefers-reduced-motion: reduce)').matches;if(motion&&document.startViewTransition)document.startViewTransition(update);else{update();if(motion)restartAnimation(document.querySelector('.app-shell'),'mode-arrive')}};
 function renderInvestigation(){
  const output=$('investigation-result');output.replaceChildren();
  if(investigationLoading){output.append(node('p','investigation-note','Читаю записи и адресные логи…'));return}
@@ -752,8 +613,8 @@ function render(){
  requestAnimationFrame(moveNavIndicator);
  const locations={review:['Задачи','На проверке'],todo:['Задачи','Прочие статусы'],bugs:['Задачи','Созданные баги'],calendar:['Планирование','Календарь'],stands:['Планирование','Стенды'],hosts:['Планирование','Hosts'],release:['Релизы','Регресс'],build:['Релизы','Собрать релиз'],investigation:['Диагностика','Разбор обращений']};
  [$('workspace-section').textContent,$('workspace-location').textContent]=locations[tab]||locations.review;
- $('page-title').textContent={investigation:'Разбор обращений',bugs:'Созданные баги',calendar:'Календарь',stands:'Стенды',hosts:'Hosts',release:'Регресс',build:'Собрать релиз'}[tab]||'Мои задачи';
- if(tab==='bugs'){renderBugs();return}if(tab==='calendar'){renderCalendar();return}if(tab==='stands'){$('owner').textContent='ЛК · последние выкладки GitLab по DEV и QA';renderStands();return}if(tab==='hosts'){$('owner').textContent='Системные сопоставления имён и IP-адресов';renderHosts();return}if(tab==='investigation'){$('owner').textContent='Запросы и уведомления · состояние, маршрут, логи';renderInvestigation();return}if(tab==='release'){$('owner').textContent='Подзадачи, связи и результаты проверки релиза';renderRelease();return}if(tab==='build'){$('owner').textContent='Версии Jira, задачи и связи с релизом';renderBuilder();return}
+ $('page-title').textContent=tab==='investigation'?'Разбор обращений':tab==='bugs'?'Созданные баги':tab==='calendar'?'Календарь':tab==='stands'?'Стенды':tab==='hosts'?'Hosts':tab==='release'?'Регресс':tab==='build'?'Собрать релиз':'Мои задачи';
+ if(tab==='bugs'){renderBugs();return}if(tab==='calendar'){renderCalendar();return}if(tab==='stands'){$('owner').textContent='ЛК · последние выкладки GitLab по DEV и QA';renderStands();return}if(tab==='hosts'){$('owner').textContent='Системные сопоставления имён и IP-адресов';renderHosts();return}if(tab==='investigation'){$('owner').textContent='Запросы и уведомления · состояние, маршрут, логи';renderInvestigation();return}if(tab==='release'){$('owner').textContent='Связанные задачи и результаты проверки';renderRelease();return}if(tab==='build'){$('owner').textContent='Подготовка состава релиза';renderBuilder();return}
  $('owner').textContent='Задачи выбранного пользователя';
  const review=data.issues.filter(x=>['READY TO TEST','TESTING'].includes(x.status));const todo=data.issues.filter(x=>!['READY TO TEST','TESTING'].includes(x.status));
  setNavLabel('review',`На проверке · ${review.length}`);setNavLabel('todo',`Прочие статусы · ${todo.length}`);

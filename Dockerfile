@@ -3,7 +3,6 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY server.mjs profile.mjs events.mjs investigation.mjs index.html ./
-COPY assets/anime-qa-duo-tv.png ./assets/anime-qa-duo-tv.png
 RUN mkdir /data && chown node:node /data
 ENV LK_LISTEN_HOST=0.0.0.0
 ENV LK_DATA_DIR=/data
