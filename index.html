@@ -255,7 +255,99 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 @media(max-width:800px){:root[data-visual=anime] header{min-height:205px}:root[data-visual=anime] .anime-characters{right:-38px;width:240px;opacity:.72}:root[data-visual=anime] .header-intro{max-width:62%}}
 @media(max-width:760px){:root[data-visual=anime] .sidebar{border-bottom-color:#665081}:root[data-visual=anime] .tabs button[aria-selected=true]{background:#693a89;box-shadow:inset 0 -3px #ff7ebf}:root[data-visual=anime] header{padding:22px 20px;min-height:0}:root[data-visual=anime] .header-intro{max-width:100%;padding:0}:root[data-visual=anime] .anime-characters{display:none}:root[data-visual=anime] .header-tools{max-width:none;align-items:flex-start}:root[data-visual=anime] header::after{right:-150px}}
 @media(prefers-reduced-motion:reduce){:root[data-visual=anime] .anime-characters{animation:none}}
-</style><div class="app-shell"><div class="workspace-bar"><div class="workspace-logo"><span class="workspace-logo-mark" aria-hidden="true">✓</span><strong>Taskboard</strong><span class="workspace-logo-divider"></span><span>ЛК / QA</span></div><div class="workspace-path"><span id="workspace-section">Задачи</span><span aria-hidden="true">/</span><strong id="workspace-location">На проверке</strong></div><div id="workspace-person" class="workspace-person"></div></div><aside class="sidebar"><div class="brand"><span class="brand-mark" aria-hidden="true">✓</span><span>Taskboard</span></div><nav class="tabs" aria-label="Разделы"><div class="sidebar-group">Задачи</div><button id="review" aria-selected="true">На проверке</button><button id="todo" aria-selected="false">Прочие статусы</button><button id="bugs-tab" aria-selected="false">Созданные баги</button><div class="sidebar-group">Планирование</div><button id="calendar-tab" aria-selected="false">Календарь</button><button id="stands-tab" aria-selected="false">Стенды</button><button id="hosts-tab" aria-selected="false">Hosts</button><div class="sidebar-group">Релизы</div><button id="release-tab" aria-selected="false">Регресс</button><button id="build-tab" aria-selected="false">Собрать релиз</button><div class="sidebar-group">Диагностика</div><button id="investigation-tab" aria-selected="false">Разбор обращений</button></nav><div class="sidebar-footer"><span class="sidebar-footer-mark" aria-hidden="true"></span><span>Рабочее пространство ЛК</span></div></aside><main><header><div class="header-intro"><h1 id="page-title">Мои задачи</h1><p id="owner">Задачи выбранного пользователя</p></div><img class="anime-characters" src="/assets/anime-qa-duo.png" alt="" aria-hidden="true" width="1320" height="1295"><div class="header-tools"><div id="connection">Подключение…</div><button id="design-toggle" type="button" aria-pressed="false">Новый дизайн</button><button id="profile-button">Настройки профиля</button></div></header>
+/* TV animation pass: clean cels, ink lines and a consistent palette across every view. */
+:root[data-visual=anime]{--page:#101b31;--surface:#1d2b47;--surface-hover:#293c5c;--text:#fff8eb;--muted:#b9c9db;--border:#49617f;--notice-bg:#183e42;--notice-border:#70b9a4;--notice-text:#dcfff2;--error-bg:#4a2c3d;--error-text:#ffd8cf;--anime-coral:#ff727b;--anime-sky:#9adfff;--anime-yellow:#ffdc84;--anime-ink:#0b1730;--anime-cel:#263a5c}
+:root[data-visual=anime] body{background:radial-gradient(circle at 94% 18%,#4678b633,transparent 28%),linear-gradient(180deg,#172746,var(--page) 55%)}
+:root[data-visual=anime] .workspace-bar{background:#172644;border-bottom:2px solid #ff727b;box-shadow:0 4px 0 #0b1730}
+:root[data-visual=anime] .workspace-logo{border-right-color:#466188}
+:root[data-visual=anime] .workspace-logo-mark{background:#ff727b;color:#192744;box-shadow:3px 3px 0 #0b1730,0 0 0 1px #ffd5c5}
+:root[data-visual=anime] .workspace-path strong{color:#ffdc84}
+:root[data-visual=anime] .sidebar{background:#182946;border-right:2px solid #466188}
+:root[data-visual=anime] .sidebar-group{color:#ffb4a9}
+:root[data-visual=anime] .tabs button{color:#deebfa}
+:root[data-visual=anime] .tabs button:hover{background:#314c72;border-color:#729bc4}
+:root[data-visual=anime] .nav-indicator{background:#355885;box-shadow:inset 4px 0 #ff727b,3px 3px 0 #0b1730}
+:root[data-visual=anime] .tabs button[aria-selected=true] .nav-icon{color:#ffdc84;filter:none}
+:root[data-visual=anime] .sidebar-footer-mark{background:#80e6c6;box-shadow:0 0 0 4px #80e6c62b}
+:root[data-visual=anime] header{min-height:302px;padding:35px 34px;border:2px solid #94b9db;border-radius:17px;background:linear-gradient(118deg,#29436f 0 61%,#3b6599 61% 100%);box-shadow:5px 6px 0 #0b1730,inset 0 2px #d6efff5c}
+:root[data-visual=anime] header::before{z-index:0;background:repeating-linear-gradient(132deg,transparent 0 20px,#d6efff17 21px 22px,transparent 23px 54px);mask-image:linear-gradient(to right,transparent 45%,black)}
+:root[data-visual=anime] header::after{right:18%;bottom:-134px;width:390px;height:390px;border:2px solid #d7f5ff77;box-shadow:0 0 0 20px #d7f5ff0d,0 0 0 48px #d7f5ff0b}
+:root[data-visual=anime] .header-intro{max-width:55%;padding-top:4px}
+:root[data-visual=anime] h1{color:#fff8ec;text-shadow:3px 4px 0 #12264b;letter-spacing:-.035em}
+:root[data-visual=anime] #owner{color:#e4f1fc;max-width:48ch}
+:root[data-visual=anime] .anime-characters{right:1%;bottom:-40px;width:475px;filter:drop-shadow(4px 7px 0 #102241aa)}
+:root[data-visual=anime] .header-tools{position:absolute;left:34px;right:auto;bottom:24px;z-index:3;max-width:58%;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:9px}
+:root[data-visual=anime] .header-tools #connection:not(:empty){max-width:150px;background:#1b3150;border:1px solid #a8c9e0;border-radius:7px;color:#d9efff}
+:root[data-visual=anime] #design-toggle{background:#ffdc84;border:2px solid #fff0bb;color:#172a4b;box-shadow:3px 3px 0 #0b1730;font-weight:800}
+:root[data-visual=anime] #design-toggle:hover{background:#ffebb4;border-color:#fff7d8}
+:root[data-visual=anime] #profile-button{background:#25446e;border:2px solid #9bc6ed;color:#fff8eb;box-shadow:3px 3px 0 #0b1730}
+:root[data-visual=anime] #profile-button:hover{background:#345989}
+:root[data-visual=anime] button{border-width:1.5px}
+:root[data-visual=anime] .task-control-panel,:root[data-visual=anime] .release-controls,:root[data-visual=anime] .builder-controls,:root[data-visual=anime] .investigation-form{background:#263a5c;border:1.5px solid #7298bb;box-shadow:4px 4px 0 #0b1730}
+:root[data-visual=anime] .task-control-intro{border-bottom:1px solid #6e93b5}
+:root[data-visual=anime] .task-control-intro strong{color:#fff8eb}
+:root[data-visual=anime] .task-control-intro span,:root[data-visual=anime] .filters label{color:#cfdeed}
+:root[data-visual=anime] input,:root[data-visual=anime] select{background:#14243f;border:1.5px solid #779abc;color:#fff8eb}
+:root[data-visual=anime] input:focus,:root[data-visual=anime] select:focus{border-color:#ffdc84;box-shadow:0 0 0 3px #ffdc8440}
+:root[data-visual=anime] .user-row>button,:root[data-visual=anime] #profile-save,:root[data-visual=anime] .builder-action,:root[data-visual=anime] .investigation-form button,:root[data-visual=anime] #hosts-save{background:#ff727b;border:1.5px solid #ffb4aa;color:#182644;font-weight:750;box-shadow:2px 2px 0 #0b1730}
+:root[data-visual=anime] .user-row>button:hover,:root[data-visual=anime] #profile-save:hover,:root[data-visual=anime] .builder-action:hover,:root[data-visual=anime] .investigation-form button:hover,:root[data-visual=anime] #hosts-save:hover{background:#ff9092;border-color:#ffd1bf}
+:root[data-visual=anime] .task-control-panel .user-row>button{background:#335275;border-color:#8bb7d9;color:#fff8eb}
+:root[data-visual=anime] .card,:root[data-visual=anime] .bug-row,:root[data-visual=anime] .stand-row,:root[data-visual=anime] .calendar-entry,:root[data-visual=anime] .calendar-day,:root[data-visual=anime] .builder-summary,:root[data-visual=anime] .release-summary{background:#1e304f;border:1.5px solid #5d7fa3;border-radius:10px;box-shadow:3px 3px 0 #0b1730}
+:root[data-visual=anime] .card:hover,:root[data-visual=anime] .bug-row:hover,:root[data-visual=anime] .stand-row:hover,:root[data-visual=anime] .calendar-day:hover{border-color:#9adfff;box-shadow:4px 4px 0 #0b1730}
+:root[data-visual=anime] .card.new-task{border-color:#80e6c6;box-shadow:inset 4px 0 #80e6c6,3px 3px 0 #0b1730}
+:root[data-visual=anime] .key,:root[data-visual=anime] .calendar-event-time,:root[data-visual=anime] .stand-kind{color:#ffdc84}
+:root[data-visual=anime] .title,:root[data-visual=anime] .bug-title,:root[data-visual=anime] .stand-ref,:root[data-visual=anime] .release-issue-title,:root[data-visual=anime] .stand-row a{color:#9adfff}
+:root[data-visual=anime] .status{border-radius:5px;border-left-width:4px;box-shadow:2px 2px 0 #0b173055}
+:root[data-visual=anime] .bugs-day h2{color:#fff8eb;border-bottom:2px solid #ff727b}
+:root[data-visual=anime] .bugs-day h2::before{content:'';display:inline-block;width:10px;height:10px;background:#ffdc84;transform:rotate(45deg);margin:0 5px 1px 1px}
+:root[data-visual=anime] .bug-row{border-left:4px solid #ff727b}
+:root[data-visual=anime] .calendar-weekdays span{color:#ffdc84}
+:root[data-visual=anime] .calendar-day{background:#203453}
+:root[data-visual=anime] .calendar-day.selected,:root[data-visual=anime] .calendar-day.selected:hover{background:#34557d;border-color:#ffdc84;box-shadow:3px 3px 0 #0b1730,inset 0 0 0 1px #ffdc84}
+:root[data-visual=anime] .calendar-day.today .calendar-number{background:#ff727b;color:#172744}
+:root[data-visual=anime] .calendar-event{background:#324e71;border-left-color:#ff727b;color:#fff8eb}
+:root[data-visual=anime] .calendar-day.selected .calendar-event{background:#203d60}
+:root[data-visual=anime] .calendar-entry{border-left:4px solid #ff727b}
+:root[data-visual=anime] .calendar-details h2{border-bottom:2px solid #ff727b}
+:root[data-visual=anime] .calendar-people{background:#263a5c;border:1.5px solid #7298bb;box-shadow:4px 4px 0 #0b1730}
+:root[data-visual=anime] .calendar-person{background:#1b304e;border:1px solid #668caf}
+:root[data-visual=anime] .calendar-person:hover,:root[data-visual=anime] .calendar-person[aria-pressed=true]{background:#34557d;border-color:#ffdc84}
+:root[data-visual=anime] .stands-tabs{background:#193150;border:1px solid #668caf}
+:root[data-visual=anime] .stands-tabs button{color:#deebfa}
+:root[data-visual=anime] .stands-tabs button[aria-pressed=true]{background:#ffdc84;color:#172744;box-shadow:2px 2px 0 #0b1730}
+:root[data-visual=anime] .stand-summary span{background:#25456a;border-color:#719bc1;color:#e3effc}
+:root[data-visual=anime] .stand-kind{background:#385578;border:1px solid #7699bc}
+:root[data-visual=anime] .stand-row.changed{border-left:4px solid #ffdc84}
+:root[data-visual=anime] .stand-activity-panel{background:#364061;border:1.5px solid #ffdc84;box-shadow:4px 4px 0 #0b1730}
+:root[data-visual=anime] .stand-activity-row{background:#243753}
+:root[data-visual=anime] .stand-activity-row a{color:#fff8eb}
+:root[data-visual=anime] .stand-live{color:#ffdc84}
+:root[data-visual=anime] .pipeline-motion:before{background:#ffdc84}
+:root[data-visual=anime] .pipeline-motion:after{background:#ff727b;box-shadow:0 0 6px #ff727b}
+:root[data-visual=anime] .pipeline-motion span{border-color:#ffdc84}
+:root[data-visual=anime] .release-parent{border-left:4px solid #ff727b}
+:root[data-visual=anime] .release-relations,:root[data-visual=anime] .release-git-branch,:root[data-visual=anime] .builder-labels label,:root[data-visual=anime] .builder-pick{background:#2b4668;border-color:#6a91b5;color:#fff8eb}
+:root[data-visual=anime] .release-git-branch:hover,:root[data-visual=anime] .builder-labels label:hover,:root[data-visual=anime] .builder-pick:hover{border-color:#ffdc84}
+:root[data-visual=anime] .release-result{background:#14243f;border-color:#779abc}
+:root[data-visual=anime] .hosts-row,:root[data-visual=anime] .hosts-other,:root[data-visual=anime] .hosts-empty{background:#213654;border:1.5px solid #668caf;box-shadow:3px 3px 0 #0b1730}
+:root[data-visual=anime] .hosts-other summary{color:#ffdc84}
+:root[data-visual=anime] .investigation-section h2{color:#fff8eb;border-bottom:2px solid #ff727b;padding-bottom:8px}
+:root[data-visual=anime] .investigation-timeline li{border-left-color:#ff727b}
+:root[data-visual=anime] .investigation-timeline li::marker{color:#ffdc84}
+:root[data-visual=anime] .investigation-log{background:#101e36;border-color:#668caf;color:#dbefff}
+:root[data-visual=anime] .investigation-finding[data-level=confirmed]{border-left-color:#80e6c6}
+:root[data-visual=anime] .investigation-finding[data-level=possible]{border-left-color:#ffdc84}
+:root[data-visual=anime] dialog{background:#233858;border:2px solid #ffdc84;color:#fff8eb;box-shadow:7px 7px 0 #0b1730,0 24px 80px #020916aa}
+:root[data-visual=anime] dialog h2{color:#ffdc84}
+:root[data-visual=anime] dialog::backdrop{background:#061126cc}
+:root[data-visual=anime] #user-options,:root[data-visual=anime] .user-row .user-option{background:#1e3556;border-color:#668caf}
+:root[data-visual=anime] .user-row .user-option:hover,:root[data-visual=anime] .user-row .user-option[aria-selected=true]{background:#365a82}
+:root[data-visual=anime] #empty,:root[data-visual=anime] .stand-message,:root[data-visual=anime] .bugs-message{background:#213654;border:1px solid #668caf;border-radius:9px;padding:14px}
+:root[data-visual=anime] .stand-message.error,:root[data-visual=anime] .bugs-message.error{background:var(--error-bg);color:var(--error-text)}
+@media(max-width:1120px){:root[data-visual=anime] .anime-characters{right:-2%;width:390px;bottom:-30px}:root[data-visual=anime] .header-intro{max-width:56%}}
+@media(max-width:800px){:root[data-visual=anime] .anime-characters{right:-9%;width:300px;bottom:-15px}:root[data-visual=anime] .header-intro{max-width:62%}:root[data-visual=anime] .header-tools{max-width:62%}}
+@media(max-width:760px){:root[data-visual=anime] .sidebar{border-bottom-color:#668caf}:root[data-visual=anime] .tabs button[aria-selected=true]{background:#355885;box-shadow:inset 0 -3px #ff727b}:root[data-visual=anime] header{min-height:228px;padding:22px 20px}:root[data-visual=anime] .header-intro{max-width:100%}:root[data-visual=anime] .anime-characters{display:block;right:-44px;bottom:-12px;width:225px;opacity:.38}:root[data-visual=anime] .header-tools{position:relative;left:auto;bottom:auto;max-width:none;flex-wrap:wrap;margin-top:38px}:root[data-visual=anime] header::after{right:-160px}}
+</style><div class="app-shell"><div class="workspace-bar"><div class="workspace-logo"><span class="workspace-logo-mark" aria-hidden="true">✓</span><strong>Taskboard</strong><span class="workspace-logo-divider"></span><span>ЛК / QA</span></div><div class="workspace-path"><span id="workspace-section">Задачи</span><span aria-hidden="true">/</span><strong id="workspace-location">На проверке</strong></div><div id="workspace-person" class="workspace-person"></div></div><aside class="sidebar"><div class="brand"><span class="brand-mark" aria-hidden="true">✓</span><span>Taskboard</span></div><nav class="tabs" aria-label="Разделы"><div class="sidebar-group">Задачи</div><button id="review" aria-selected="true">На проверке</button><button id="todo" aria-selected="false">Прочие статусы</button><button id="bugs-tab" aria-selected="false">Созданные баги</button><div class="sidebar-group">Планирование</div><button id="calendar-tab" aria-selected="false">Календарь</button><button id="stands-tab" aria-selected="false">Стенды</button><button id="hosts-tab" aria-selected="false">Hosts</button><div class="sidebar-group">Релизы</div><button id="release-tab" aria-selected="false">Регресс</button><button id="build-tab" aria-selected="false">Собрать релиз</button><div class="sidebar-group">Диагностика</div><button id="investigation-tab" aria-selected="false">Разбор обращений</button></nav><div class="sidebar-footer"><span class="sidebar-footer-mark" aria-hidden="true"></span><span>Рабочее пространство ЛК</span></div></aside><main><header><div class="header-intro"><h1 id="page-title">Мои задачи</h1><p id="owner">Задачи выбранного пользователя</p></div><img class="anime-characters" src="/assets/anime-qa-duo-tv.png" alt="" aria-hidden="true" width="1536" height="1024"><div class="header-tools"><div id="connection">Подключение…</div><button id="design-toggle" type="button" aria-pressed="false">Новый дизайн</button><button id="profile-button">Настройки профиля</button></div></header>
 <details class="appearance"><summary>Внешний вид</summary><div class="appearance-body"><label for="theme">Тема<select id="theme"><option value="system">Как в системе</option><option value="light">Светлая</option><option value="dark">Тёмная</option></select></label><fieldset><legend>Цвет интерфейса</legend><div id="accent-colors"></div></fieldset></div></details>
 <section id="tasks-view"><div class="task-control-panel"><div class="task-control-intro"><strong>Рабочая очередь</strong><span>Выбери пользователя Jira, чтобы увидеть актуальные задачи.</span></div>
 <div class="user-row"><div class="user-picker"><label for="username">Пользователь<input id="username" placeholder="Начни вводить имя или фамилию" autocomplete="off" maxlength="100" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="user-options" aria-describedby="user-help"></label><div id="user-options" role="listbox" aria-label="Пользователи Jira" hidden></div></div><button id="clear-user" type="button">Сбросить</button></div>
@@ -621,7 +713,7 @@ if(!['system','light','dark'].includes(themeChoice))themeChoice='system';if(!acc
 function applyAppearance(){
  const palette=accentPalette[accentChoice];
  document.documentElement.dataset.theme='dark';document.documentElement.dataset.design='mock';document.documentElement.dataset.visual=animeMode?'anime':'standard';document.documentElement.style.colorScheme='dark';
- document.documentElement.style.setProperty('--accent',animeMode?'#a74ace':palette.solid);document.documentElement.style.setProperty('--accent-link',animeMode?'#e7a9ff':palette.dark);
+ document.documentElement.style.setProperty('--accent',animeMode?'#ff727b':palette.solid);document.documentElement.style.setProperty('--accent-link',animeMode?'#9adfff':palette.dark);
  $('theme').value=themeChoice;for(const button of $('accent-colors').children)button.setAttribute('aria-pressed',String(button.dataset.color===accentChoice));
  $('design-toggle').setAttribute('aria-pressed',String(animeMode));$('design-toggle').textContent=animeMode?'Обычный вид':'Новый дизайн';
  requestAnimationFrame(moveNavIndicator);
@@ -660,8 +752,8 @@ function render(){
  requestAnimationFrame(moveNavIndicator);
  const locations={review:['Задачи','На проверке'],todo:['Задачи','Прочие статусы'],bugs:['Задачи','Созданные баги'],calendar:['Планирование','Календарь'],stands:['Планирование','Стенды'],hosts:['Планирование','Hosts'],release:['Релизы','Регресс'],build:['Релизы','Собрать релиз'],investigation:['Диагностика','Разбор обращений']};
  [$('workspace-section').textContent,$('workspace-location').textContent]=locations[tab]||locations.review;
- $('page-title').textContent=tab==='investigation'?'Разбор обращений':tab==='bugs'?'Созданные баги':tab==='calendar'?'Календарь':tab==='stands'?'Стенды':tab==='hosts'?'Hosts':'Мои задачи';
- if(tab==='bugs'){renderBugs();return}if(tab==='calendar'){renderCalendar();return}if(tab==='stands'){$('owner').textContent='ЛК · последние выкладки GitLab по DEV и QA';renderStands();return}if(tab==='hosts'){$('owner').textContent='Системные сопоставления имён и IP-адресов';renderHosts();return}if(tab==='investigation'){$('owner').textContent='Запросы и уведомления · состояние, маршрут, логи';renderInvestigation();return}if(tab==='release'){renderRelease();return}if(tab==='build'){renderBuilder();return}
+ $('page-title').textContent={investigation:'Разбор обращений',bugs:'Созданные баги',calendar:'Календарь',stands:'Стенды',hosts:'Hosts',release:'Регресс',build:'Собрать релиз'}[tab]||'Мои задачи';
+ if(tab==='bugs'){renderBugs();return}if(tab==='calendar'){renderCalendar();return}if(tab==='stands'){$('owner').textContent='ЛК · последние выкладки GitLab по DEV и QA';renderStands();return}if(tab==='hosts'){$('owner').textContent='Системные сопоставления имён и IP-адресов';renderHosts();return}if(tab==='investigation'){$('owner').textContent='Запросы и уведомления · состояние, маршрут, логи';renderInvestigation();return}if(tab==='release'){$('owner').textContent='Подзадачи, связи и результаты проверки релиза';renderRelease();return}if(tab==='build'){$('owner').textContent='Версии Jira, задачи и связи с релизом';renderBuilder();return}
  $('owner').textContent='Задачи выбранного пользователя';
  const review=data.issues.filter(x=>['READY TO TEST','TESTING'].includes(x.status));const todo=data.issues.filter(x=>!['READY TO TEST','TESTING'].includes(x.status));
  setNavLabel('review',`На проверке · ${review.length}`);setNavLabel('todo',`Прочие статусы · ${todo.length}`);
