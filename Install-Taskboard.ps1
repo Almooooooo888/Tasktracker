@@ -114,8 +114,15 @@ try {
             Start-Sleep -Seconds 1
         }
         if (-not $healthy) { throw 'Taskboard не ответил на проверку здоровья.' }
-        $updateStatus = Invoke-RestMethod -Uri "${appUrl}api/update/status" -TimeoutSec 5
-        if (-not $updateStatus.stage) { throw 'Компонент обновления не отвечает.' }
+        $updaterReady = $false
+        for ($attempt = 0; $attempt -lt 20; $attempt++) {
+            try {
+                $updateStatus = Invoke-RestMethod -Uri "${appUrl}api/update/status" -TimeoutSec 2
+                if ($updateStatus.stage) { $updaterReady = $true; break }
+            } catch {}
+            Start-Sleep -Seconds 1
+        }
+        if (-not $updaterReady) { throw 'Компонент обновления не отвечает.' }
     } catch {
         if ($oldWasRunning) {
             & docker compose -p $project -f $composePath down *> $null
