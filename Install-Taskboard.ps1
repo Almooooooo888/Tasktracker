@@ -39,6 +39,7 @@ $envPath = Join-Path $InstallDirectory '.env'
 if (-not (Test-Path -LiteralPath $envPath)) {
     $initialEnv = @(
         "TASKBOARD_IMAGE=$image"
+        'TASKBOARD_PROJECT=taskboard'
         'LK_JIRA_BASE_URL=https://dp-dev-develop-01.dev.lan'
         'LK_JIRA_TLS_SKIP_VERIFY=true'
         'LK_GITLAB_BASE_URL=https://ahcode-01.digital.achrf.ru'
@@ -53,6 +54,9 @@ if (-not (Test-Path -LiteralPath $envPath)) {
         }
     } else {
         Add-Content -LiteralPath $envPath -Value "TASKBOARD_IMAGE=$image" -Encoding UTF8
+    }
+    if ($envText -notmatch '(?m)^TASKBOARD_PROJECT=') {
+        Add-Content -LiteralPath $envPath -Value 'TASKBOARD_PROJECT=taskboard' -Encoding UTF8
     }
 }
 

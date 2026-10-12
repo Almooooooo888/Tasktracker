@@ -105,8 +105,14 @@ async function pullImage(version) {
   });
 }
 
+export function containerFilters(projectName = process.env.UPDATER_PROJECT) {
+  const labels = [`com.docker.compose.service=${service}`];
+  if (projectName) labels.push(`com.docker.compose.project=${projectName}`);
+  return { label: labels };
+}
+
 async function currentContainer() {
-  const filters = encodeURIComponent(JSON.stringify({ label: [`com.docker.compose.service=${service}`] }));
+  const filters = encodeURIComponent(JSON.stringify(containerFilters()));
   const entries = await docker('GET', `/containers/json?all=1&filters=${filters}`);
   const running = entries.filter(item => item.State === 'running');
   if (running.length !== 1) throw new Error('Ожидался один работающий контейнер Taskboard.');

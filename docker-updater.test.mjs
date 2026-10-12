@@ -4,7 +4,11 @@ import http from 'node:http';
 import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { nextEnv, cloneCreateBody } from './docker-updater.mjs';
+import { nextEnv, cloneCreateBody, containerFilters } from './docker-updater.mjs';
+
+test('Docker updater selects the Taskboard app from its own Compose project', () => {
+  assert.deepEqual(containerFilters('taskboard'), { label: ['com.docker.compose.service=jira-board', 'com.docker.compose.project=taskboard'] });
+});
 
 test('Docker update preserves unrelated environment and replaces the image once', () => {
   assert.equal(nextEnv('LK_JIRA_BASE_URL=https://jira.example.com\nTASKBOARD_IMAGE=old/image:1.0.0\nLK_GITLAB_TOKEN=\n', 'almooooooo/taskboard:1.27.0'),

@@ -1,6 +1,6 @@
 services:
   jira-board:
-    image: ${TASKBOARD_IMAGE:-almooooooo/taskboard:1.27.4}
+    image: ${TASKBOARD_IMAGE:-almooooooo/taskboard:1.27.5}
     restart: unless-stopped
     ports:
       - "127.0.0.1:18764:18764"
@@ -25,7 +25,7 @@ services:
     security_opt:
       - no-new-privileges:true
   docker-updater:
-    image: almooooooo/taskboard:1.27.4
+    image: almooooooo/taskboard:1.27.5
     command: ["node", "docker-updater.mjs"]
     user: "0:0"
     restart: unless-stopped
@@ -34,6 +34,7 @@ services:
     environment:
       UPDATER_STATE_DIR: /updater-state
       UPDATER_WORKSPACE: /workspace
+      UPDATER_PROJECT: ${TASKBOARD_PROJECT:-}
     volumes:
       - updater-state:/updater-state
       - ./:/workspace
