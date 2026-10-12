@@ -54,9 +54,55 @@ export function cloneCreateBody(inspect, image) {
   return config;
 }
 
-async function state(stage, message) {
-  await writeFile(`${statusPath}.tmp`, JSON.stringify({ stage, message, checkedAt: new Date().toISOString() }));
+async function state(stage, message, details = {}) {
+  await writeFile(`${statusPath}.tmp`, JSON.stringify({ stage, message, ...details, checkedAt: new Date().toISOString() }));
   await rename(`${statusPath}.tmp`, statusPath);
+}
+
+async function pullImage(version) {
+  const path = `/images/create?fromImage=${encodeURIComponent(repository)}&tag=${encodeURIComponent(version)}`;
+  return new Promise((resolve, reject) => {
+    const req = http.request({ socketPath, method: 'POST', path }, async res => {
+      try {
+        let pending = '';
+        const decoder = new TextDecoder();
+        let lastReport = 0;
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          for await (const chunk of res) pending += chunk;
+          throw new Error(`Docker HTTP ${res.statusCode}: ${pending.slice(0, 250)}`);
+        }
+        async function event(line) {
+          if (!line.trim()) return;
+          const item = JSON.parse(line);
+          if (item.error) throw new Error(typeof item.error === 'string' ? item.error : 'Docker не смог скачать образ.');
+          const current = Number(item.progressDetail?.current), total = Number(item.progressDetail?.total);
+          if (!item.id || !Number.isFinite(current) || !Number.isFinite(total) || total <= 0) return;
+          const now = Date.now();
+          if (now - lastReport < 500 && current < total) return;
+          lastReport = now;
+          const activity = item.status === 'Extracting' ? 'extract' : 'download';
+          await state('running', activity === 'extract' ? 'Распаковываю слой Docker-образа.' : 'Скачиваю слой Docker-образа.', {
+            phase: 'download', progress: { scope: 'layer', activity, id: String(item.id).slice(0, 12), current: Math.min(Math.max(0, current), total), total }
+          });
+        }
+        for await (const chunk of res) {
+          pending += decoder.decode(chunk, { stream: true });
+          let newline;
+          while ((newline = pending.indexOf('\n')) !== -1) {
+            const line = pending.slice(0, newline);
+            pending = pending.slice(newline + 1);
+            await event(line);
+          }
+        }
+        pending += decoder.decode();
+        if (pending.trim()) await event(pending);
+        resolve();
+      } catch (error) { reject(error); }
+    });
+    req.setTimeout(120000, () => req.destroy(new Error('Docker не ответил за две минуты.')));
+    req.on('error', reject);
+    req.end();
+  });
 }
 
 async function currentContainer() {
@@ -92,29 +138,34 @@ async function install(version, verifyVersion = waitForVersion) {
   let oldEnv, old, oldName, backupName, newId, stopped = false, renamed = false;
   try {
     oldEnv = await readFile(`${workspace}/.env`, 'utf8').catch(error => error.code === 'ENOENT' ? null : Promise.reject(error));
-    await state('running', 'Скачиваю Docker-образ.');
-    await docker('POST', `/images/create?fromImage=${encodeURIComponent(repository)}&tag=${encodeURIComponent(version)}`);
+    await state('running', 'Docker ищет и скачивает слои образа.', { phase: 'download' });
+    await pullImage(version);
+    await state('running', 'Проверяю скачанный образ.', { phase: 'verify' });
     await docker('GET', `/images/${encodeURIComponent(image)}/json`);
     old = await currentContainer();
     oldName = old.Name.replace(/^\//, '');
     backupName = `${oldName}-rollback-${Date.now()}`;
-    await state('running', 'Перезапускаю Taskboard.');
+    await state('running', 'Останавливаю прежний Taskboard.', { phase: 'restart' });
     await docker('POST', `/containers/${old.Id}/stop?t=10`);
     stopped = true;
     await docker('POST', `/containers/${old.Id}/rename?name=${encodeURIComponent(backupName)}`);
     renamed = true;
     const created = await docker('POST', `/containers/create?name=${encodeURIComponent(oldName)}`, cloneCreateBody(old, image));
     newId = created.Id;
+    await state('running', 'Запускаю новую версию Taskboard.', { phase: 'restart' });
     await docker('POST', `/containers/${newId}/start`);
+    await state('running', 'Проверяю запуск новой версии.', { phase: 'health' });
     if (!await verifyVersion(version)) throw new Error('Новая версия не ответила после запуска.');
+    await state('running', 'Сохраняю установленную версию.', { phase: 'finish' });
     await writeFile(`${workspace}/.env`, nextEnv(oldEnv || '', image));
     try { await docker('DELETE', `/containers/${old.Id}?force=1`); }
     catch { /* A stopped backup may remain; the new version is already running. */ }
-    await state('done', `Установлена версия ${version}. Страница перезагрузится.`);
+    await state('done', `Установлена версия ${version}. Страница перезагрузится.`, { phase: 'done' });
   } catch (error) {
     let message = error.message;
     if (stopped) {
       try {
+        await state('running', 'Новая версия не запустилась. Восстанавливаю прежнюю.', { phase: 'rollback' });
         if (newId) await docker('DELETE', `/containers/${newId}?force=1`);
         if (renamed) await docker('POST', `/containers/${old.Id}/rename?name=${encodeURIComponent(oldName)}`);
         await docker('POST', `/containers/${old.Id}/start`);
@@ -123,7 +174,7 @@ async function install(version, verifyVersion = waitForVersion) {
         message += ' Прежняя версия восстановлена.';
       } catch { message += ' Откат не удался; проверь Docker-контейнеры.'; }
     }
-    await state('error', message);
+    await state('error', message, { phase: 'error' });
   } finally { busy = false; }
 }
 
@@ -158,7 +209,7 @@ export async function startUpdater(port = 18765, verifyVersion = waitForVersion)
       try { version = JSON.parse(body).version; } catch { return send(res, 400, { error: 'Некорректный запрос.' }); }
       if (typeof version !== 'string' || !versionPattern.test(version)) return send(res, 400, { error: 'Некорректная версия.' });
       busy = true;
-      try { await state('running', 'Начинаю обновление.'); }
+      try { await state('running', 'Начинаю обновление.', { phase: 'starting' }); }
       catch { busy = false; return send(res, 500, { error: 'Не удалось сохранить состояние обновления.' }); }
       void install(version, verifyVersion);
       return send(res, 202, { message: 'Обновление запущено.' });

@@ -125,3 +125,64 @@ test('Docker update switches image and records it for the next Compose start', a
     await rm(temporary, { recursive: true, force: true });
   }
 });
+
+test('Docker update reports measured layer bytes while the image is still downloading', async () => {
+  const temporary = await mkdtemp(join(tmpdir(), 'taskboard-updater-progress-'));
+  const socketPath = `\\\\.\\pipe\\taskboard-progress-${process.pid}-${Date.now()}`;
+  let releasePull, notifyPull;
+  const pullStarted = new Promise(resolve => { notifyPull = resolve; });
+  const old = {
+    Id: 'old-container', Name: '/taskboard-jira-board-1',
+    Config: { Image: 'almooooooo/taskboard:1.27.1' },
+    HostConfig: { NetworkMode: 'taskboard_default' },
+    NetworkSettings: { Networks: { taskboard_default: { Aliases: ['jira-board'] } } }
+  };
+  const engine = http.createServer(async (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    if (req.url.startsWith('/images/create')) {
+      res.write('{"id":"abc123","status":"Downloading","progressDetail":{"current":512,"total":1024}}\n');
+      notifyPull();
+      await new Promise(resolve => { releasePull = resolve; });
+      return res.end('{"status":"pulled"}\n');
+    }
+    if (req.url.startsWith('/images/')) return res.end('{}');
+    if (req.url.startsWith('/containers/json')) return res.end(JSON.stringify([{ Id: old.Id, State: 'running' }]));
+    if (req.url === `/containers/${old.Id}/json`) return res.end(JSON.stringify(old));
+    if (req.url.startsWith('/containers/create')) return res.end('{"Id":"new-container"}');
+    res.end('{}');
+  });
+  let updater;
+  try {
+    await new Promise(resolve => engine.listen(socketPath, resolve));
+    process.env.DOCKER_SOCKET = socketPath;
+    process.env.UPDATER_STATE_DIR = temporary;
+    process.env.UPDATER_WORKSPACE = temporary;
+    const { startUpdater } = await import(`./docker-updater.mjs?progress=${Date.now()}`);
+    updater = await startUpdater(0, async () => true);
+    const token = (await readFile(join(temporary, 'token'), 'utf8')).trim();
+    const response = await fetch(`http://127.0.0.1:${updater.address().port}/install`, { method: 'POST', headers: { 'X-Updater-Token': token }, body: JSON.stringify({ version: '1.27.2' }) });
+    assert.equal(response.status, 202);
+    await pullStarted;
+    let status;
+    for (let attempt = 0; attempt < 50; attempt++) {
+      status = JSON.parse(await readFile(join(temporary, 'status.json'), 'utf8'));
+      if (status.progress) break;
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    assert.equal(status.phase, 'download');
+    assert.deepEqual(status.progress, { scope: 'layer', activity: 'download', id: 'abc123', current: 512, total: 1024 });
+    releasePull();
+    for (let attempt = 0; attempt < 50; attempt++) {
+      status = JSON.parse(await readFile(join(temporary, 'status.json'), 'utf8'));
+      if (status.stage === 'done') break;
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    assert.equal(status.stage, 'done');
+    assert.equal(status.progress, undefined);
+  } finally {
+    if (releasePull) releasePull();
+    if (updater) await new Promise(resolve => updater.close(resolve));
+    await new Promise(resolve => engine.close(resolve));
+    await rm(temporary, { recursive: true, force: true });
+  }
+});

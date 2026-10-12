@@ -236,6 +236,16 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 :root[data-design=mock] #investigation-result>.investigation-grid .card:nth-child(-n+4),:root[data-design=mock] #investigation-result>.investigation-section:nth-child(-n+4){animation:element-arrive .25s cubic-bezier(.23,1,.32,1) both}
 :root[data-design=mock] dialog[open]{animation:dialog-arrive .28s cubic-bezier(.23,1,.32,1) both}
 :root[data-design=mock] dialog[open]::backdrop{animation:backdrop-arrive .22s ease-out both}
+/* An exact percentage is shown only for a Docker layer that reports byte totals. */
+#update-progress{margin-top:18px;padding:14px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+#update-progress[hidden]{display:none}
+.update-progress-head{display:flex;justify-content:space-between;align-items:baseline;gap:14px;color:var(--text);font-size:13px}
+#update-percent{font-variant-numeric:tabular-nums;color:var(--muted)}
+#update-bar{display:block;width:100%;height:9px;margin:13px 0 9px;accent-color:var(--accent)}
+#update-bar::-webkit-progress-bar{background:var(--surface-hover);border-radius:999px}
+#update-bar::-webkit-progress-value{background:var(--accent);border-radius:999px}
+#update-bar::-moz-progress-bar{background:var(--accent);border-radius:999px}
+#update-detail{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
 /* Connection state sits above one aligned row of header actions. */
 .header-tools,:root[data-design=mock] .header-tools{display:grid;grid-template-columns:max-content max-content;align-items:stretch;justify-content:end;gap:8px 10px;margin-left:auto}
 .header-tools #connection,:root[data-design=mock] .header-tools #connection{grid-column:1/-1;max-width:none;margin:0;text-align:right}
@@ -269,7 +279,7 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 <form id="investigation-form" class="investigation-form"><label for="investigation-kind">Вид обращения<select id="investigation-kind"><option value="request">Запрос</option><option value="notice">Уведомление</option></select></label><label for="investigation-number">Номер или UUID<input id="investigation-number" inputmode="text" placeholder="Например, ЗИ/123/01С или UUID" autocomplete="off" maxlength="120" required></label><label for="investigation-window">Окно логов<select id="investigation-window"><option value="60">1 час</option><option value="180" selected>3 часа</option><option value="360">6 часов</option><option value="1440">24 часа</option></select></label><button type="submit" id="investigation-run">Разобрать</button></form>
 <p class="investigation-note">Проверка читает закрытый и открытый контуры и ищет строки Kubernetes по найденным идентификаторам. Если номер изменился после регистрации, введи текущий номер или UUID карточки.</p><p id="investigation-error" role="alert" hidden></p><div id="investigation-result" aria-live="polite"></div>
 </section></main></div>
-<dialog id="update-dialog" aria-labelledby="update-title"><h2 id="update-title">Обновление Taskboard</h2><p id="update-message" role="status">Проверяю опубликованные версии…</p><div class="actions"><button id="update-install" type="button" hidden>Установить обновление</button><button id="update-close" type="button">Закрыть</button></div></dialog>
+<dialog id="update-dialog" aria-labelledby="update-title"><h2 id="update-title">Обновление Taskboard</h2><p id="update-message" role="status">Проверяю опубликованные версии…</p><div id="update-progress" hidden><div class="update-progress-head"><strong id="update-phase">Подготовка</strong><span id="update-percent"></span></div><progress id="update-bar" max="100" aria-label="Ход текущего этапа обновления"></progress><p id="update-detail"></p></div><div class="actions"><button id="update-install" type="button" hidden>Установить обновление</button><button id="update-close" type="button">Закрыть</button></div></dialog>
 <dialog id="profile-dialog" aria-labelledby="profile-title"><form id="profile-form"><h2 id="profile-title">Настройки профиля</h2>
 <p id="profile-account"></p>
 <label for="profile-token">Токен Jira<input id="profile-token" type="password" autocomplete="new-password" maxlength="8000"></label>
@@ -863,9 +873,57 @@ async function poll(){
 }
 $('profile-button').onclick=openProfile;
 let updateDetails=null,updateWorking=false;
-$('update-button').onclick=async()=>{
- const dialog=$('update-dialog');dialog.showModal();$('update-message').textContent='Проверяю опубликованные версии…';$('update-install').hidden=true;updateDetails=null;
+const updatePhaseNames={starting:'Подготовка',download:'Загрузка образа',verify:'Проверка образа',restart:'Перезапуск',health:'Проверка запуска',finish:'Завершение',rollback:'Восстановление прежней версии'};
+function updateBytes(value){return value<1048576?`${(value/1024).toFixed(1)} КБ`:`${(value/1048576).toFixed(1)} МБ`}
+function renderUpdateProgress(state){
+ $('update-progress').hidden=state.stage!=='running';
+ if(state.message)$('update-message').textContent=state.message;
+ if(state.stage!=='running')return;
+ $('update-phase').textContent=updatePhaseNames[state.phase]||'Обновление';
+ const bar=$('update-bar'),percent=$('update-percent'),detail=$('update-detail'),progress=state.progress;
+ if(progress?.scope==='layer'&&Number.isFinite(progress.current)&&Number.isFinite(progress.total)&&progress.total>0){
+  const value=Math.floor(Math.max(0,Math.min(100,100*progress.current/progress.total)));
+  bar.value=value;percent.textContent=`${value}% слоя`;
+  detail.textContent=`${progress.activity==='extract'?'Распаковка':'Загрузка'} слоя ${progress.id}: ${updateBytes(progress.current)} из ${updateBytes(progress.total)}. Процент относится к этому слою, не ко всему обновлению.`;
+ }else{
+  bar.removeAttribute('value');percent.textContent='';
+  detail.textContent=state.phase==='download'?'Docker пока не сообщил размер слоя — точного процента нет.':'Для этого этапа Docker не сообщает процент.';
+ }
+ const age=Date.now()-Date.parse(state.checkedAt);
+ if(Number.isFinite(age)&&age>15000)detail.textContent+=` Новых событий ${Math.floor(age/1000)} с.`;
+}
+async function watchUpdate(){
+ if(updateWorking)return;
+ updateWorking=true;$('update-install').disabled=true;$('update-install').hidden=true;
  try{
+  let failures=0,lastState=null;
+  for(let attempt=0;attempt<180;attempt++){
+   await new Promise(resolve=>setTimeout(resolve,1500));
+   let state;
+   try{
+    const response=await fetch('/api/update/status',{signal:AbortSignal.timeout(2500)});
+    if(!response.ok)throw Error('Соединение с обновлятором временно недоступно.');
+    state=await response.json();lastState=state;failures=0;
+   }catch{
+    if(lastState?.stage==='running')renderUpdateProgress(lastState);
+    if(++failures>=20)throw Error('Нет связи с обновлятором более 30 секунд. Проверь Docker Desktop.');
+    continue;
+   }
+   renderUpdateProgress(state);
+   if(state.stage==='error')throw Error(state.message||'Обновление не удалось.');
+   if(state.stage==='done'){window.location.reload();return}
+  }
+  throw Error('Обновление ещё не завершилось. Открой это окно позже, чтобы посмотреть состояние.');
+ }catch(error){$('update-progress').hidden=true;$('update-message').textContent=error.message}
+ finally{updateWorking=false;$('update-install').disabled=false}
+}
+$('update-button').onclick=async()=>{
+ const dialog=$('update-dialog');dialog.showModal();$('update-message').textContent='Проверяю опубликованные версии…';$('update-progress').hidden=true;$('update-install').hidden=true;updateDetails=null;
+ try{
+  try{
+   const statusResponse=await fetch('/api/update/status',{signal:AbortSignal.timeout(2500)});
+   if(statusResponse.ok){const state=await statusResponse.json();if(state.stage==='running'){renderUpdateProgress(state);void watchUpdate();return}}
+  }catch{}
   const response=await fetch('/api/update',{signal:AbortSignal.timeout(15000)}),info=await response.json();
   if(!response.ok)throw Error(info.error||'Не удалось проверить обновления.');
   updateDetails=info;
@@ -877,24 +935,13 @@ $('update-button').onclick=async()=>{
 $('update-close').onclick=()=>$('update-dialog').close();
 $('update-install').onclick=async()=>{
  if(!updateDetails||updateWorking)return;
- updateWorking=true;$('update-install').disabled=true;$('update-message').textContent='Запускаю обновление…';
+ $('update-install').disabled=true;renderUpdateProgress({stage:'running',phase:'starting',message:'Запускаю обновление…'});
  try{
   const response=await fetch('/api/update/install',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':configuration.csrf},body:'{}',signal:AbortSignal.timeout(15000)}),result=await response.json();
   if(!response.ok)throw Error(result.error||'Не удалось запустить обновление.');
-  $('update-message').textContent='Обновление выполняется. Дождись перезапуска приложения…';
-  for(let attempt=0;attempt<120;attempt++){
-   await new Promise(resolve=>setTimeout(resolve,1500));
-   try{
-    const stateResponse=await fetch('/api/update/status',{signal:AbortSignal.timeout(2500)}),state=await stateResponse.json();
-    if(!stateResponse.ok)throw Error(state.error||'Не удалось получить состояние обновления.');
-    if(state.stage==='error')throw Error(state.message||'Обновление не удалось.');
-    if(state.stage==='done'){window.location.reload();return}
-    if(state.stage==='running'&&state.message)$('update-message').textContent=state.message;
-   }catch(error){if(error.message&&error.message!=='Failed to fetch'&&error.name!=='TimeoutError')throw error}
-  }
-  throw Error('Обновление ещё не завершилось. Проверь его статус позже или запусти Taskboard вручную.');
- }catch(error){$('update-message').textContent=error.name==='TimeoutError'?'Обновление не ответило вовремя.':error.message}
- finally{updateWorking=false;$('update-install').disabled=false}
+  await watchUpdate();
+ }catch(error){$('update-progress').hidden=true;$('update-message').textContent=error.name==='TimeoutError'?'Обновление не ответило вовремя.':error.message}
+ finally{$('update-install').disabled=false}
 };
  $('profile-cancel').onclick=()=>{$('profile-token').value='';$('profile-gitlab-token').value='';$('profile-pg-password').value='';$('profile-dialog').close()};
  $('profile-dialog').addEventListener('close',()=>{$('profile-token').value='';$('profile-gitlab-token').value='';$('profile-pg-password').value=''});
