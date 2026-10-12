@@ -3,8 +3,8 @@ Set-Location $PSScriptRoot
 $envPath = Join-Path $PSScriptRoot '.env'
 if (Test-Path -LiteralPath $envPath -PathType Leaf) {
     $envText = [IO.File]::ReadAllText($envPath)
-    if ($envText -match '(?m)^TASKBOARD_IMAGE=almooooooo/taskboard:(\d+\.\d+\.\d+)[ \t]*$' -and [version]$Matches[1] -lt [version]'1.27.0') {
-        $envText = [regex]::Replace($envText, '(?m)^TASKBOARD_IMAGE=almooooooo/taskboard:\d+\.\d+\.\d+[ \t]*$', 'TASKBOARD_IMAGE=almooooooo/taskboard:1.27.0')
+    if ($envText -match '(?m)^TASKBOARD_IMAGE=almooooooo/taskboard:(\d+\.\d+\.\d+)[ \t]*$' -and [version]$Matches[1] -lt [version]'1.27.1') {
+        $envText = [regex]::Replace($envText, '(?m)^TASKBOARD_IMAGE=almooooooo/taskboard:\d+\.\d+\.\d+[ \t]*$', 'TASKBOARD_IMAGE=almooooooo/taskboard:1.27.1')
         [IO.File]::WriteAllText($envPath, $envText, [Text.UTF8Encoding]::new($false))
     }
 }
