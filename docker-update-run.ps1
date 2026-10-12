@@ -9,6 +9,13 @@ function Set-UpdateState([string]$stage, [string]$message) {
     $json = @{ stage=$stage; message=$message; checkedAt=(Get-Date).ToUniversalTime().ToString('o') } | ConvertTo-Json -Compress
     [IO.File]::WriteAllText($stateFile, $json, [Text.UTF8Encoding]::new($false))
 }
+function Invoke-DockerCompose([string[]]$arguments) {
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { & docker compose -f $composePath @arguments *> $null; $code = $LASTEXITCODE }
+    finally { $ErrorActionPreference = $previousPreference }
+    if ($code -ne 0) { throw 'Docker Compose не смог выполнить обновление.' }
+}
 $previousEnv = if (Test-Path -LiteralPath $envPath) { [IO.File]::ReadAllText($envPath) } else { $null }
 $previousImage = $env:TASKBOARD_IMAGE
 $changed = $false
@@ -30,13 +37,11 @@ try {
     }
     $env:TASKBOARD_IMAGE = $image
     Set-UpdateState 'running' 'Загружаю Docker-образ.'
-    & docker compose -f $composePath pull jira-board *> $null
-    if ($LASTEXITCODE -ne 0) { throw 'Не удалось загрузить Docker-образ.' }
+    Invoke-DockerCompose -arguments @('pull', 'jira-board')
     [IO.File]::WriteAllText($envPath, $newEnv, [Text.UTF8Encoding]::new($false))
     $changed = $true
     Set-UpdateState 'running' 'Перезапускаю Taskboard.'
-    & docker compose -f $composePath up -d --no-deps jira-board *> $null
-    if ($LASTEXITCODE -ne 0) { throw 'Не удалось перезапустить контейнер.' }
+    Invoke-DockerCompose -arguments @('up', '-d', '--no-deps', 'jira-board')
     $ready = $false
     for ($i=0; $i -lt 30; $i++) {
         Start-Sleep -Seconds 1
@@ -55,9 +60,8 @@ try {
             else { [IO.File]::WriteAllText($envPath, $previousEnv, [Text.UTF8Encoding]::new($false)) }
             if ($null -eq $previousImage) { Remove-Item Env:\TASKBOARD_IMAGE -ErrorAction SilentlyContinue }
             else { $env:TASKBOARD_IMAGE = $previousImage }
-            & docker compose -f $composePath up -d --no-deps jira-board *> $null
-            if ($LASTEXITCODE -eq 0) { $message += ' Предыдущий контейнер восстановлен.' }
-            else { $message += ' Откат контейнера не удался.' }
+            Invoke-DockerCompose -arguments @('up', '-d', '--no-deps', 'jira-board')
+            $message += ' Предыдущий контейнер восстановлен.'
         } catch { $message += ' Откат контейнера не удался.' }
     }
     Set-UpdateState 'error' $message

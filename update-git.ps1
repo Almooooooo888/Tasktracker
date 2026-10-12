@@ -10,9 +10,19 @@ function Set-UpdateState([string]$stage, [string]$message) {
     [IO.File]::WriteAllText($stateFile, $json, [Text.UTF8Encoding]::new($false))
 }
 function Invoke-Git([string[]]$arguments) {
-    $result = & git -c "safe.directory=$safeRepo" @arguments 2>$null
-    if ($LASTEXITCODE -ne 0) { throw 'Git не смог выполнить обновление.' }
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { $result = & git -c "safe.directory=$safeRepo" @arguments 2>$null; $code = $LASTEXITCODE }
+    finally { $ErrorActionPreference = $previousPreference }
+    if ($code -ne 0) { throw 'Git не смог выполнить обновление.' }
     return ($result | Out-String).Trim()
+}
+function Invoke-NpmCi {
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { & npm.cmd ci --omit=dev --ignore-scripts *> $null; $code = $LASTEXITCODE }
+    finally { $ErrorActionPreference = $previousPreference }
+    if ($code -ne 0) { throw 'Не удалось установить зависимости новой версии.' }
 }
 $oldCommit = $null
 $merged = $false
@@ -28,13 +38,15 @@ try {
     Invoke-Git -arguments @('fetch', '--no-tags', 'origin', 'main') | Out-Null
     $target = Invoke-Git -arguments @('rev-parse', 'FETCH_HEAD')
     if ($target -eq $oldCommit) { Set-UpdateState 'done' 'Уже установлена последняя версия.'; exit 0 }
-    & git -c "safe.directory=$safeRepo" merge-base --is-ancestor $oldCommit $target 2>$null
-    if ($LASTEXITCODE -ne 0) { throw 'Ветка разошлась с GitHub. Автоматическое обновление остановлено.' }
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { & git -c "safe.directory=$safeRepo" merge-base --is-ancestor $oldCommit $target *> $null; $ancestorCode = $LASTEXITCODE }
+    finally { $ErrorActionPreference = $previousPreference }
+    if ($ancestorCode -ne 0) { throw 'Ветка разошлась с GitHub. Автоматическое обновление остановлено.' }
     Set-UpdateState 'running' 'Устанавливаю новую версию.'
     Invoke-Git -arguments @('merge', '--ff-only', $target) | Out-Null
     $merged = $true
-    & npm.cmd ci --omit=dev --ignore-scripts *> $null
-    if ($LASTEXITCODE -ne 0) { throw 'Не удалось установить зависимости новой версии.' }
+    Invoke-NpmCi
     & (Join-Path $repo 'start.ps1') -Restart -Background
     if (-not $?) { throw 'Новая версия не запустилась.' }
     Set-UpdateState 'done' 'Обновление установлено. Перезагрузи страницу.'
@@ -43,7 +55,7 @@ try {
     if ($merged -and $oldCommit -and -not (Invoke-Git -arguments @('status', '--porcelain'))) {
         try {
             Invoke-Git -arguments @('reset', '--hard', $oldCommit) | Out-Null
-            & npm.cmd ci --omit=dev --ignore-scripts *> $null
+            Invoke-NpmCi
             & (Join-Path $repo 'start.ps1') -Restart -Background
             $message += ' Предыдущая версия восстановлена.'
         } catch { $message += ' Автоматический откат не удался — запусти Start.cmd вручную.' }
