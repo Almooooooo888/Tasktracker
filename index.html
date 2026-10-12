@@ -221,6 +221,8 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 :root[data-design=mock] .availability-grid .availability-open{color:#87c7a1;font-weight:700}
 :root[data-design=mock] .availability-grid .availability-closed{color:var(--muted)}
 :root[data-design=mock] .availability-error{color:var(--error-text);font-size:13px;line-height:1.5}
+.calendar-person-row{margin:7px 0;overflow:hidden;border:1px solid var(--border);border-radius:9px;background:var(--surface-hover);transition:border-color .18s ease,background .18s ease}.calendar-person-row:hover,.calendar-person-row:has(.calendar-person[aria-pressed=true]){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface))}.calendar-person-row .calendar-person{display:block;width:100%;margin:0;padding:11px 12px 9px;border:0;border-radius:0;background:transparent;text-align:left}.calendar-person-row .calendar-person:hover,.calendar-person-row .calendar-person[aria-pressed=true]{border:0;background:transparent}.calendar-person-row .calendar-person-add{display:block;width:100%;margin:0;padding:8px 12px;border:0;border-top:1px solid var(--border);border-radius:0;background:transparent;color:var(--accent-link);font-size:12px;font-weight:650;text-align:left}.calendar-person-row .calendar-person-add:hover{background:color-mix(in srgb,var(--accent) 10%,var(--surface));text-decoration:none}.calendar-person-row .calendar-person-add:disabled{color:var(--muted)}:root[data-design=mock] .calendar-person-row button:hover{transform:none}
+.availability-grid .availability-head-person{display:flex;align-items:center;justify-content:flex-start;gap:4px;min-width:0}.availability-head-person span{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.availability-head-person .availability-remove{display:inline-flex;align-items:center;justify-content:center;flex:none;width:20px;height:20px;margin:0;padding:0;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--accent-link);font-size:16px;line-height:1}.availability-head-person .availability-remove:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--surface));color:var(--text)}:root[data-design=mock] .availability-head-person .availability-remove:hover{transform:none}
 @media(max-width:760px){:root[data-design=mock] .availability-form{grid-template-columns:1fr 1fr}:root[data-design=mock] .availability-form label:first-child{grid-column:1/-1}:root[data-design=mock] .availability-form button{align-self:end}}
 @media(max-width:500px){:root[data-design=mock] .availability-form{grid-template-columns:1fr}:root[data-design=mock] .availability-form label:first-child{grid-column:auto}}
 :root[data-design=mock] .release-check:hover,:root[data-design=mock] .builder-pick:hover,:root[data-design=mock] .builder-labels label:hover,:root[data-design=mock] .stand-activity-row:hover{transform:translateX(2px)}
@@ -235,7 +237,7 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 :root[data-design=mock] dialog[open]{animation:dialog-arrive .28s cubic-bezier(.23,1,.32,1) both}
 :root[data-design=mock] dialog[open]::backdrop{animation:backdrop-arrive .22s ease-out both}
 @media(prefers-reduced-motion:reduce){:root[data-design=mock] *, :root[data-design=mock] *::before,:root[data-design=mock] *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
-</style><div class="app-shell"><div class="workspace-bar"><div class="workspace-logo"><span class="workspace-logo-mark" aria-hidden="true">✓</span><strong>Taskboard</strong><span class="workspace-logo-divider"></span><span>ЛК / QA</span></div><div class="workspace-path"><span id="workspace-section">Задачи</span><span aria-hidden="true">/</span><strong id="workspace-location">На проверке</strong></div><div id="workspace-person" class="workspace-person"></div></div><aside class="sidebar"><div class="brand"><span class="brand-mark" aria-hidden="true">✓</span><span>Taskboard</span></div><nav class="tabs" aria-label="Разделы"><div class="sidebar-group">Задачи</div><button id="review" aria-selected="true">На проверке</button><button id="todo" aria-selected="false">Прочие статусы</button><button id="bugs-tab" aria-selected="false">Созданные баги</button><div class="sidebar-group">Планирование</div><button id="calendar-tab" aria-selected="false">Календарь</button><button id="stands-tab" aria-selected="false">Стенды</button><button id="hosts-tab" aria-selected="false">Hosts</button><div class="sidebar-group">Релизы</div><button id="release-tab" aria-selected="false">Регресс</button><button id="build-tab" aria-selected="false">Собрать релиз</button><div class="sidebar-group">Диагностика</div><button id="investigation-tab" aria-selected="false">Разбор обращений</button></nav><div class="sidebar-footer"><span class="sidebar-footer-mark" aria-hidden="true"></span><span>Рабочее пространство ЛК</span></div></aside><main><header><div class="header-intro"><h1 id="page-title">Мои задачи</h1><p id="owner">Задачи выбранного пользователя</p></div><div class="header-tools"><div id="connection">Подключение…</div><button id="profile-button">Настройки профиля</button></div></header>
+</style><div class="app-shell"><div class="workspace-bar"><div class="workspace-logo"><span class="workspace-logo-mark" aria-hidden="true">✓</span><strong>Taskboard</strong><span class="workspace-logo-divider"></span><span>ЛК / QA</span></div><div class="workspace-path"><span id="workspace-section">Задачи</span><span aria-hidden="true">/</span><strong id="workspace-location">На проверке</strong></div><div id="workspace-person" class="workspace-person"></div></div><aside class="sidebar"><div class="brand"><span class="brand-mark" aria-hidden="true">✓</span><span>Taskboard</span></div><nav class="tabs" aria-label="Разделы"><div class="sidebar-group">Задачи</div><button id="review" aria-selected="true">На проверке</button><button id="todo" aria-selected="false">Прочие статусы</button><button id="bugs-tab" aria-selected="false">Созданные баги</button><div class="sidebar-group">Планирование</div><button id="calendar-tab" aria-selected="false">Календарь</button><button id="stands-tab" aria-selected="false">Стенды</button><button id="hosts-tab" aria-selected="false">Hosts</button><div class="sidebar-group">Релизы</div><button id="release-tab" aria-selected="false">Регресс</button><button id="build-tab" aria-selected="false">Собрать релиз</button><div class="sidebar-group">Диагностика</div><button id="investigation-tab" aria-selected="false">Разбор обращений</button></nav><div class="sidebar-footer"><span class="sidebar-footer-mark" aria-hidden="true"></span><span>Рабочее пространство ЛК</span></div></aside><main><header><div class="header-intro"><h1 id="page-title">Мои задачи</h1><p id="owner">Задачи выбранного пользователя</p></div><div class="header-tools"><div id="connection">Подключение…</div><button id="update-button" type="button">Обновление</button><button id="profile-button">Настройки профиля</button></div></header>
 <details class="appearance"><summary>Внешний вид</summary><div class="appearance-body"><label for="theme">Тема<select id="theme"><option value="system">Как в системе</option><option value="light">Светлая</option><option value="dark">Тёмная</option></select></label><fieldset><legend>Цвет интерфейса</legend><div id="accent-colors"></div></fieldset></div></details>
 <section id="tasks-view"><div class="task-control-panel"><div class="task-control-intro"><strong>Рабочая очередь</strong><span>Выбери пользователя Jira, чтобы увидеть актуальные задачи.</span></div>
 <div class="user-row"><div class="user-picker"><label for="username">Пользователь<input id="username" placeholder="Начни вводить имя или фамилию" autocomplete="off" maxlength="100" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="user-options" aria-describedby="user-help"></label><div id="user-options" role="listbox" aria-label="Пользователи Jira" hidden></div></div><button id="clear-user" type="button">Сбросить</button></div>
@@ -246,7 +248,7 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 <p id="count"></p><div id="list"></div><div id="empty">Загрузка…</div></section>
 <section id="bugs-view" hidden><div class="bugs-toolbar"><p id="bugs-count">Баги, созданные владельцем Jira-токена · все статусы</p><button id="bugs-refresh" type="button">Обновить</button></div><p id="bugs-error" class="bugs-message error" role="alert" hidden></p><div id="bugs-list" aria-live="polite"></div><button id="bugs-more" type="button" hidden>Показать ещё</button></section>
 <section id="calendar-view" hidden><div class="calendar-main"><p class="calendar-note">Календарь Exchange открывается отдельно от Jira. Доступ только для чтения; логин и пароль действуют до выхода или перезапуска Taskboard и не сохраняются на диск.</p><form id="calendar-login" class="card calendar-login" autocomplete="off"><label for="calendar-email">Адрес почтового ящика<input id="calendar-email" type="email" autocomplete="off" placeholder="user@example.com" required maxlength="254"></label><label for="calendar-username">Корпоративный логин<input id="calendar-username" autocomplete="off" placeholder="ДОМЕН\логин или адрес почты" required maxlength="180"></label><label for="calendar-password">Пароль<input id="calendar-password" type="password" autocomplete="off" required maxlength="8000"></label><button id="calendar-connect" type="submit">Войти и открыть календарь</button></form><div id="calendar-controls" hidden><div class="calendar-actions"><button id="calendar-prev" type="button" aria-label="Предыдущий месяц">←</button><strong id="calendar-month-title"></strong><button id="calendar-next" type="button" aria-label="Следующий месяц">→</button><button id="calendar-today" type="button">Сегодня</button><button id="calendar-refresh" type="button">Обновить</button><button id="calendar-logout" type="button">Выйти</button></div><p id="calendar-mailbox-label" class="calendar-mailbox-label"></p><section class="availability-panel" aria-label="Занятость коллег"><div class="availability-heading"><h2>Занятость коллег</h2><p id="availability-day"></p></div><form id="availability-form" class="availability-form"><label for="availability-emails">Адреса коллег, через запятую (до 8)<input id="availability-emails" type="text" placeholder="colleague@example.com" autocomplete="off" maxlength="2200"></label><label for="availability-duration">Длительность встречи<select id="availability-duration"><option value="30">30 минут</option><option value="60" selected>60 минут</option></select></label><button id="availability-check" type="submit">Проверить время</button></form><div id="availability-result" aria-live="polite"><p class="calendar-note">Выбери день в календаре и добавь коллег по адресу или из участников встречи.</p></div></section><div id="calendar-result" aria-live="polite"></div></div><p id="calendar-error" role="alert" hidden></p></div><aside id="calendar-people" class="calendar-people" aria-label="Участники встречи" hidden></aside></section>
-<section id="stands-view" hidden><div class="stands-toolbar"><p id="stands-status">Последние выкладки ЛК из GitLab · обновление раз в минуту, пока вкладка открыта.</p><button id="stands-refresh" type="button">Обновить</button></div><div class="stands-tabs" role="group" aria-label="Стенд"><button type="button" data-stand="dev">DEV</button><button type="button" data-stand="dev-1">DEV-1</button><button type="button" data-stand="dev-2">DEV-2</button><button type="button" data-stand="dev-3">DEV-3</button><button type="button" data-stand="qa-1">QA-1</button><button type="button" data-stand="qa-2">QA-2</button><button type="button" data-stand="qa-3">QA-3</button></div><label class="stands-search" for="stands-search">Поиск сервиса<input id="stands-search" placeholder="Сервис, ветка или тег" autocomplete="off"></label><div id="stand-activity" class="stand-activity" aria-live="polite"></div><div id="stands-result" aria-live="polite"></div></section>
+<section id="stands-view" hidden><div class="stands-toolbar"><p id="stands-status">Последние выкладки ЛК из GitLab · версии обновляются после новой выкладки.</p><button id="stands-refresh" type="button">Обновить</button></div><div class="stands-tabs" role="group" aria-label="Стенд"><button type="button" data-stand="dev">DEV</button><button type="button" data-stand="dev-1">DEV-1</button><button type="button" data-stand="dev-2">DEV-2</button><button type="button" data-stand="dev-3">DEV-3</button><button type="button" data-stand="qa-1">QA-1</button><button type="button" data-stand="qa-2">QA-2</button><button type="button" data-stand="qa-3">QA-3</button></div><label class="stands-search" for="stands-search">Поиск сервиса<input id="stands-search" placeholder="Сервис, ветка или тег" autocomplete="off"></label><div id="stand-activity" class="stand-activity" aria-live="polite"></div><div id="stands-result" aria-live="polite"></div></section>
 <section id="hosts-view" hidden><p class="hosts-note">Записи сохраняются в системный файл Windows hosts на этом компьютере. Taskboard редактирует только свой блок; остальные строки остаются на месте. Windows может запросить права администратора при сохранении.</p><div class="hosts-toolbar"><button id="hosts-add" type="button">+ Добавить запись</button><button id="hosts-refresh" type="button">Перечитать файл</button></div><div id="hosts-editor"></div><button id="hosts-save" type="button">Сохранить в Windows hosts</button><p id="hosts-message" role="status"></p><details class="hosts-other"><summary>Другие записи системного hosts</summary><pre id="hosts-existing"></pre></details></section>
 <section id="release-view" hidden>
 <form id="release-form" class="release-controls"><label for="release-key">Ключ релизной задачи<input id="release-key" placeholder="Например, ECP-6376" autocomplete="off" maxlength="32"></label><button type="submit" id="release-load">Загрузить</button></form>
@@ -261,6 +263,7 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 <form id="investigation-form" class="investigation-form"><label for="investigation-kind">Вид обращения<select id="investigation-kind"><option value="request">Запрос</option><option value="notice">Уведомление</option></select></label><label for="investigation-number">Номер или UUID<input id="investigation-number" inputmode="text" placeholder="Например, ЗИ/123/01С или UUID" autocomplete="off" maxlength="120" required></label><label for="investigation-window">Окно логов<select id="investigation-window"><option value="60">1 час</option><option value="180" selected>3 часа</option><option value="360">6 часов</option><option value="1440">24 часа</option></select></label><button type="submit" id="investigation-run">Разобрать</button></form>
 <p class="investigation-note">Проверка читает закрытый и открытый контуры и ищет строки Kubernetes по найденным идентификаторам. Если номер изменился после регистрации, введи текущий номер или UUID карточки.</p><p id="investigation-error" role="alert" hidden></p><div id="investigation-result" aria-live="polite"></div>
 </section></main></div>
+<dialog id="update-dialog" aria-labelledby="update-title"><h2 id="update-title">Обновление Taskboard</h2><p id="update-message" role="status">Проверяю опубликованные версии…</p><div class="actions"><button id="update-install" type="button" hidden>Установить обновление</button><button id="update-close" type="button">Закрыть</button></div></dialog>
 <dialog id="profile-dialog" aria-labelledby="profile-title"><form id="profile-form"><h2 id="profile-title">Настройки профиля</h2>
 <p id="profile-account"></p>
 <label for="profile-token">Токен Jira<input id="profile-token" type="password" autocomplete="new-password" maxlength="8000"></label>
@@ -297,7 +300,7 @@ let tab=readPref('tab','review'),selectedUser='',selectedName='',data={issues:[]
 let investigation=null,investigationLoading=false;
 let bugRows=[],bugTotal=0,bugsNextAt=0,bugsCheckedAt=null,bugsLoading=false,bugsError='',bugsRequestSequence=0;
 let calendarMonth='',calendarSelectedDay='',calendarData=null,calendarBusy=false,calendarError='',calendarMailbox='',calendarSelectedEvent=null,calendarAttendees=null,calendarAttendeesBusy=false,calendarAttendeesError='',calendarAttendeesRequest=0,availabilityData=null,availabilityBusy=false,availabilityError='';
-let standSnapshot=null,standLoading=false,standError='',standTimer=null,standActivitySnapshot=null,standActivityLoading=false,standActivityError='',standActivityTimer=null,standRefreshAfterLoad=false,standSelected=readPref('standSelected','dev'),standVersions=new Map(),standChanges=new Map();
+let standSnapshot=null,standLoading=false,standError='',standActivitySnapshot=null,standActivityLoading=false,standActivityError='',standActivityTimer=null,standRefreshAfterLoad=false,standSelected=readPref('standSelected','dev'),standVersions=new Map(),standChanges=new Map();
 let hostsData=null,hostsDraft=[],hostsBusy=false,hostsMessage='',hostsError=false;
 let unread=[];
 let releaseSnapshot=null,releaseError='',releaseLoading=false,releaseSequence=0,releaseKey=readPref('releaseKey','');
@@ -402,7 +405,23 @@ function calendarEventTime(item,dayKey){
  return 'Длится';
 }
 function availabilityAddresses(){return $('availability-emails').value.split(/[,;\n]+/).map(value=>value.trim()).filter(Boolean)}
+function removeAvailabilityAddress(email){
+ if(availabilityBusy||calendarBusy)return;
+ const remaining=availabilityAddresses().filter(value=>value.toLowerCase()!==email.toLowerCase());
+ $('availability-emails').value=remaining.join(', ');availabilityError='';
+ availabilityData=remaining.length&&availabilityData?{...availabilityData,rows:availabilityData.rows.filter(row=>row.email.toLowerCase()!==email.toLowerCase())}:null;
+ renderAvailability();renderCalendarPeople();
+}
 function availabilityTime(index){const minutes=9*60+index*30;return `${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`}
+function availabilityPeriods(rows,steps){
+ const periods=[];let start=-1;
+ for(let index=0;index<=20;index++){
+  const free=index<20&&rows.length>0&&rows.every(row=>!row.error&&row.slots[index]===0);
+  if(free&&start<0)start=index;
+  if(!free&&start>=0){if(index-start>=steps)periods.push(`${availabilityTime(start)}–${availabilityTime(index)}`);start=-1}
+ }
+ return periods;
+}
 function renderAvailability(){
  $('availability-day').textContent=new Intl.DateTimeFormat('ru-RU',{timeZone:'UTC',day:'numeric',month:'long',year:'numeric'}).format(new Date(calendarSelectedDay+'T12:00:00Z'))+' · 09:00–19:00 МСК';
  $('availability-check').disabled=availabilityBusy||calendarBusy||!configuration.calendarConnected;
@@ -411,16 +430,21 @@ function renderAvailability(){
  if(availabilityBusy){output.append(node('p','calendar-note','Запрашиваю занятость у Exchange…'));return}
  if(availabilityError){output.append(node('p','availability-error',availabilityError));return}
  const requested=availabilityAddresses().map(value=>value.toLowerCase()),rows=availabilityData?.rows||[];
- if(!availabilityData||availabilityData.date!==calendarSelectedDay||JSON.stringify(rows.map(row=>row.email))!==JSON.stringify(requested)){output.append(node('p','calendar-note','Выбери день и укажи коллег. Здесь покажутся только интервалы занятости, без названий встреч.'));return}
- const duration=Number($('availability-duration').value),steps=duration/30,freeSlots=[];
- for(let index=0;index<=20-steps;index++)if(rows.length&&rows.every(row=>!row.error&&row.slots.slice(index,index+steps).length===steps&&row.slots.slice(index,index+steps).every(state=>state===0)))freeSlots.push(availabilityTime(index));
- const summary=freeSlots.length?`Всем удобно на ${duration} минут: ${freeSlots.slice(0,8).join(', ')}${freeSlots.length>8?` и ещё ${freeSlots.length-8}`:''}.`:'Общего свободного интервала на выбранную длительность не найдено.';
+ if(!availabilityData||availabilityData.date!==calendarSelectedDay||JSON.stringify(rows.map(row=>row.email))!==JSON.stringify(requested)){output.append(node('p','calendar-note','Нажми на участника встречи, чтобы увидеть его занятость. Для общего времени добавь других коллег кнопкой «+ Добавить». Названия встреч не запрашиваются.'));return}
+ const duration=Number($('availability-duration').value),steps=duration/30,periods=availabilityPeriods(rows,steps);
+ const summary=periods.length?`Свободные периоды для всех (встреча ${duration} мин): ${periods.join(', ')}.`:'Общего свободного периода на выбранную длительность не найдено.';
  output.append(node('p','availability-summary',summary));
- const scroll=node('div','availability-scroll',''),grid=node('div','availability-grid','');grid.style.gridTemplateColumns=`78px repeat(${rows.length},minmax(130px,1fr)) 130px`;grid.style.minWidth=`${208+rows.length*130}px`;
- grid.append(node('div','availability-head','МСК'));for(const row of rows)grid.append(node('div','availability-head',row.email));grid.append(node('div','availability-head',`Всем · ${duration} мин`));
+ const scroll=node('div','availability-scroll',''),grid=node('div','availability-grid','');grid.style.gridTemplateColumns=`112px repeat(${rows.length},minmax(130px,1fr)) 130px`;grid.style.minWidth=`${242+rows.length*130}px`;
+ grid.append(node('div','availability-head','Период · МСК'));
+ for(const row of rows){
+  const head=node('div','availability-head availability-head-person',''),email=node('span','',row.email),remove=node('button','availability-remove','−');
+  email.title=row.email;remove.type='button';remove.title=`Убрать ${row.email} из общей проверки`;remove.setAttribute('aria-label',remove.title);
+  remove.onclick=()=>removeAvailabilityAddress(row.email);head.append(email,remove);grid.append(head);
+ }
+ grid.append(node('div','availability-head',`Всем · ${duration} мин`));
  const names=['Свободен','Предварительно','Занят','Нет на месте','Нет данных'],classes=['free','tentative','busy','oof','unknown'];
  for(let index=0;index<20;index++){
-  grid.append(node('div','availability-time',availabilityTime(index)));
+  grid.append(node('div','availability-time',`${availabilityTime(index)}–${availabilityTime(index+1)}`));
   for(const row of rows){const status=row.error?4:row.slots[index],cell=node('div','availability-cell',row.error?'Недоступно':names[status]||'Нет данных');cell.dataset.state=classes[status]||'unknown';grid.append(cell)}
   const open=index<=20-steps&&rows.every(row=>!row.error&&row.slots.slice(index,index+steps).length===steps&&row.slots.slice(index,index+steps).every(state=>state===0));grid.append(node('div',open?'availability-open':'availability-closed',open?'Подходит':'—'));
  }
@@ -446,9 +470,27 @@ function renderCalendarPeople(){
  if(!calendarAttendees){panel.append(node('p','','Нажмите «Участники» у встречи.'));return}
  const groups=[['Организатор',calendarAttendees.organizer?[calendarAttendees.organizer]:[]],['Обязательные',calendarAttendees.attendees.filter(person=>person.type==='required')],['Необязательные',calendarAttendees.attendees.filter(person=>person.type==='optional')]];
  let count=0;const seen=new Set();
- for(const [label,people] of groups){const entries=people.filter(person=>{const key=String(person.email||'').toLowerCase();if(!key||seen.has(key))return false;seen.add(key);return true});if(!entries.length)continue;panel.append(node('h3','',label));for(const person of entries){count++;const button=node('button','calendar-person','');button.type='button';button.disabled=calendarBusy||calendarAttendeesBusy||availabilityBusy;const included=availabilityAddresses().some(value=>value.toLowerCase()===person.email.toLowerCase());button.setAttribute('aria-pressed',String(included));button.append(node('strong','',person.name||person.email),node('small','',person.email),node('small','calendar-person-hint',included?'В проверке занятости':'Добавить к проверке занятости'));button.onclick=()=>{if(calendarBusy||calendarAttendeesBusy||availabilityBusy)return;const addresses=availabilityAddresses();if(!addresses.some(value=>value.toLowerCase()===person.email.toLowerCase()))addresses.push(person.email);$('availability-emails').value=addresses.join(', ');availabilityData=null;void loadAvailability();renderCalendarPeople()};panel.append(button)}}
+ for(const [label,people] of groups){
+  const entries=people.filter(person=>{const key=String(person.email||'').toLowerCase();if(!key||seen.has(key))return false;seen.add(key);return true});
+  if(!entries.length)continue;
+  panel.append(node('h3','',label));
+  for(const person of entries){
+   count++;
+   const row=node('div','calendar-person-row',''),button=node('button','calendar-person',''),add=node('button','calendar-person-add','');
+   const addresses=availabilityAddresses(),included=addresses.some(value=>value.toLowerCase()===person.email.toLowerCase());
+   button.type='button';button.disabled=calendarBusy||calendarAttendeesBusy||availabilityBusy;
+   button.setAttribute('aria-pressed',String(addresses.length===1&&included));
+   button.append(node('strong','',person.name||person.email),node('small','',person.email),node('small','calendar-person-hint','Показать занятость'));
+   button.onclick=()=>{if(calendarBusy||calendarAttendeesBusy||availabilityBusy)return;$('availability-emails').value=person.email;availabilityData=null;availabilityError='';void loadAvailability();renderCalendarPeople()};
+   add.type='button';add.disabled=calendarBusy||calendarAttendeesBusy||availabilityBusy||(!included&&addresses.length>=8);
+   add.textContent=included?'− Убрать из общей проверки':'+ Добавить в общую проверку';
+   add.title=addresses.length>=8&&!included?'Можно проверить не более 8 коллег':`Общая проверка: ${person.email}`;
+   add.onclick=()=>{if(add.disabled)return;if(included){removeAvailabilityAddress(person.email);return}$('availability-emails').value=[...availabilityAddresses(),person.email].join(', ');availabilityData=null;availabilityError='';void loadAvailability();renderCalendarPeople()};
+   row.append(button,add);panel.append(row);
+  }
+ }
  if(!count)panel.append(node('p','','Exchange не вернул список участников этой встречи.'));
- panel.append(node('p','calendar-note','Для назначения встречи покажем только занятость участников. Названия их событий не запрашиваются.'));
+ panel.append(node('p','calendar-note','Нажми на коллегу для просмотра его занятости. Добавить или убрать его из общей проверки можно прямо в карточке. Названия чужих встреч не запрашиваются.'));
 }
 async function selectCalendarEvent(item){
  calendarSelectedEvent=item;calendarAttendees=null;calendarAttendeesError='';calendarAttendeesBusy=Boolean(item);const request=++calendarAttendeesRequest;renderCalendar();
@@ -522,11 +564,11 @@ function renderStands(){
  for(const button of document.querySelectorAll('.stands-tabs button'))button.setAttribute('aria-pressed',String(button.dataset.stand===standSelected));
  renderStandActivity();
  $('stands-refresh').disabled=standLoading;$('stands-refresh').textContent=standLoading?'Обновляю…':'Обновить';
- $('stands-status').textContent=standSnapshot?`GitLab · выкладки проверены ${date(standSnapshot.checkedAt)} · pipeline каждые 15 с, версии раз в минуту`:'GitLab · pipeline каждые 15 с, версии раз в минуту, пока вкладка открыта.';
+ $('stands-status').textContent=standSnapshot?`GitLab · выкладки проверены ${date(standSnapshot.checkedAt)} · запуск проверяется раз в минуту, версии меняются после выкладки`:'GitLab · проверяю запуск раз в минуту; версии перечитываю после новой выкладки.';
  const output=$('stands-result');output.replaceChildren();
  if(standError)output.append(node('p','stand-message error',standError));
  if(!standSnapshot){if(standLoading)output.append(node('p','stand-message','Читаю окружения и выкладки GitLab…'));return}
- if(standSnapshot.error){output.append(node('p','stand-message error',standSnapshot.error));return}
+ if(standSnapshot.error){if(!standError)output.append(node('p','stand-message error',standSnapshot.error));return}
  const stand=standSnapshot.stands.find(item=>item.key===standSelected);if(!stand)return;
  const query=$('stands-search').value.toLowerCase().trim();
  const rows=stand.services.filter(service=>(service.name+' '+service.ref+' '+service.sha).toLowerCase().includes(query));
@@ -538,7 +580,7 @@ function renderStands(){
  const list=node('div','stand-list',''),head=node('div','stand-list-head','');for(const label of ['Сервис','Ветка / тег и коммит','Последняя выкладка','Ссылка'])head.append(node('span','',label));list.append(head);
  for(const service of rows){
   const key=stand.key+'|'+service.name,changed=standChanges.get(key),recent=changed&&Date.now()-changed<300000;
-  const active=standActivitySnapshot?.deployments?.find(item=>item.stand===stand.key&&item.service===service.name),card=node('article','stand-row'+(recent?' changed':'')+(active?' deploying':''),'');
+  const active=standActivityError?null:standActivitySnapshot?.deployments?.find(item=>item.stand===stand.key&&item.service===service.name),card=node('article','stand-row'+(recent?' changed':'')+(active?' deploying':''),'');
   const identity=node('div','','');const project=node('a','','');project.href=service.projectUrl;project.target='_blank';project.rel='noopener noreferrer';project.textContent=service.name;identity.append(project);if(service.name==='digital-ui (FE)')identity.append(node('small','','Общая FE-сборка; флаг ЛК не проверен'));if(['qa-2','qa-3'].includes(standSelected)&&service.documentedFor?.length)identity.append(node('small','stand-docs','В гайде: '+service.documentedFor.map(value=>value.toUpperCase()).join(', ')));if(recent)identity.append(node('small','','Выкладка изменилась '+date(new Date(changed).toISOString())));
   const ref=node('div','','');if(service.ref){ref.append(node('span','stand-kind',service.refType==='tag'?'Тег':service.refType==='branch'?'Ветка':'Git ref'),node('div','stand-ref',service.ref))}else ref.append(node('span','stand-muted',service.state==='stopped'?'Окружение остановлено':service.state==='no-environment'?'Нет окружения в GitLab':service.state==='no-deployment'?'Выкладок нет':service.state==='error'?'Ошибка GitLab':'Нет версии'));
   if(service.sha){const commit=node('div','stand-commit','Коммит: '),link=node('a','',service.sha.slice(0,8));link.href=service.commitUrl;link.title='Открыть коммит '+service.sha+' в GitLab';link.target='_blank';link.rel='noopener noreferrer';commit.append(link);ref.append(commit)}
@@ -551,18 +593,18 @@ function renderStands(){
  output.append(list);
 }
 async function loadStands(force=false){
- if(standLoading)return;clearTimeout(standTimer);standLoading=true;standError='';renderStands();
+ if(standLoading)return;standLoading=true;standError='';renderStands();
  try{const response=await fetch('/api/stands'+(force?'?refresh=1':''),{signal:AbortSignal.timeout(90000)}),result=await response.json();if(!response.ok)throw Error(result.error||'Не удалось прочитать стенды.');
-  for(const stand of result.stands||[])for(const service of stand.services||[]){const key=stand.key+'|'+service.name,version=JSON.stringify([service.deploymentId,service.ref,service.sha,service.state]);if(standVersions.has(key)&&standVersions.get(key)!==version)standChanges.set(key,Date.now());standVersions.set(key,version)}
-  standSnapshot=result;
+  if(result.rateLimited){standError=result.error||'GitLab ограничил число запросов (HTTP 429). Показан последний успешный снимок.';if(!standSnapshot)standSnapshot=result}
+  else{for(const stand of result.stands||[])for(const service of stand.services||[]){const key=stand.key+'|'+service.name,version=JSON.stringify([service.deploymentId,service.ref,service.sha,service.state]);if(standVersions.has(key)&&standVersions.get(key)!==version)standChanges.set(key,Date.now());standVersions.set(key,version)}standSnapshot=result}
  }catch(error){standError=error.name==='TimeoutError'?'GitLab не ответил за 90 секунд. Показан последний снимок.':error.message}
- finally{standLoading=false;renderStands();if(tab==='stands'){if(standRefreshAfterLoad){standRefreshAfterLoad=false;queueMicrotask(()=>loadStands(true))}else standTimer=setTimeout(loadStands,60000)}}
+ finally{standLoading=false;renderStands();if(tab==='stands'&&standRefreshAfterLoad){standRefreshAfterLoad=false;queueMicrotask(()=>loadStands(true))}}
 }
 async function loadStandActivity(force=false){
- if(standActivityLoading)return;clearTimeout(standActivityTimer);standActivityLoading=true;
- try{const response=await fetch('/api/stands/activity'+(force?'?refresh=1':''),{signal:AbortSignal.timeout(45000)}),result=await response.json();if(!response.ok||result.error)throw Error(result.error||'Не удалось прочитать активные pipeline.');const previous=standActivitySnapshot,oldDeployments=previous?.deployments||[],nextDeployments=result.deployments||[],hadError=Boolean(standActivityError),previousCompleted=new Set((previous?.completed||[]).map(item=>`${item.service}|${item.stand}|${item.id}`)),newCompleted=Boolean(previous&&(result.completed||[]).some(item=>!previousCompleted.has(`${item.service}|${item.stand}|${item.id}`))),deploymentEnded=oldDeployments.some(old=>!nextDeployments.some(item=>item.id===old.id&&item.service===old.service));standActivitySnapshot=result;standActivityError='';const changed=JSON.stringify([previous?.pipelines||[],oldDeployments,previous?.partial])!==JSON.stringify([result.pipelines||[],nextDeployments,result.partial]);if(changed)renderStands();else if(hadError)renderStandActivity();if(newCompleted||deploymentEnded){if(standLoading)standRefreshAfterLoad=true;else void loadStands(true)}}
+ if(standActivityLoading)return;clearTimeout(standActivityTimer);standActivityLoading=true;let retryDelay=60000;
+ try{const response=await fetch('/api/stands/activity'+(force?'?refresh=1':''),{signal:AbortSignal.timeout(45000)}),result=await response.json();if(!response.ok||result.error)throw Error(result.error||'Не удалось прочитать активные pipeline.');const previous=standActivitySnapshot,oldDeployments=previous?.deployments||[],nextDeployments=result.deployments||[],hadError=Boolean(standActivityError),previousCompleted=new Set((previous?.completed||[]).map(item=>`${item.service}|${item.stand}|${item.id}`)),newCompleted=Boolean(previous&&(result.completed||[]).some(item=>!previousCompleted.has(`${item.service}|${item.stand}|${item.id}`))),deploymentEnded=oldDeployments.some(old=>!nextDeployments.some(item=>item.id===old.id&&item.service===old.service));standActivitySnapshot=result;standActivityError='';const changed=JSON.stringify([previous?.pipelines||[],oldDeployments,previous?.partial])!==JSON.stringify([result.pipelines||[],nextDeployments,result.partial]);if(changed||hadError)renderStands();if(newCompleted||deploymentEnded||!standSnapshot||standSnapshot.error||(hadError&&!previous)){if(standLoading)standRefreshAfterLoad=true;else void loadStands(true)}}
  catch(error){standActivityError=error.name==='TimeoutError'?'GitLab не ответил при проверке pipeline.':error.message;renderStandActivity()}
- finally{standActivityLoading=false;if(tab==='stands')standActivityTimer=setTimeout(loadStandActivity,15000)}
+ finally{if(standActivityError.includes('429')){retryDelay=120000;renderStands()}standActivityLoading=false;if(tab==='stands')standActivityTimer=setTimeout(loadStandActivity,retryDelay)}
 }
 function renderHosts(){
  $('hosts-add').disabled=hostsBusy||!hostsData;$('hosts-refresh').disabled=hostsBusy;$('hosts-save').disabled=hostsBusy||!hostsData;
@@ -690,7 +732,7 @@ function render(){
  $('list').replaceChildren();for(const x of rows){const card=node('article','card'+(unread.some(i=>i.key===x.key)?' new-task':''),''),top=node('div','top','');card.dataset.key=x.key;card.addEventListener('mouseenter',()=>acknowledgeCard(x.key,card));card.addEventListener('focusin',()=>acknowledgeCard(x.key,card));card.addEventListener('pointerdown',()=>acknowledgeCard(x.key,card));if(unread.some(i=>i.key===x.key))card.append(node('span','new-label','Новая на проверке'));top.append(node('span','key',x.key+' · '+x.type),statusBadge(x.status));const link=node('a','title',x.summary);link.href=x.url;link.target='_blank';link.rel='noopener noreferrer';const meta=node('div','meta','');meta.append(node('span','',`Исполнитель: ${x.assignee}`),node('span','author',`Автор: ${x.author || 'Не указан'}`),node('span','',`Приоритет: ${x.priority || '—'}`),node('span','',`Изменено: ${date(x.updated)}`));card.append(top,link,meta);$('list').append(card)}
  $('empty').hidden=rows.length>0;$('empty').textContent=!selectedUser?'Выбери пользователя':data.lastSuccess?(query||selectedStatus?'Ничего не найдено':'Задач нет'):data.error?'Данные не получены':'Ожидание данных Jira…';
 }
-function changeTab(next){const update=()=>{const previous=tab;tab=next;savePref('tab',tab);if(previous==='stands'){clearTimeout(standTimer);clearTimeout(standActivityTimer);standRefreshAfterLoad=false}if(['bugs','calendar','stands','hosts','release','build','investigation'].includes(tab)){clearTimeout(timer);requestNumber++}render();if(tab==='bugs'&&(!bugsCheckedAt||Date.now()-Date.parse(bugsCheckedAt)>60000))loadBugs();if(tab==='calendar'&&configuration.calendarConnected&&!calendarData)loadCalendar();if(tab==='stands'){loadStands();loadStandActivity()}if(tab==='hosts'&&!hostsData)loadHosts();if(['bugs','calendar','stands','hosts','release','build','investigation'].includes(previous)&&!['bugs','calendar','stands','hosts','release','build','investigation'].includes(tab)&&selectedUser)poll()};const motion=!matchMedia('(prefers-reduced-motion: reduce)').matches;if(motion&&document.startViewTransition)document.startViewTransition(update);else{update();if(motion)animateActiveView()}}
+function changeTab(next){const update=()=>{const previous=tab;tab=next;savePref('tab',tab);if(previous==='stands'){clearTimeout(standActivityTimer);standRefreshAfterLoad=false}if(['bugs','calendar','stands','hosts','release','build','investigation'].includes(tab)){clearTimeout(timer);requestNumber++}render();if(tab==='bugs'&&(!bugsCheckedAt||Date.now()-Date.parse(bugsCheckedAt)>60000))loadBugs();if(tab==='calendar'&&configuration.calendarConnected&&!calendarData)loadCalendar();if(tab==='stands'){if(!standSnapshot)loadStands();loadStandActivity()}if(tab==='hosts'&&!hostsData)loadHosts();if(['bugs','calendar','stands','hosts','release','build','investigation'].includes(previous)&&!['bugs','calendar','stands','hosts','release','build','investigation'].includes(tab)&&selectedUser)poll()};const motion=!matchMedia('(prefers-reduced-motion: reduce)').matches;if(motion&&document.startViewTransition)document.startViewTransition(update);else{update();if(motion)animateActiveView()}}
 for(const id of ['review','todo'])$(id).onclick=()=>changeTab(id);$('bugs-tab').onclick=()=>changeTab('bugs');$('calendar-tab').onclick=()=>changeTab('calendar');$('stands-tab').onclick=()=>changeTab('stands');$('hosts-tab').onclick=()=>changeTab('hosts');$('release-tab').onclick=()=>changeTab('release');$('build-tab').onclick=()=>changeTab('build');$('investigation-tab').onclick=()=>changeTab('investigation');$('search').oninput=render;
 $('hosts-add').onclick=()=>{hostsDraft.push({ip:'',host:''});renderHosts()};$('hosts-refresh').onclick=loadHosts;$('hosts-save').onclick=saveHostsEntries;
 $('stands-refresh').onclick=()=>{loadStands(true);loadStandActivity(true)};$('stands-search').oninput=renderStands;for(const button of document.querySelectorAll('.stands-tabs button'))button.onclick=()=>{standSelected=button.dataset.stand;savePref('standSelected',standSelected);renderStands()};
@@ -814,6 +856,45 @@ async function poll(){
   $('profile-token').required=!configuration.configured;$('gitlab-help').textContent=configuration.gitlabConfigured?'GitLab подключён. Оставь токен пустым, чтобы сохранить его.':'Необязательно. Нужен токен с правом read_api для поиска MR и веток.';$('profile-diagnostics-help').textContent=configuration.pgConfigured?'Доступ к БД настроен. Пароль можно оставить пустым.':'Для поиска по номеру укажи read-only доступ к БД. Пароль сохраняется в зашифрованном профиле Windows.';$('profile-message').textContent='';$('profile-dialog').showModal();
 }
 $('profile-button').onclick=openProfile;
+let updateDetails=null,updateHelperReady=false,updateWorking=false;
+const updateHelper='http://127.0.0.1:18765';
+$('update-button').onclick=async()=>{
+ const dialog=$('update-dialog');dialog.showModal();$('update-message').textContent='Проверяю опубликованные версии…';$('update-install').hidden=true;updateDetails=null;updateHelperReady=false;
+ try{
+  const response=await fetch('/api/update',{signal:AbortSignal.timeout(15000)}),info=await response.json();
+  if(!response.ok)throw Error(info.error||'Не удалось проверить обновления.');
+  updateDetails=info;
+  if(info.mode==='docker'){
+   try{const helper=await fetch(updateHelper+'/health',{signal:AbortSignal.timeout(2500)});updateHelperReady=helper.ok&&(await helper.json()).app==='taskboard-docker-updater'}catch{}
+  }
+  const source=info.mode==='docker'?'Docker Hub':'GitHub';
+  $('update-message').textContent=info.available?`Установлена ${info.currentVersion}. В ${source} доступна ${info.latestVersion}.${info.reason?' '+info.reason:''}${info.mode==='docker'&&!updateHelperReady?' Для обновления одной кнопкой сначала запусти Docker-Hub-Start.cmd на этом компьютере.':''}`:`Установлена ${info.currentVersion}. Новее в ${source} сейчас нет.${info.reason?' '+info.reason:''}`;
+  $('update-install').hidden=!info.available||!info.canInstall&&info.mode!=='docker'||info.mode==='docker'&&!updateHelperReady;
+ }catch(error){$('update-message').textContent=error.name==='TimeoutError'?'Источник обновлений не ответил за 15 секунд.':error.message}
+};
+$('update-close').onclick=()=>$('update-dialog').close();
+$('update-install').onclick=async()=>{
+ if(!updateDetails||updateWorking)return;
+ updateWorking=true;$('update-install').disabled=true;$('update-message').textContent='Запускаю обновление…';
+ const docker=updateDetails.mode==='docker',url=docker?updateHelper+'/install':'/api/update/install';
+ try{
+  const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...(docker?{}:{'X-CSRF-Token':configuration.csrf})},body:JSON.stringify(docker?{version:updateDetails.latestVersion}:{}),signal:AbortSignal.timeout(15000)}),result=await response.json();
+  if(!response.ok)throw Error(result.error||'Не удалось запустить обновление.');
+  $('update-message').textContent='Обновление выполняется. Дождись перезапуска приложения…';
+  const statusUrl=docker?updateHelper+'/status':'/api/update/status';
+  for(let attempt=0;attempt<120;attempt++){
+   await new Promise(resolve=>setTimeout(resolve,1500));
+   try{
+    const stateResponse=await fetch(statusUrl,{signal:AbortSignal.timeout(2500)}),state=await stateResponse.json();
+    if(state.stage==='error')throw Error(state.message||'Обновление не удалось.');
+    if(state.stage==='done'){window.location.reload();return}
+    if(state.stage==='running'&&state.message)$('update-message').textContent=state.message;
+   }catch(error){if(error.message&&error.message!=='Failed to fetch'&&error.name!=='TimeoutError')throw error}
+  }
+  throw Error('Обновление ещё не завершилось. Проверь его статус позже или запусти Taskboard вручную.');
+ }catch(error){$('update-message').textContent=error.name==='TimeoutError'?'Помощник обновления не ответил.':error.message}
+ finally{updateWorking=false;$('update-install').disabled=false}
+};
  $('profile-cancel').onclick=()=>{$('profile-token').value='';$('profile-gitlab-token').value='';$('profile-pg-password').value='';$('profile-dialog').close()};
  $('profile-dialog').addEventListener('close',()=>{$('profile-token').value='';$('profile-gitlab-token').value='';$('profile-pg-password').value=''});
 $('profile-form').onsubmit=async event=>{

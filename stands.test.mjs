@@ -24,9 +24,9 @@ test('GitLab deployment carries the deployed ref, commit and tag/branch kind',()
 
 test('read-only GitLab requests select the exact environment deployment',async()=>{
   const calls=[];
-  const fetcher=async url=>{calls.push(url.pathname);return {ok:true,json:async()=>url.pathname.endsWith('/environments')?[{id:97,name:'qa-2'}]:{id:97,state:'available',last_deployment:{id:23985,ref:'feature/ECP-6496',sha:'3587eb18e1ac6903f6ece3043370e9b218a1320d',status:'success',deployable:{tag:false}}}}};
+  const fetcher=async url=>{calls.push(url.pathname);return {ok:true,json:async()=>url.pathname.endsWith('/environments')?[{id:97,name:'qa-2',state:'available'}]:[{id:23985,environment:{id:97,name:'qa-2'},ref:'feature/ECP-6496',sha:'3587eb18e1ac6903f6ece3043370e9b218a1320d',status:'success',deployable:{tag:false}}]}};
   const result=await readGitLabStands({base:'https://git.example',token:'test-only'},{fetcher,services:[{name:'audit-portal',path:'digital/backend/audit-portal'}],stands:[{key:'qa-2',name:'QA-2'}]});
-  assert.deepEqual(calls,['/api/v4/projects/digital%2Fbackend%2Faudit-portal/environments','/api/v4/projects/digital%2Fbackend%2Faudit-portal/environments/97']);
+  assert.deepEqual(calls,['/api/v4/projects/digital%2Fbackend%2Faudit-portal/environments','/api/v4/projects/digital%2Fbackend%2Faudit-portal/deployments']);
   assert.equal(result.stands[0].services[0].ref,'feature/ECP-6496');
 });
 
@@ -43,11 +43,30 @@ test('running pipelines do not claim an environment until GitLab records a deplo
 
 test('a running deployment keeps the previous successful ref visible',async()=>{
   const calls=[];
-  const fetcher=async url=>{calls.push(url.pathname+url.search);return {ok:true,json:async()=>url.pathname.endsWith('/environments')?[{id:7,name:'qa-2'}]:url.pathname.endsWith('/environments/7')?{id:7,state:'available',last_deployment:{id:91,ref:'feature/new',status:'running'}}:[{id:90,ref:'feature/old',sha:'3587eb18e1ac6903f6ece3043370e9b218a1320d',status:'success',deployable:{tag:false}}]}};
+  const fetcher=async url=>{calls.push(url.pathname+url.search);return {ok:true,json:async()=>url.pathname.endsWith('/environments')?[{id:7,name:'qa-2',state:'available'}]:[{id:91,environment:{name:'qa-2'},ref:'feature/new',status:'running'},{id:90,environment:{name:'qa-2'},ref:'feature/old',sha:'3587eb18e1ac6903f6ece3043370e9b218a1320d',status:'success',deployable:{tag:false}}]}};
   const result=await readGitLabStands({base:'https://git.example',token:'test-only'},{fetcher,services:[{name:'audit-portal',path:'digital/backend/audit-portal'}],stands:[{key:'qa-2',name:'QA-2'}]});
   assert.equal(result.stands[0].services[0].ref,'feature/old');assert.equal(result.stands[0].services[0].state,'success');
   assert.equal(result.stands[0].services[0].lastAttempt.status,'running');
-  assert.ok(calls.some(path=>path.includes('/deployments?environment=qa-2&status=success')));
+  assert.equal(calls.length,2);
+});
+
+test('older successful deployment is requested only when absent from the recent page',async()=>{
+  const calls=[];
+  const fetcher=async url=>{calls.push(url.pathname+url.search);return {ok:true,json:async()=>url.pathname.endsWith('/environments')?[{id:7,name:'qa-2'}]:url.searchParams.has('status')?[{id:80,ref:'release/old',status:'success',environment:{name:'qa-2'}}]:[{id:91,ref:'feature/new',status:'failed',environment:{name:'qa-2'}}]}};
+  const result=await readGitLabStands({base:'https://git.example',token:'test-only'},{fetcher,services:[{name:'audit-portal',path:'digital/backend/audit-portal'}],stands:[{key:'qa-2',name:'QA-2'}]});
+  assert.equal(result.stands[0].services[0].ref,'release/old');
+  assert.equal(result.stands[0].services[0].lastAttempt.status,'failed');
+  assert.equal(calls.length,3);
+});
+
+test('HTTP 429 stops additional GitLab requests in the current scan',async()=>{
+  let calls=0;
+  const fetcher=async()=>{calls++;return {ok:false,status:429}};
+  const services=Array.from({length:13},(_,index)=>({name:`service-${index}`,path:`digital/service-${index}`}));
+  const result=await readGitLabStands({base:'https://git.example',token:'test-only'},{fetcher,services,stands:[{key:'qa-2',name:'QA-2'}]});
+  assert.equal(result.rateLimited,true);
+  assert.ok(calls<=3);
+  assert.ok(result.stands[0].services.every(service=>service.state==='error'));
 });
 
 test('activity reads active project pipelines and exact running deployments',async()=>{

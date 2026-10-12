@@ -6,4 +6,10 @@
 !profile.mjs
 !events.mjs
 !investigation.mjs
+!calendar.mjs
+!stands.mjs
+!hosts.mjs
+!updater.mjs
+!calendar-exchange.ps1
+!hosts-elevated.ps1
 !index.html

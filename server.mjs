@@ -1,14 +1,21 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
+import { spawn } from 'node:child_process';
 import { randomBytes, timingSafeEqual, createHash } from 'node:crypto';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { loadProfile, saveProfile, directory } from './profile.mjs';
 import {EventStore,scanReadyEvents} from './events.mjs';
 import { investigate, checkDatabaseConnection, diagnosticDefaults } from './investigation.mjs';
 import { validateLogin, discoverCalendar, readCalendar, readCalendarAttendees, readAvailability, availabilityRequest, calendarRange, validateCalendarMailbox, validateCalendarItemId } from './calendar.mjs';
 import { readGitLabStands, readGitLabStandActivity } from './stands.mjs';
 import { readHosts, saveHosts } from './hosts.mjs';
+import { readUpdateInfo } from './updater.mjs';
 const eventStore=new EventStore(directory);
+const packageVersion=JSON.parse(await readFile(new URL('./package.json',import.meta.url),'utf8')).version;
+const installMode=process.env.LK_INSTALL_MODE||(process.platform==='win32'?'git':'docker');
+let updateBusy=false;
 const require = createRequire(import.meta.url);
 const { fetch, Agent } = require('undici');
 const tlsErrorCodes = new Set(['UNABLE_TO_VERIFY_LEAF_SIGNATURE','CERT_HAS_EXPIRED','DEPTH_ZERO_SELF_SIGNED_CERT','SELF_SIGNED_CERT_IN_CHAIN','ERR_TLS_CERT_ALTNAME_INVALID']);
@@ -36,7 +43,7 @@ let calendarBusy = false;
 // Same internal certificate configuration as the existing LK connector.
 const dispatcher = new Agent({ connect: { rejectUnauthorized: process.env.LK_JIRA_TLS_SKIP_VERIFY !== 'true' } });
 const getGitLabConnection=()=>({base:(profile.gitlabBaseUrl||process.env.LK_GITLAB_BASE_URL||'').trim().replace(/\/$/,''),token:(profile.gitlabToken||process.env.LK_GITLAB_TOKEN||'').trim()});
-const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,pgHost:profile.pgHost||diagnosticDefaults.pgHost,pgUser:profile.pgUser||diagnosticDefaults.pgUser,pgConfigured:Boolean((profile.pgHost||diagnosticDefaults.pgHost)&&(profile.pgUser||diagnosticDefaults.pgUser)&&(profile.pgPassword||process.env.LK_PG_PASSWORD)),kubeconfig:profile.kubeconfig||diagnosticDefaults.kubeconfig,calendarConnected:Boolean(calendarSession),calendarEmail:calendarSession?.email||'',version:'1.25.0', csrf});
+const publicProfile = () => ({configured: Boolean(profile.token), account: profile.account, gitlabConfigured:Boolean(getGitLabConnection().base&&getGitLabConnection().token),gitlabBaseUrl:getGitLabConnection().base,pgHost:profile.pgHost||diagnosticDefaults.pgHost,pgUser:profile.pgUser||diagnosticDefaults.pgUser,pgConfigured:Boolean((profile.pgHost||diagnosticDefaults.pgHost)&&(profile.pgUser||diagnosticDefaults.pgUser)&&(profile.pgPassword||process.env.LK_PG_PASSWORD)),kubeconfig:profile.kubeconfig||diagnosticDefaults.kubeconfig,calendarConnected:Boolean(calendarSession),calendarEmail:calendarSession?.email||'',version:packageVersion, csrf});
 const states = new Map();
 const refreshTimes = new WeakMap();
 const lastAccess = new WeakMap();
@@ -45,18 +52,27 @@ const releasePending = new Map();
 const gitlabCache = new Map();
 const gitlabPending = new Map();
 const bugTypeCache = new WeakMap();
-let standCache=null,standPending=null,standActivityCache=null,standActivityPending=null;
+let standCache=null,standPending=null,standActivityCache=null,standActivityPending=null,gitlabRetryAt=0;
+const gitlabLimitMessage='GitLab ограничил число запросов (HTTP 429). Последняя подтверждённая версия сохранена; следующая проверка через две минуты.';
 async function currentStands(force=false){
+  if(Date.now()<gitlabRetryAt)return standCache?{...standCache.data,rateLimited:true}: {checkedAt:new Date().toISOString(),source:'gitlab',stands:[],rateLimited:true,error:gitlabLimitMessage};
   if(!force&&standCache&&Date.now()-standCache.at<30000)return standCache.data;
   if(standPending)return standPending;
   const connection=getGitLabConnection();
-  standPending=readGitLabStands(connection,{fetcher:fetch,dispatcher}).then(data=>{standCache={at:Date.now(),data};return data}).finally(()=>{standPending=null});
+  standPending=readGitLabStands(connection,{fetcher:fetch,dispatcher}).then(data=>{
+    if(data.rateLimited){gitlabRetryAt=Date.now()+120000;return standCache?{...standCache.data,rateLimited:true}:{...data,error:gitlabLimitMessage}}
+    standCache={at:Date.now(),data};return data;
+  }).finally(()=>{standPending=null});
   return standPending;
 }
 async function currentStandActivity(force=false){
+  if(Date.now()<gitlabRetryAt)return {checkedAt:new Date().toISOString(),pipelines:[],deployments:[],completed:[],partial:true,rateLimited:true,error:gitlabLimitMessage};
   if(!force&&standActivityCache&&Date.now()-standActivityCache.at<10000)return standActivityCache.data;
   if(standActivityPending)return standActivityPending;
-  standActivityPending=readGitLabStandActivity(getGitLabConnection(),{fetcher:fetch,dispatcher}).then(data=>{standActivityCache={at:Date.now(),data};return data}).finally(()=>{standActivityPending=null});
+  standActivityPending=readGitLabStandActivity(getGitLabConnection(),{fetcher:fetch,dispatcher}).then(data=>{
+    if(data.rateLimited){gitlabRetryAt=Date.now()+120000;return {...data,error:gitlabLimitMessage}}
+    standActivityCache={at:Date.now(),data};return data;
+  }).finally(()=>{standActivityPending=null});
   return standActivityPending;
 }
 function getState(username) {
@@ -161,7 +177,7 @@ async function refresh(state) {
     let previous;
     try{previous=await eventStore.load(scope,state.user);state.readyEvents=(previous?.events||[]).map(event=>({...event,url:`${connection.base}/browse/${encodeURIComponent(event.key)}`}));state.historyCheckedAt=previous?new Date(previous.checkedAt).toISOString():null;}catch{state.historyError='Не удалось прочитать журнал уведомлений. Проверка истории остановлена.';}
     const userLiteral = JSON.stringify(state.user);
-    const jql = `("Тестировщик" = ${userLiteral} OR assignee = ${userLiteral} OR reporter = ${userLiteral}) AND resolution = Unresolved AND statusCategory != Done ORDER BY updated DESC`;
+    const jql = `("Тестировщик" = ${userLiteral} OR assignee = ${userLiteral} OR reporter = ${userLiteral}) AND statusCategory != Done ORDER BY updated DESC`;
     let issues = [], startAt = 0;
     for (;;) {
       const page = await jira('/rest/api/2/search', { jql, startAt, maxResults: 100, fields: ['summary', 'status', 'issuetype', 'priority', 'assignee', 'reporter', 'updated'] }, connection);
@@ -280,9 +296,25 @@ const server = http.createServer(async (req, res) => {
   if (![ `127.0.0.1:${listenPort}`, `localhost:${listenPort}` ].includes(req.headers.host)) { res.writeHead(403); return res.end(); }
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
+  res.setHeader('Content-Security-Policy', `default-src 'self'; img-src 'self' data:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'${installMode==='docker'?' http://127.0.0.1:18765':''}; frame-ancestors 'none'; base-uri 'none'`);
   const url = new URL(req.url, `http://127.0.0.1:${listenPort}`);
   const json=(code,data)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
+  if (url.pathname === '/api/update/install' && req.method === 'POST') {
+    const supplied=Buffer.from(String(req.headers['x-csrf-token']||''));
+    if(req.headers.origin!==`http://${req.headers.host}`||supplied.length!==csrf.length||!timingSafeEqual(supplied,Buffer.from(csrf)))return json(403,{error:'Перезагрузи страницу и повтори действие.'});
+    if(installMode!=='git'||process.platform!=='win32')return json(501,{error:'Этот способ установки доступен только при локальном запуске из Git на Windows.'});
+    if(updateBusy)return json(409,{error:'Обновление уже выполняется.'});
+    try {
+      const info=await readUpdateInfo({currentVersion:packageVersion,cwd:path.dirname(fileURLToPath(import.meta.url)),mode:installMode});
+      if(!info.available)return json(409,{error:'Новой версии в GitHub сейчас нет.'});
+      if(!info.canInstall)return json(409,{error:info.reason});
+      const script=fileURLToPath(new URL('./update-git.ps1',import.meta.url));
+      const child=spawn('powershell.exe',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',script],{cwd:path.dirname(script),detached:true,windowsHide:true,stdio:'ignore'});
+      child.on('error',()=>{updateBusy=false});child.on('exit',()=>{updateBusy=false});
+      updateBusy=true;child.unref();
+      return json(202,{message:'Обновление запущено. Приложение перезапустится после установки.'});
+    } catch { return json(502,{error:'Не удалось проверить GitHub или запустить обновление.'}); }
+  }
   if(url.pathname==='/api/hosts'){
     const supplied=Buffer.from(String(req.headers['x-csrf-token']||''));
     if(supplied.length!==csrf.length||!timingSafeEqual(supplied,Buffer.from(csrf)))return json(403,{error:'Перезагрузи страницу и повтори действие.'});
@@ -386,7 +418,7 @@ const server = http.createServer(async (req, res) => {
       profile=candidate;states.clear();calendarSession=null;
       releaseCache.clear();
       gitlabCache.clear();
-      standCache=null;standActivityCache=null;
+      standCache=null;standActivityCache=null;gitlabRetryAt=0;
       return json(200,publicProfile());
     } catch { return json(400,{error:'Не удалось сохранить профиль.'}); }
     finally { savingProfile=false; }
@@ -412,6 +444,15 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method !== 'GET') { res.writeHead(405); return res.end(); }
   if (url.pathname === '/api/config') return json(200,publicProfile());
+  if (url.pathname === '/api/update') {
+    try { return json(200,await readUpdateInfo({currentVersion:packageVersion,cwd:path.dirname(fileURLToPath(import.meta.url)),mode:installMode})); }
+    catch(error){return json(502,{error:error.message||'Не удалось проверить обновления.'})}
+  }
+  if (url.pathname === '/api/update/status') {
+    if(installMode!=='git')return json(200,{stage:'idle'});
+    try{return json(200,JSON.parse(await readFile(path.join(directory,'update-status.json'),'utf8')))}
+    catch{return json(200,{stage:'idle'})}
+  }
   if (url.pathname === '/api/stands') {
     try{return json(200,await currentStands(url.searchParams.get('refresh')==='1'))}
     catch{return json(502,{error:'Не удалось прочитать выкладки GitLab. Проверь подключение и адрес в профиле.'})}

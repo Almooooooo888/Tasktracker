@@ -60,36 +60,49 @@ export async function readGitLabStands({base,token},{fetcher=fetch,dispatcher,se
   if(!base||!token)return {checkedAt,source:'gitlab',stands:stands.map(stand=>({...stand,services:[]})),error:'GitLab не настроен в профиле.'};
   const origin=new URL(base);
   if(origin.protocol!=='https:')throw Error('Для GitLab нужен HTTPS-адрес.');
+  let rateLimited=false;
   const request=async path=>{
+    if(rateLimited)throw Error('GitLab HTTP 429');
     const response=await fetcher(new URL(path,origin),{headers:{'PRIVATE-TOKEN':token,Accept:'application/json'},redirect:'error',dispatcher,signal:AbortSignal.timeout(12000)});
+    if(response.status===429)rateLimited=true;
     if(!response.ok)throw Error(`GitLab HTTP ${response.status}`);
     return response.json();
   };
-  const projects=await limited(services,5,async service=>{
+  const projects=await limited(services,3,async service=>{
     const url=`${origin.origin}/${service.path}`;
     const apiRoot=`/api/v4/projects/${encodeURIComponent(service.path)}`;
-    const prefix=`${apiRoot}/environments`;
     try{
-      const environments=await request(`${prefix}?per_page=100`);
-      if(!Array.isArray(environments))throw Error('Некорректный ответ GitLab');
-      return {service,url,apiRoot,prefix,environments};
-    }catch(error){return {service,url,apiRoot,prefix,error:error.message,environments:[]}}
+      const environments=await request(`${apiRoot}/environments?per_page=100`);
+      const deployments=await request(`${apiRoot}/deployments?per_page=100&sort=desc`);
+      if(!Array.isArray(environments)||!Array.isArray(deployments))throw Error('Некорректный ответ GitLab');
+      return {service,url,apiRoot,environments,deployments};
+    }catch(error){return {service,url,apiRoot,error:error.message,environments:[],deployments:[]}}
   });
   const jobs=projects.flatMap(project=>stands.map(stand=>({project,stand,environment:project.environments.find(item=>item.name===stand.key)})));
-  const details=await limited(jobs,8,async({project,environment})=>{
+  const details=await limited(jobs,3,async({project,environment})=>{
     if(project.error)return {state:'error',error:project.error};
     if(!environment)return {state:'no-environment'};
     try{
-      const current=await request(`${project.prefix}/${environment.id}`),latest=current.last_deployment;
-      if(!latest||latest.status==='success')return deploymentView(current,project.url);
-      const successful=await request(`${project.apiRoot}/deployments?environment=${encodeURIComponent(environment.name)}&status=success&sort=desc&per_page=1`);
-      if(!Array.isArray(successful))throw Error('Некорректный ответ GitLab');
-      const view=successful[0]?deploymentView({...current,last_deployment:successful[0]},project.url):{state:'no-deployment',environmentUrl:`${project.url}/-/environments/${environment.id}`};
-      return {...view,lastAttempt:{status:latest.status,ref:String(latest.ref||'')}};
+      const matches=project.deployments.filter(item=>item.environment?.name===environment.name);
+      let latest=matches[0];
+      if(!latest){
+        const recent=await request(`${project.apiRoot}/deployments?environment=${encodeURIComponent(environment.name)}&sort=desc&per_page=1`);
+        if(!Array.isArray(recent))throw Error('Некорректный ответ GitLab');
+        latest=recent[0];
+      }
+      if(!latest)return {state:environment.state==='stopped'?'stopped':'no-deployment',environmentUrl:`${project.url}/-/environments/${environment.id}`};
+      let successful=latest.status==='success'?latest:matches.find(item=>item.status==='success');
+      if(!successful){
+        const previous=await request(`${project.apiRoot}/deployments?environment=${encodeURIComponent(environment.name)}&status=success&sort=desc&per_page=1`);
+        if(!Array.isArray(previous))throw Error('Некорректный ответ GitLab');
+        successful=previous[0];
+      }
+      const view=successful?deploymentView({...environment,last_deployment:successful},project.url):{state:environment.state==='stopped'?'stopped':'no-deployment',environmentUrl:`${project.url}/-/environments/${environment.id}`};
+      return latest.status==='success'?view:{...view,lastAttempt:{status:latest.status,ref:String(latest.ref||'')}};
     }
     catch(error){return {state:'error',error:error.message}}
   });
-  return {checkedAt:new Date().toISOString(),source:'gitlab',stands:stands.map((stand,standIndex)=>({...stand,services:projects.map((project,index)=>({name:project.service.name,documentedFor:project.service.documentedFor||[],projectUrl:project.url,...details[index*stands.length+standIndex]}))}))};
+  return {checkedAt:new Date().toISOString(),source:'gitlab',rateLimited,stands:stands.map((stand,standIndex)=>({...stand,services:projects.map((project,index)=>({name:project.service.name,documentedFor:project.service.documentedFor||[],projectUrl:project.url,...details[index*stands.length+standIndex]}))}))};
 }
 
 export async function readGitLabStandActivity({base,token},{fetcher=fetch,dispatcher,services=LK_SERVICES,stands=STANDS}={}){
@@ -97,12 +110,15 @@ export async function readGitLabStandActivity({base,token},{fetcher=fetch,dispat
   if(!base||!token)return {checkedAt,pipelines:[],deployments:[],error:'GitLab не настроен в профиле.'};
   const origin=new URL(base);
   if(origin.protocol!=='https:')throw Error('Для GitLab нужен HTTPS-адрес.');
+  let rateLimited=false;
   const request=async path=>{
+    if(rateLimited)throw Error('GitLab HTTP 429');
     const response=await fetcher(new URL(path,origin),{headers:{'PRIVATE-TOKEN':token,Accept:'application/json'},redirect:'error',dispatcher,signal:AbortSignal.timeout(12000)});
+    if(response.status===429)rateLimited=true;
     if(!response.ok)throw Error(`GitLab HTTP ${response.status}`);
     const data=await response.json();if(!Array.isArray(data))throw Error('Некорректный ответ GitLab');return data;
   };
-  const items=await limited(services,5,async service=>{
+  const items=await limited(services,3,async service=>{
     const projectUrl=`${origin.origin}/${service.path}`,apiRoot=`/api/v4/projects/${encodeURIComponent(service.path)}`;
     const [pipelines,deployments]=await Promise.allSettled([
       request(`${apiRoot}/pipelines?per_page=30&order_by=id&sort=desc`),
@@ -110,5 +126,5 @@ export async function readGitLabStandActivity({base,token},{fetcher=fetch,dispat
     ]);
     return {pipelines:pipelines.status==='fulfilled'?pipelines.value.map(item=>pipelineView(item,service.name,projectUrl)).filter(Boolean):[],deployments:deployments.status==='fulfilled'?deployments.value.map(item=>activeDeploymentView(item,service.name,projectUrl,stands)).filter(Boolean):[],completed:deployments.status==='fulfilled'?deployments.value.map(item=>completedDeploymentView(item,service.name,stands)).filter(Boolean):[],failed:pipelines.status==='rejected'||deployments.status==='rejected'};
   });
-  return {checkedAt,pipelines:items.flatMap(item=>item.pipelines),deployments:items.flatMap(item=>item.deployments),completed:items.flatMap(item=>item.completed),partial:Boolean(items.some(item=>item.failed))};
+  return {checkedAt,pipelines:items.flatMap(item=>item.pipelines),deployments:items.flatMap(item=>item.deployments),completed:items.flatMap(item=>item.completed),partial:Boolean(items.some(item=>item.failed)),rateLimited};
 }

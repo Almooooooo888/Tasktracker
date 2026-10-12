@@ -1,6 +1,6 @@
 services:
   jira-board:
-    image: almooooooo/taskboard:1.18.0
+    image: ${TASKBOARD_IMAGE:-almooooooo/taskboard:1.26.0}
     restart: unless-stopped
     ports:
       - "127.0.0.1:18764:18764"
@@ -9,6 +9,7 @@ services:
       LK_JIRA_TLS_SKIP_VERIFY: ${LK_JIRA_TLS_SKIP_VERIFY:-false}
       LK_GITLAB_BASE_URL: ${LK_GITLAB_BASE_URL:-}
       LK_GITLAB_TOKEN: ${LK_GITLAB_TOKEN:-}
+      LK_INSTALL_MODE: docker
       NODE_EXTRA_CA_CERTS: ${NODE_EXTRA_CA_CERTS:-}
     volumes:
       - profile:/data
