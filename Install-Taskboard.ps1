@@ -3,7 +3,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$image = 'almooooooo/taskboard:1.27.4'
+$image = 'almooooooo/taskboard:1.27.6'
 $composeUrl = 'https://raw.githubusercontent.com/Almooooooo888/Tasktracker/main/compose.hub.yaml'
 $project = 'taskboard'
 $appUrl = 'http://127.0.0.1:18764/'
@@ -48,7 +48,7 @@ if (-not (Test-Path -LiteralPath $envPath)) {
 } else {
     $envText = [IO.File]::ReadAllText($envPath)
     if ($envText -match '(?m)^TASKBOARD_IMAGE=almooooooo/taskboard:(\d+\.\d+\.\d+)[ \t]*$') {
-        if ([version]$Matches[1] -lt [version]'1.27.4') {
+        if ([version]$Matches[1] -lt [version]'1.27.6') {
             $envText = [regex]::Replace($envText, '(?m)^TASKBOARD_IMAGE=almooooooo/taskboard:\d+\.\d+\.\d+[ \t]*$', "TASKBOARD_IMAGE=$image")
             [IO.File]::WriteAllText($envPath, $envText, [Text.UTF8Encoding]::new($false))
         }

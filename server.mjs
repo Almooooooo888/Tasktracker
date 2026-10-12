@@ -188,7 +188,8 @@ async function refresh(state) {
     let previous;
     try{previous=await eventStore.load(scope,state.user);state.readyEvents=(previous?.events||[]).map(event=>({...event,url:`${connection.base}/browse/${encodeURIComponent(event.key)}`}));state.historyCheckedAt=previous?new Date(previous.checkedAt).toISOString():null;}catch{state.historyError='Не удалось прочитать журнал уведомлений. Проверка истории остановлена.';}
     const userLiteral = JSON.stringify(state.user);
-    const jql = `("Тестировщик" = ${userLiteral} OR assignee = ${userLiteral} OR reporter = ${userLiteral}) AND statusCategory != Done ORDER BY updated DESC`;
+    const lkWithoutTester = 'project = ECP AND status in ("READY TO TEST", "TESTING") AND "Тестировщик" IS EMPTY AND (component = "ВГА.ЛК" OR labels in ("ВГА.ЛК", "ВГА.ЛК.") OR summary ~ "ВГА.ЛК")';
+    const jql = `(("Тестировщик" = ${userLiteral} OR assignee = ${userLiteral} OR reporter = ${userLiteral}) OR (${lkWithoutTester})) AND statusCategory != Done ORDER BY updated DESC`;
     let issues = [], startAt = 0;
     for (;;) {
       const page = await jira('/rest/api/2/search', { jql, startAt, maxResults: 100, fields: ['summary', 'status', 'issuetype', 'priority', 'assignee', 'reporter', 'updated'] }, connection);

@@ -732,7 +732,7 @@ function render(){
  [$('workspace-section').textContent,$('workspace-location').textContent]=locations[tab]||locations.review;
  $('page-title').textContent=tab==='investigation'?'Разбор обращений':tab==='bugs'?'Созданные баги':tab==='calendar'?'Календарь':tab==='stands'?'Стенды':tab==='hosts'?'Hosts':tab==='release'?'Регресс':tab==='build'?'Собрать релиз':'Мои задачи';
  if(tab==='bugs'){renderBugs();return}if(tab==='calendar'){renderCalendar();return}if(tab==='stands'){$('owner').textContent='ЛК · последние выкладки GitLab по DEV и QA';renderStands();return}if(tab==='hosts'){$('owner').textContent='Системные сопоставления имён и IP-адресов';renderHosts();return}if(tab==='investigation'){$('owner').textContent='Запросы и уведомления · состояние, маршрут, логи';renderInvestigation();return}if(tab==='release'){$('owner').textContent='Связанные задачи и результаты проверки';renderRelease();return}if(tab==='build'){$('owner').textContent='Подготовка состава релиза';renderBuilder();return}
- $('owner').textContent='Задачи выбранного пользователя';
+ $('owner').textContent=tab==='review'?'Задачи выбранного пользователя и ЛК без тестировщика':'Задачи выбранного пользователя';
  const review=data.issues.filter(x=>['READY TO TEST','TESTING'].includes(x.status));const todo=data.issues.filter(x=>!['READY TO TEST','TESTING'].includes(x.status));
  setNavLabel('review',`На проверке · ${review.length}`);setNavLabel('todo',`Прочие статусы · ${todo.length}`);
  const items=tab==='review'?review:todo;

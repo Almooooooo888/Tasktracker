@@ -1,6 +1,6 @@
 services:
   jira-board:
-    image: jira-board:1.27.5
+    image: jira-board:1.27.6
     build: .
     restart: unless-stopped
     ports:
