@@ -7,6 +7,7 @@
 !events.mjs
 !investigation.mjs
 !calendar.mjs
+!calendar-ews.mjs
 !stands.mjs
 !hosts.mjs
 !updater.mjs

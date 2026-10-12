@@ -1,6 +1,6 @@
 services:
   jira-board:
-    image: ${TASKBOARD_IMAGE:-almooooooo/taskboard:1.27.6}
+    image: ${TASKBOARD_IMAGE:-almooooooo/taskboard:1.27.7}
     restart: unless-stopped
     ports:
       - "127.0.0.1:18764:18764"
@@ -9,6 +9,8 @@ services:
       LK_JIRA_TLS_SKIP_VERIFY: ${LK_JIRA_TLS_SKIP_VERIFY:-false}
       LK_GITLAB_BASE_URL: ${LK_GITLAB_BASE_URL:-}
       LK_GITLAB_TOKEN: ${LK_GITLAB_TOKEN:-}
+      LK_EXCHANGE_DOMAIN: ${LK_EXCHANGE_DOMAIN:-da.gov.ru}
+      LK_EXCHANGE_AUTODISCOVER_URL: ${LK_EXCHANGE_AUTODISCOVER_URL:-https://autodiscover.da.gov.ru/autodiscover/autodiscover.xml}
       LK_INSTALL_MODE: docker
       LK_UPDATER_URL: http://docker-updater:18765
       LK_UPDATER_TOKEN_FILE: /updater-state/token
@@ -25,7 +27,7 @@ services:
     security_opt:
       - no-new-privileges:true
   docker-updater:
-    image: almooooooo/taskboard:1.27.6
+    image: almooooooo/taskboard:1.27.7
     command: ["node", "docker-updater.mjs"]
     user: "0:0"
     restart: unless-stopped

@@ -1,12 +1,13 @@
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
+import { exchangeRequestLinux } from './calendar-ews.mjs';
 
 let localSettings = {};
 try { localSettings = JSON.parse(readFileSync(new URL('./diagnostics.local.json', import.meta.url), 'utf8')); }
 catch (error) { if (error.code !== 'ENOENT') throw error; }
-const exchangeDomain = String(process.env.LK_EXCHANGE_DOMAIN || localSettings.exchangeDomain || '').toLowerCase();
-const autodiscoverUrl = String(process.env.LK_EXCHANGE_AUTODISCOVER_URL || localSettings.exchangeAutodiscoverUrl || '');
+const exchangeDomain = String(process.env.LK_EXCHANGE_DOMAIN || localSettings.exchangeDomain || (process.platform === 'linux' ? 'da.gov.ru' : '')).toLowerCase();
+const autodiscoverUrl = String(process.env.LK_EXCHANGE_AUTODISCOVER_URL || localSettings.exchangeAutodiscoverUrl || (process.platform === 'linux' ? 'https://autodiscover.da.gov.ru/autodiscover/autodiscover.xml' : ''));
 
 function isAllowedHost(host) { return host === exchangeDomain || host.endsWith('.' + exchangeDomain); }
 
@@ -88,7 +89,7 @@ export function normalizeAvailability(request,result) {
 }
 
 export async function exchangeRequest(input) {
-  if (process.platform !== 'win32') throw new Error('Календарь Exchange пока доступен только в локальном Windows-запуске.');
+  if (process.platform !== 'win32') return exchangeRequestLinux(input);
   const script=fileURLToPath(new URL('./calendar-exchange.ps1',import.meta.url));
   return new Promise((resolve,reject)=>{
     const env={...process.env};delete env.PSModulePath;
