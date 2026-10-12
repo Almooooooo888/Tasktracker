@@ -856,43 +856,38 @@ async function poll(){
   $('profile-token').required=!configuration.configured;$('gitlab-help').textContent=configuration.gitlabConfigured?'GitLab подключён. Оставь токен пустым, чтобы сохранить его.':'Необязательно. Нужен токен с правом read_api для поиска MR и веток.';$('profile-diagnostics-help').textContent=configuration.pgConfigured?'Доступ к БД настроен. Пароль можно оставить пустым.':'Для поиска по номеру укажи read-only доступ к БД. Пароль сохраняется в зашифрованном профиле Windows.';$('profile-message').textContent='';$('profile-dialog').showModal();
 }
 $('profile-button').onclick=openProfile;
-let updateDetails=null,updateHelperReady=false,updateWorking=false;
-const updateHelper='http://127.0.0.1:18765';
+let updateDetails=null,updateWorking=false;
 $('update-button').onclick=async()=>{
- const dialog=$('update-dialog');dialog.showModal();$('update-message').textContent='Проверяю опубликованные версии…';$('update-install').hidden=true;updateDetails=null;updateHelperReady=false;
+ const dialog=$('update-dialog');dialog.showModal();$('update-message').textContent='Проверяю опубликованные версии…';$('update-install').hidden=true;updateDetails=null;
  try{
   const response=await fetch('/api/update',{signal:AbortSignal.timeout(15000)}),info=await response.json();
   if(!response.ok)throw Error(info.error||'Не удалось проверить обновления.');
   updateDetails=info;
-  if(info.mode==='docker'){
-   try{const helper=await fetch(updateHelper+'/health',{signal:AbortSignal.timeout(2500)});updateHelperReady=helper.ok&&(await helper.json()).app==='taskboard-docker-updater'}catch{}
-  }
   const source=info.mode==='docker'?'Docker Hub':'GitHub';
-  $('update-message').textContent=info.available?`Установлена ${info.currentVersion}. В ${source} доступна ${info.latestVersion}.${info.reason?' '+info.reason:''}${info.mode==='docker'&&!updateHelperReady?' Для обновления одной кнопкой сначала запусти Docker-Hub-Start.cmd на этом компьютере.':''}`:`Установлена ${info.currentVersion}. Новее в ${source} сейчас нет.${info.reason?' '+info.reason:''}`;
-  $('update-install').hidden=!info.available||!info.canInstall&&info.mode!=='docker'||info.mode==='docker'&&!updateHelperReady;
+  $('update-message').textContent=info.available?`Установлена ${info.currentVersion}. В ${source} доступна ${info.latestVersion}.${info.reason?' '+info.reason:''}`:`Установлена ${info.currentVersion}. Новее в ${source} сейчас нет.${info.reason?' '+info.reason:''}`;
+  $('update-install').hidden=!info.canInstall;
  }catch(error){$('update-message').textContent=error.name==='TimeoutError'?'Источник обновлений не ответил за 15 секунд.':error.message}
 };
 $('update-close').onclick=()=>$('update-dialog').close();
 $('update-install').onclick=async()=>{
  if(!updateDetails||updateWorking)return;
  updateWorking=true;$('update-install').disabled=true;$('update-message').textContent='Запускаю обновление…';
- const docker=updateDetails.mode==='docker',url=docker?updateHelper+'/install':'/api/update/install';
  try{
-  const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...(docker?{}:{'X-CSRF-Token':configuration.csrf})},body:JSON.stringify(docker?{version:updateDetails.latestVersion}:{}),signal:AbortSignal.timeout(15000)}),result=await response.json();
+  const response=await fetch('/api/update/install',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':configuration.csrf},body:'{}',signal:AbortSignal.timeout(15000)}),result=await response.json();
   if(!response.ok)throw Error(result.error||'Не удалось запустить обновление.');
   $('update-message').textContent='Обновление выполняется. Дождись перезапуска приложения…';
-  const statusUrl=docker?updateHelper+'/status':'/api/update/status';
   for(let attempt=0;attempt<120;attempt++){
    await new Promise(resolve=>setTimeout(resolve,1500));
    try{
-    const stateResponse=await fetch(statusUrl,{signal:AbortSignal.timeout(2500)}),state=await stateResponse.json();
+    const stateResponse=await fetch('/api/update/status',{signal:AbortSignal.timeout(2500)}),state=await stateResponse.json();
+    if(!stateResponse.ok)throw Error(state.error||'Не удалось получить состояние обновления.');
     if(state.stage==='error')throw Error(state.message||'Обновление не удалось.');
     if(state.stage==='done'){window.location.reload();return}
     if(state.stage==='running'&&state.message)$('update-message').textContent=state.message;
    }catch(error){if(error.message&&error.message!=='Failed to fetch'&&error.name!=='TimeoutError')throw error}
   }
   throw Error('Обновление ещё не завершилось. Проверь его статус позже или запусти Taskboard вручную.');
- }catch(error){$('update-message').textContent=error.name==='TimeoutError'?'Помощник обновления не ответил.':error.message}
+ }catch(error){$('update-message').textContent=error.name==='TimeoutError'?'Обновление не ответило вовремя.':error.message}
  finally{updateWorking=false;$('update-install').disabled=false}
 };
  $('profile-cancel').onclick=()=>{$('profile-token').value='';$('profile-gitlab-token').value='';$('profile-pg-password').value='';$('profile-dialog').close()};

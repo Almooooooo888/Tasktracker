@@ -1,6 +1,6 @@
 services:
   jira-board:
-    image: ${TASKBOARD_IMAGE:-almooooooo/taskboard:1.26.0}
+    image: ${TASKBOARD_IMAGE:-almooooooo/taskboard:1.27.0}
     restart: unless-stopped
     ports:
       - "127.0.0.1:18764:18764"
@@ -10,13 +10,43 @@ services:
       LK_GITLAB_BASE_URL: ${LK_GITLAB_BASE_URL:-}
       LK_GITLAB_TOKEN: ${LK_GITLAB_TOKEN:-}
       LK_INSTALL_MODE: docker
+      LK_UPDATER_URL: http://docker-updater:18765
+      LK_UPDATER_TOKEN_FILE: /updater-state/token
       NODE_EXTRA_CA_CERTS: ${NODE_EXTRA_CA_CERTS:-}
     volumes:
       - profile:/data
+      - updater-state:/updater-state:ro
       - ./certs:/run/certs:ro
+    networks:
+      - default
+      - updater
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+  docker-updater:
+    image: almooooooo/taskboard:1.27.0
+    command: ["node", "docker-updater.mjs"]
+    user: "0:0"
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+    environment:
+      UPDATER_STATE_DIR: /updater-state
+      UPDATER_WORKSPACE: /workspace
+    volumes:
+      - updater-state:/updater-state
+      - ./:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - updater
     cap_drop:
       - ALL
     security_opt:
       - no-new-privileges:true
 volumes:
   profile:
+  updater-state:
+networks:
+  updater:
+    internal: true

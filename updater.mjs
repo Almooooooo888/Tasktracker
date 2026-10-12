@@ -34,8 +34,7 @@ export async function readUpdateInfo({ currentVersion, cwd, mode = process.platf
     versions.sort(compareVersions);
     const latestVersion = versions.at(-1);
     return { mode, currentVersion, latestVersion, available: compareVersions(latestVersion, currentVersion) > 0,
-      source: 'Docker Hub', canInstall: false,
-      reason: 'Для установки Docker-образа нужен помощник на компьютере, где запущен Docker.' };
+      source: 'Docker Hub', canInstall: false, reason: '' };
   }
   if (mode !== 'git') throw new Error('Неизвестный режим установки.');
   const [commit, content, localCommit, status] = await Promise.all([

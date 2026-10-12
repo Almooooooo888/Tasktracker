@@ -10,6 +10,7 @@
 !stands.mjs
 !hosts.mjs
 !updater.mjs
+!docker-updater.mjs
 !calendar-exchange.ps1
 !hosts-elevated.ps1
 !index.html

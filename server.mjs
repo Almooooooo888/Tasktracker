@@ -15,6 +15,8 @@ import { readUpdateInfo } from './updater.mjs';
 const eventStore=new EventStore(directory);
 const packageVersion=JSON.parse(await readFile(new URL('./package.json',import.meta.url),'utf8')).version;
 const installMode=process.env.LK_INSTALL_MODE||(process.platform==='win32'?'git':'docker');
+const updaterUrl=process.env.LK_UPDATER_URL||'';
+const updaterTokenFile=process.env.LK_UPDATER_TOKEN_FILE||'';
 let updateBusy=false;
 const require = createRequire(import.meta.url);
 const { fetch, Agent } = require('undici');
@@ -35,6 +37,15 @@ let profile = await loadProfile() || {
   gitlabToken: process.env.LK_GITLAB_TOKEN || ''
 };
 const csrf = randomBytes(32).toString('hex');
+async function updaterRequest(route, options={}) {
+  if(!updaterUrl||!updaterTokenFile)throw new Error('Компонент обновления не настроен.');
+  const token=(await readFile(updaterTokenFile,'utf8')).trim();
+  const response=await fetch(`${updaterUrl}${route}`,{...options,headers:{...options.headers,'X-Updater-Token':token},signal:AbortSignal.timeout(route==='/health'?2500:10000)});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.error||'Компонент обновления не ответил.');
+  return data;
+}
+async function updaterReady(){try{return (await updaterRequest('/health')).app==='taskboard-docker-updater'}catch{return false}}
 let savingProfile = false;
 let savingHosts = false;
 let investigationBusy = false;
@@ -296,12 +307,19 @@ const server = http.createServer(async (req, res) => {
   if (![ `127.0.0.1:${listenPort}`, `localhost:${listenPort}` ].includes(req.headers.host)) { res.writeHead(403); return res.end(); }
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Content-Security-Policy', `default-src 'self'; img-src 'self' data:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'${installMode==='docker'?' http://127.0.0.1:18765':''}; frame-ancestors 'none'; base-uri 'none'`);
+  res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
   const url = new URL(req.url, `http://127.0.0.1:${listenPort}`);
   const json=(code,data)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
   if (url.pathname === '/api/update/install' && req.method === 'POST') {
     const supplied=Buffer.from(String(req.headers['x-csrf-token']||''));
     if(req.headers.origin!==`http://${req.headers.host}`||supplied.length!==csrf.length||!timingSafeEqual(supplied,Buffer.from(csrf)))return json(403,{error:'Перезагрузи страницу и повтори действие.'});
+    if(installMode==='docker') {
+      try {
+        const info=await readUpdateInfo({currentVersion:packageVersion,cwd:path.dirname(fileURLToPath(import.meta.url)),mode:installMode});
+        if(!info.available)return json(409,{error:'Новой версии в Docker Hub сейчас нет.'});
+        return json(202,await updaterRequest('/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:info.latestVersion})}));
+      } catch(error){return json(502,{error:error.message||'Не удалось запустить обновление Docker.'})}
+    }
     if(installMode!=='git'||process.platform!=='win32')return json(501,{error:'Этот способ установки доступен только при локальном запуске из Git на Windows.'});
     if(updateBusy)return json(409,{error:'Обновление уже выполняется.'});
     try {
@@ -445,11 +463,20 @@ const server = http.createServer(async (req, res) => {
   if (req.method !== 'GET') { res.writeHead(405); return res.end(); }
   if (url.pathname === '/api/config') return json(200,publicProfile());
   if (url.pathname === '/api/update') {
-    try { return json(200,await readUpdateInfo({currentVersion:packageVersion,cwd:path.dirname(fileURLToPath(import.meta.url)),mode:installMode})); }
+    try {
+      const info=await readUpdateInfo({currentVersion:packageVersion,cwd:path.dirname(fileURLToPath(import.meta.url)),mode:installMode});
+      if(installMode==='docker'){
+        const ready=await updaterReady();
+        return json(200,{...info,canInstall:info.available&&ready,reason:ready?'':'Компонент обновления Docker недоступен.'});
+      }
+      return json(200,info);
+    }
     catch(error){return json(502,{error:error.message||'Не удалось проверить обновления.'})}
   }
   if (url.pathname === '/api/update/status') {
-    if(installMode!=='git')return json(200,{stage:'idle'});
+    if(installMode==='docker'){
+      try{return json(200,await updaterRequest('/status'))}catch(error){return json(502,{error:error.message})}
+    }
     try{return json(200,JSON.parse(await readFile(path.join(directory,'update-status.json'),'utf8')))}
     catch{return json(200,{stage:'idle'})}
   }
