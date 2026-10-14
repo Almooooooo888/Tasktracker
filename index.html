@@ -250,6 +250,8 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 /* Connection state sits above one aligned row of header actions. */
 .header-tools,:root[data-design=mock] .header-tools{display:grid;grid-template-columns:max-content max-content;align-items:stretch;justify-content:end;gap:8px 10px;margin-left:auto}
 .header-tools #connection,:root[data-design=mock] .header-tools #connection{grid-column:1/-1;max-width:none;margin:0;text-align:right}
+#update-button{position:relative}
+#update-button[data-update-available="true"]::after{content:"";position:absolute;top:-4px;right:-4px;width:11px;height:11px;border-radius:50%;background:#e8ad57;box-shadow:0 0 0 3px var(--page),0 0 0 4px #e8ad5780;pointer-events:none}
 #profile-button,:root[data-design=mock] #profile-button{margin:0}
 @media(max-width:760px){.header-tools,:root[data-design=mock] .header-tools{margin-left:0;justify-content:start}.header-tools #connection,:root[data-design=mock] .header-tools #connection{text-align:left}}
 @media(max-width:500px){.header-tools,:root[data-design=mock] .header-tools{width:100%;grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -894,6 +896,25 @@ async function poll(){
 }
 $('profile-button').onclick=openProfile;
 let updateDetails=null,updateWorking=false;
+let updateBadgeChecking=false,updateBadgeCheckedAt=0;
+function setUpdateBadge(info){
+ const button=$('update-button'),available=Boolean(info?.available);
+ button.dataset.updateAvailable=String(available);
+ const label=available?`Обновить приложение. Доступна версия ${info.latestVersion}`:'Обновить приложение';
+ button.setAttribute('aria-label',label);button.title=available?`Доступна версия ${info.latestVersion}`:'';
+}
+async function checkUpdateBadge(){
+ if(updateBadgeChecking)return;
+ updateBadgeChecking=true;
+ try{
+  const response=await fetch('/api/update',{signal:AbortSignal.timeout(15000)});
+  if(!response.ok)throw Error('Не удалось проверить версию');
+  setUpdateBadge(await response.json());
+ }catch{setUpdateBadge(null)}
+ finally{updateBadgeCheckedAt=Date.now();updateBadgeChecking=false}
+}
+setInterval(()=>{if(!document.hidden)void checkUpdateBadge()},15*60*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-updateBadgeCheckedAt>15*60*1000)void checkUpdateBadge()});
 const updatePhaseNames={starting:'Подготовка',download:'Загрузка образа',verify:'Проверка образа',restart:'Перезапуск',health:'Проверка запуска',finish:'Завершение',rollback:'Восстановление прежней версии'};
 function updateBytes(value){return value<1048576?`${(value/1024).toFixed(1)} КБ`:`${(value/1048576).toFixed(1)} МБ`}
 function renderUpdateProgress(state){
@@ -948,6 +969,7 @@ $('update-button').onclick=async()=>{
   const response=await fetch('/api/update',{signal:AbortSignal.timeout(15000)}),info=await response.json();
   if(!response.ok)throw Error(info.error||'Не удалось проверить обновления.');
   updateDetails=info;
+  setUpdateBadge(info);
   const source=info.mode==='docker'?'Docker Hub':'GitHub';
   $('update-message').textContent=info.available?`Установлена ${info.currentVersion}. В ${source} доступна ${info.latestVersion}.${info.reason?' '+info.reason:''}`:`Установлена ${info.currentVersion}. Новее в ${source} сейчас нет.${info.reason?' '+info.reason:''}`;
   $('update-install').hidden=!info.canInstall;
@@ -973,6 +995,6 @@ $('profile-form').onsubmit=async event=>{
  catch(error){$('profile-message').textContent=error.name==='TimeoutError'?'Проверка заняла слишком много времени. Проверь сеть и повтори.':error.message}
  finally{$('profile-save').disabled=false;$('profile-cancel').disabled=false}
 };
-async function init(){try{const response=await fetch('/api/config');if(!response.ok)throw Error();configuration=await response.json();$('workspace-person').textContent=configuration.account?.displayName||'';$('username').value='';$('builder-key').value=readPref('builderKey','');render();$('connection').textContent='';if(!configuration.configured)openProfile();else{const saved=parsePref('selectedUser',null);if(saved&&typeof saved.username==='string'&&typeof saved.displayName==='string')selectUser(saved,true);if(tab==='bugs')loadBugs();if(tab==='calendar'&&configuration.calendarConnected)loadCalendar();if(tab==='stands'){loadStands();loadStandActivity()}if(tab==='hosts')loadHosts();if(tab==='release'&&releaseKey)loadRelease();if(tab==='build'&&$('builder-key').value)loadBuilder()}}catch{$('error').hidden=false;$('error').textContent='Не удалось подключиться к программе. Перезагрузи страницу после запуска.'}}
+async function init(){try{const response=await fetch('/api/config');if(!response.ok)throw Error();configuration=await response.json();void checkUpdateBadge();$('workspace-person').textContent=configuration.account?.displayName||'';$('username').value='';$('builder-key').value=readPref('builderKey','');render();$('connection').textContent='';if(!configuration.configured)openProfile();else{const saved=parsePref('selectedUser',null);if(saved&&typeof saved.username==='string'&&typeof saved.displayName==='string')selectUser(saved,true);if(tab==='bugs')loadBugs();if(tab==='calendar'&&configuration.calendarConnected)loadCalendar();if(tab==='stands'){loadStands();loadStandActivity()}if(tab==='hosts')loadHosts();if(tab==='release'&&releaseKey)loadRelease();if(tab==='build'&&$('builder-key').value)loadBuilder()}}catch{$('error').hidden=false;$('error').textContent='Не удалось подключиться к программе. Перезагрузи страницу после запуска.'}}
 init();
 </script></html>
