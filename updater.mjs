@@ -2,7 +2,6 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
-const github = 'https://api.github.com/repos/Almooooooo888/Tasktracker';
 const dockerHub = 'https://hub.docker.com/v2/repositories/almooooooo/taskboard/tags?page_size=100';
 const versionPattern = /^\d+\.\d+\.\d+$/;
 
@@ -37,18 +36,23 @@ export async function readUpdateInfo({ currentVersion, cwd, mode = process.platf
       source: 'Docker Hub', canInstall: false, reason: '' };
   }
   if (mode !== 'git') throw new Error('Неизвестный режим установки.');
-  const [commit, content, localCommit, status] = await Promise.all([
-    readJson(`${github}/commits/main`, fetcher),
-    readJson(`${github}/contents/package.json?ref=main`, fetcher),
+  const [remoteRef, localCommit, status] = await Promise.all([
+    gitCommand('git', ['ls-remote', 'origin', 'refs/heads/main'], cwd),
     gitCommand('git', ['rev-parse', 'HEAD'], cwd),
     gitCommand('git', ['status', '--porcelain'], cwd)
   ]);
-  const remotePackage = JSON.parse(Buffer.from(content.content.replace(/\s/g, ''), 'base64').toString('utf8'));
-  const latestVersion = remotePackage.version;
-  if (!versionPattern.test(latestVersion) || !/^[0-9a-f]{40}$/.test(commit.sha)) throw new Error('Источник вернул некорректную версию.');
-  const available = localCommit !== commit.sha && compareVersions(latestVersion, currentVersion) >= 0;
+  const remoteCommit = remoteRef.match(/^([0-9a-f]{40})\s+refs\/heads\/main$/)?.[1];
+  if (!remoteCommit) throw new Error('GitHub не вернул ветку main.');
+  let latestVersion = currentVersion;
+  if (remoteCommit !== localCommit) {
+    await gitCommand('git', ['fetch', '--no-tags', 'origin', 'main'], cwd);
+    const remotePackage = JSON.parse(await gitCommand('git', ['show', `${remoteCommit}:package.json`], cwd));
+    latestVersion = remotePackage.version;
+  }
+  if (!versionPattern.test(latestVersion)) throw new Error('Источник вернул некорректную версию.');
+  const available = localCommit !== remoteCommit && compareVersions(latestVersion, currentVersion) >= 0;
   return { mode, currentVersion, latestVersion, available, source: 'GitHub main', canInstall: available && !status,
     reason: status ? 'В папке есть локальные изменения. Сначала сохрани их в Git: автоматическое обновление их не затронет.' :
-      localCommit !== commit.sha && !available ? 'Удалённая ветка старше установленной версии.' : '',
-    localCommit, remoteCommit: commit.sha };
+      localCommit !== remoteCommit && !available ? 'Удалённая ветка старше установленной версии.' : '',
+    localCommit, remoteCommit };
 }

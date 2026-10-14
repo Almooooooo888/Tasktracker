@@ -16,10 +16,14 @@ test('Docker update selects newest published numeric tag', async () => {
 });
 
 test('Git update does not overwrite a dirty checkout', async () => {
-  const fetcher = async url => ({ ok: true, json: async () => url.includes('/commits/') ? { sha: 'b'.repeat(40) } :
-    { content: Buffer.from(JSON.stringify({ version: '1.26.0' })).toString('base64') } });
-  const gitCommand = async (_command, args) => args[0] === 'rev-parse' ? 'a'.repeat(40) : ' M index.html';
-  const info = await readUpdateInfo({ currentVersion: '1.25.1', cwd: '.', mode: 'git', fetcher, gitCommand });
+  const gitCommand = async (_command, args) => ({
+    'ls-remote': `${'b'.repeat(40)}\trefs/heads/main`,
+    'rev-parse': 'a'.repeat(40),
+    status: ' M index.html',
+    fetch: '',
+    show: JSON.stringify({ version: '1.26.0' })
+  })[args[0]];
+  const info = await readUpdateInfo({ currentVersion: '1.25.1', cwd: '.', mode: 'git', gitCommand });
   assert.equal(info.available, true);
   assert.equal(info.canInstall, false);
   assert.match(info.reason, /локальные изменения/);
