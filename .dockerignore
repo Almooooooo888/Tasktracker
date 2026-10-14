@@ -9,6 +9,7 @@
 !calendar.mjs
 !calendar-ews.mjs
 !stands.mjs
+!task-git.mjs
 !hosts.mjs
 !updater.mjs
 !docker-updater.mjs

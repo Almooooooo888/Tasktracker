@@ -10,6 +10,7 @@ import {EventStore,scanReadyEvents} from './events.mjs';
 import { investigate, checkDatabaseConnection, diagnosticDefaults } from './investigation.mjs';
 import { validateLogin, discoverCalendar, readCalendar, readCalendarAttendees, readAvailability, availabilityRequest, calendarRange, validateCalendarMailbox, validateCalendarItemId } from './calendar.mjs';
 import { readGitLabStands, readGitLabStandActivity } from './stands.mjs';
+import { branchBelongsToIssue, mentionsIssueKey, summarizeTaskGit } from './task-git.mjs';
 import { readHosts, saveHosts } from './hosts.mjs';
 import { readUpdateInfo } from './updater.mjs';
 const eventStore=new EventStore(directory);
@@ -62,6 +63,8 @@ const releaseCache = new Map();
 const releasePending = new Map();
 const gitlabCache = new Map();
 const gitlabPending = new Map();
+const taskGitCache = new Map();
+const taskGitPending = new Map();
 const bugTypeCache = new WeakMap();
 let standCache=null,standPending=null,standActivityCache=null,standActivityPending=null,gitlabRetryAt=0;
 const gitlabLimitMessage='GitLab ограничил число запросов (HTTP 429). Последняя подтверждённая версия сохранена; следующая проверка через две минуты.';
@@ -94,7 +97,7 @@ function getState(username) {
       if (!oldest) return null;
       states.delete(oldest.user);
     }
-    state = { user: username, issues: [], lastSuccess: null, error: null, historyError:null, readyEvents:[], historyCheckedAt:null, refreshing: false };
+    state = { user: username, issues: [], lastSuccess: null, error: null, historyError:null, readyEvents:[], historyCheckedAt:null, refreshing: false, gitRefreshing:false };
     states.set(username, state);
   }
   lastAccess.set(state, Date.now());
@@ -156,18 +159,21 @@ async function getCreatedBugs(startAt, connection) {
 }
 async function gitlabIssueBranches(key) {
   const connection=getGitLabConnection();if (!connection.base || !connection.token) return {status:'not-configured',repositories:[]};
-  const cacheKey=connection.base+'|'+key, cached=gitlabCache.get(cacheKey);
+  if(Date.now()<gitlabRetryAt)throw new Error('GitLab HTTP 429');
+  const cacheKey=connection.base+'|'+createHash('sha256').update(connection.token).digest('hex')+'|'+key, cached=gitlabCache.get(cacheKey);
   if(cached&&Date.now()-cached.at<300000)return cached.value;
   if(gitlabPending.has(cacheKey))return gitlabPending.get(cacheKey);
   const pending=(async()=>{
     const endpoint=new URL('/api/v4/merge_requests',connection.base);
     endpoint.searchParams.set('scope','all');endpoint.searchParams.set('state','all');endpoint.searchParams.set('search',key);endpoint.searchParams.set('per_page','20');
     const response=await fetch(endpoint,{headers:{'PRIVATE-TOKEN':connection.token,Accept:'application/json'},redirect:'error',dispatcher,signal:AbortSignal.timeout(10000)});
+    if(response.status===429)gitlabRetryAt=Date.now()+120000;
     if(!response.ok)throw new Error('GitLab HTTP '+response.status);
     const rows=await response.json();if(!Array.isArray(rows))throw new Error('Некорректный ответ GitLab');
     const repositories=new Map();
     for(const mr of rows){
-      if(![mr.title,mr.description,mr.source_branch].some(value=>String(value||'').includes(key)))continue;
+      if(![mr.title,mr.description,mr.source_branch].some(value=>mentionsIssueKey(value,key)))continue;
+      if(!branchBelongsToIssue(mr.source_branch,key))continue;
       if(!mr.source_branch)continue;
       const projectPath=mr.references?.full?.replace(/![^!]+$/,'')||mr.web_url?.split('/-/merge_requests/')[0]?.replace(/^https?:\/\/[^/]+\//,'')||'Репозиторий';
       const group=repositories.get(projectPath)||{name:projectPath,url:'',branches:[]};
@@ -177,6 +183,48 @@ async function gitlabIssueBranches(key) {
     gitlabCache.set(cacheKey,{at:Date.now(),value});if(gitlabCache.size>300)gitlabCache.delete(gitlabCache.keys().next().value);return value;
   })();
   gitlabPending.set(cacheKey,pending);try{return await pending}finally{gitlabPending.delete(cacheKey)}
+}
+async function jiraIssueBranches(item, connection) {
+  const response=await jira(`/rest/dev-status/1.0/issue/detail?issueId=${encodeURIComponent(item.id)}&applicationType=gitlab&dataType=branch`,undefined,connection);
+  if(Array.isArray(response.errors)&&response.errors.length)throw new Error('Jira Git integration error');
+  const repositories=Array.isArray(response.detail?.repositories)?response.detail.repositories:[];
+  return repositories.map(repository=>({
+    name:repository.name||repository.repositoryName||'Репозиторий',
+    branches:(repository.branches||[]).map(branch=>({name:branch.name||branch.displayId||'',url:branch.url||branch.urlDisplay||''})).filter(branch=>branch.name)
+  })).filter(repository=>repository.branches.length);
+}
+async function taskGitFor(item,connection){
+  const gitlab=getGitLabConnection();
+  const scope=createHash('sha256').update([connection.base,connection.account?.username||'',gitlab.base,gitlab.token].join('|')).digest('hex');
+  const cacheKey=scope+'|'+item.id+'|'+item.key,cached=taskGitCache.get(cacheKey);
+  if(cached&&Date.now()-cached.at<300000)return cached.value;
+  if(taskGitPending.has(cacheKey))return taskGitPending.get(cacheKey);
+  const pending=(async()=>{
+    let jiraRepositories=[],jiraError=false,gitlabRepositories=[],gitlabStatus=gitlab.base&&gitlab.token?'no-match':'not-configured';
+    try{jiraRepositories=await jiraIssueBranches(item,connection)}catch{jiraError=true}
+    if(gitlab.base&&gitlab.token){
+      try{const found=await gitlabIssueBranches(item.key);gitlabRepositories=found.repositories;gitlabStatus=gitlabRepositories.length?'found':'no-match'}
+      catch(error){gitlabStatus=/GitLab HTTP 429/.test(error.message)?'rate-limited':'error'}
+    }
+    const value={...summarizeTaskGit(jiraRepositories,gitlabRepositories,gitlabStatus),jiraError,checkedAt:new Date().toISOString()};
+    if(connection===profile){taskGitCache.set(cacheKey,{at:Date.now(),value});if(taskGitCache.size>500)taskGitCache.delete(taskGitCache.keys().next().value)}
+    return value;
+  })();
+  taskGitPending.set(cacheKey,pending);try{return await pending}finally{taskGitPending.delete(cacheKey)}
+}
+async function enrichTaskGit(state,connection){
+  if(state.gitRefreshing)return;
+  state.gitRefreshing=true;
+  const queue=state.issues.map(issue=>({key:issue.key,id:issue.id}));
+  let cursor=0;
+  try{await Promise.all(Array.from({length:Math.min(2,queue.length)},async()=>{
+    while(cursor<queue.length&&connection===profile){
+      const item=queue[cursor++];
+      const git=await taskGitFor(item,connection);
+      const current=state.issues.find(issue=>issue.key===item.key&&issue.id===item.id);
+      if(current&&connection===profile)current.git=git;
+    }
+  }))}finally{state.gitRefreshing=false}
 }
 async function refresh(state) {
   if (state.refreshing) return;
@@ -199,7 +247,9 @@ async function refresh(state) {
       if (startAt >= page.total) break;
       if (!page.issues.length) throw new Error('Jira вернула неполный список');
     }
-    state.issues = [...new Map(issues.map(x => [x.key, { key: x.key, url: `${connection.base}/browse/${encodeURIComponent(x.key)}`, summary: x.fields.summary, status: x.fields.status.id === '10100' ? 'Сделать' : x.fields.status.name, type: x.fields.issuetype?.name, priority: x.fields.priority?.name, assignee: x.fields.assignee?.displayName || 'Не назначен', author: x.fields.reporter?.displayName || x.fields.reporter?.name || 'Не указан', updated: x.fields.updated }])).values()];
+    const previousGit=new Map(state.issues.map(issue=>[issue.key,issue.git]));
+    state.issues = [...new Map(issues.map(x => [x.key, { id:x.id,key: x.key, url: `${connection.base}/browse/${encodeURIComponent(x.key)}`, summary: x.fields.summary, status: x.fields.status.id === '10100' ? 'Сделать' : x.fields.status.name, type: x.fields.issuetype?.name, priority: x.fields.priority?.name, assignee: x.fields.assignee?.displayName || 'Не назначен', author: x.fields.reporter?.displayName || x.fields.reporter?.name || 'Не указан', updated: x.fields.updated,git:previousGit.get(x.key) }])).values()];
+    void enrichTaskGit(state,connection).catch(()=>{state.gitRefreshing=false});
     state.lastSuccess = new Date().toISOString();
     state.error = null;
     try{
@@ -255,14 +305,7 @@ async function getReleaseSnapshot(key, connection) {
         if (index >= queue.length) return;
         const item = queue[index];
         try {
-          const response = await jira(`/rest/dev-status/1.0/issue/detail?issueId=${encodeURIComponent(item.id)}&applicationType=gitlab&dataType=branch`, undefined, connection);
-          if (Array.isArray(response.errors) && response.errors.length) throw new Error('Git integration error');
-          const repositories = Array.isArray(response.detail?.repositories) ? response.detail.repositories : [];
-          gitResults.set(item.key, repositories.map(repository => ({
-            name: repository.name || repository.repositoryName || 'Репозиторий',
-            url: repository.url || '',
-            branches: (repository.branches || []).map(branch => ({name: branch.name || branch.displayId || '', url: branch.url || branch.urlDisplay || ''})).filter(branch => branch.name)
-          })).filter(repository => repository.branches.length));
+          gitResults.set(item.key,await jiraIssueBranches(item,connection));
         } catch { gitErrors++; gitResults.set(item.key, null); }
       }
     }
@@ -437,6 +480,7 @@ const server = http.createServer(async (req, res) => {
       profile=candidate;states.clear();calendarSession=null;
       releaseCache.clear();
       gitlabCache.clear();
+      taskGitCache.clear();
       standCache=null;standActivityCache=null;gitlabRetryAt=0;
       return json(200,publicProfile());
     } catch { return json(400,{error:'Не удалось сохранить профиль.'}); }
