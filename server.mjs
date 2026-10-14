@@ -387,7 +387,9 @@ const server = http.createServer(async (req, res) => {
       await writeGitUpdateStatus({attemptId,stage:'running',message:'Запускаю скрипт обновления.'});
       updateBusy=true;
       try{
-        const child=spawn('powershell.exe',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',script,'-AttemptId',attemptId],{cwd:path.dirname(script),detached:true,windowsHide:true,stdio:'ignore'});
+        const childEnv={...process.env};
+        delete childEnv.PSModulePath;
+        const child=spawn('powershell.exe',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',script,'-AttemptId',attemptId],{cwd:path.dirname(script),windowsHide:true,stdio:'ignore',env:childEnv});
         child.once('exit',code=>{void finishGitUpdateAttempt(attemptId,code)});
         await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject)});
         child.unref();
