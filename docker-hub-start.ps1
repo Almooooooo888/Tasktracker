@@ -1,10 +1,10 @@
-﻿$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 $envPath = Join-Path $PSScriptRoot '.env'
 if (Test-Path -LiteralPath $envPath -PathType Leaf) {
     $envText = [IO.File]::ReadAllText($envPath)
-    if ($envText -match '(?m)^TASKBOARD_IMAGE=almooooooo/taskboard:(\d+\.\d+\.\d+)[ \t]*$' -and [version]$Matches[1] -lt [version]'1.27.8') {
-        $envText = [regex]::Replace($envText, '(?m)^TASKBOARD_IMAGE=almooooooo/taskboard:\d+\.\d+\.\d+[ \t]*$', 'TASKBOARD_IMAGE=almooooooo/taskboard:1.27.8')
+    if ($envText -match '(?m)^TASKBOARD_IMAGE=almooooooo/taskboard:(\d+\.\d+\.\d+)[ \t]*$' -and [version]$Matches[1] -lt [version]'1.27.7') {
+        $envText = [regex]::Replace($envText, '(?m)^TASKBOARD_IMAGE=almooooooo/taskboard:\d+\.\d+\.\d+[ \t]*$', 'TASKBOARD_IMAGE=almooooooo/taskboard:1.27.7')
         [IO.File]::WriteAllText($envPath, $envText, [Text.UTF8Encoding]::new($false))
     }
 }
