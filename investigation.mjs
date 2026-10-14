@@ -16,13 +16,17 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 const NUMBER = /^[0-9]{1,20}$/;
 const DOCUMENT_NUMBER = /^[\p{L}\p{N}/._ -]{1,80}$/u;
 const SOURCES = [
-  { kind: 'internal', name: 'Закрытый контур', database: process.env.LK_DB_INTERNAL || localSettings.internalDatabase, schema: process.env.LK_SCHEMA_INTERNAL || localSettings.internalSchema },
-  { kind: 'external', name: 'Открытый контур', database: process.env.LK_DB_EXTERNAL || localSettings.externalDatabase, schema: process.env.LK_SCHEMA_EXTERNAL || localSettings.externalSchema }
+  { kind: 'internal', name: 'Закрытый контур', stand: process.env.LK_STAND_INTERNAL || localSettings.internalStand || process.env.LK_DB_INTERNAL || localSettings.internalDatabase || 'не настроен', database: process.env.LK_DB_INTERNAL || localSettings.internalDatabase, schema: process.env.LK_SCHEMA_INTERNAL || localSettings.internalSchema },
+  { kind: 'external', name: 'Открытый контур', stand: process.env.LK_STAND_EXTERNAL || localSettings.externalStand || process.env.LK_DB_EXTERNAL || localSettings.externalDatabase || 'не настроен', database: process.env.LK_DB_EXTERNAL || localSettings.externalDatabase, schema: process.env.LK_SCHEMA_EXTERNAL || localSettings.externalSchema }
 ];
 const PODS = Array.isArray(localSettings.podGroups) ? localSettings.podGroups : [];
 
 export function normalizeSearch(value) {
-  const query = String(value || '').trim();
+  let query = String(value || '').trim();
+  if (/^https?:\/\//i.test(query)) {
+    try { const url = new URL(query); query = url.href.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i)?.[0] || ''; }
+    catch { query = ''; }
+  }
   if (UUID.test(query)) return { query: query.toLowerCase(), byId: true };
   if (NUMBER.test(query)) return { query: query.padStart(10, '0'), byId: false };
   if (DOCUMENT_NUMBER.test(query)) return { query, byId: false };
@@ -57,6 +61,8 @@ async function readContour(source, search, connection) {
     const found = await client.query(`SELECT i.id, i.sequence_number,
       to_jsonb(i)->>'name' AS name, to_jsonb(i)->>'created_at' AS created_at,
       to_jsonb(i)->>'updated_at' AS updated_at, to_jsonb(i)->>'send_at' AS send_at,
+      to_jsonb(i)->>'created_by' AS created_by, to_jsonb(i)->>'respond_by' AS respond_by,
+      to_jsonb(i)->>'event_id' AS event_id, to_jsonb(i)->>'event_object_id' AS event_object_id,
       to_jsonb(t)->>'code' AS type_code,
       to_jsonb(t)->>'audit_interaction_classification' AS kind,
       to_jsonb(i)->>'submission_form_id' AS submission_form_id,
@@ -66,7 +72,7 @@ async function readContour(source, search, connection) {
       WHERE ${match} ORDER BY i.created_at DESC LIMIT 3`, [search.query]);
     if (found.rows.length !== 1) {
       await client.query('COMMIT');
-      return { source: source.name, found: false, ambiguous: found.rows.length > 1 };
+      return { source: source.name, stand: source.stand, database: source.database, found: false, ambiguous: found.rows.length > 1 };
     }
     const interaction = found.rows[0];
     const id = interaction.id;
@@ -76,11 +82,13 @@ async function readContour(source, search, connection) {
         LEFT JOIN ${schema}.audit_interaction_status s ON s.id::text = COALESCE(to_jsonb(h)->>'to_status_id', to_jsonb(h)->>'status_id')
         WHERE COALESCE(to_jsonb(h)->>'interaction_id', to_jsonb(h)->>'audit_interaction_id') = $1
         ORDER BY COALESCE(to_jsonb(h)->>'changed_at',to_jsonb(h)->>'created_at') LIMIT 100`, [id]),
-      client.query(`SELECT f.id, f.original_name, f.file_type, f.created_at
+      client.query(`SELECT f.id, f.original_name, f.file_type, f.created_at,
+        to_jsonb(f)->>'file_size' AS file_size, to_jsonb(f)->>'type' AS mime_type
         FROM ${schema}.audit_interaction_file link JOIN ${schema}.file f ON f.id = link.file_id
         WHERE link.audit_interaction_id = $1::uuid ORDER BY f.created_at LIMIT 100`, [id]),
       client.query(`SELECT a.id, to_jsonb(a)->>'sequence_number' AS sequence_number,
-        to_jsonb(a)->>'created_at' AS created_at, to_jsonb(a)->>'updated_at' AS updated_at
+        to_jsonb(a)->>'created_at' AS created_at, to_jsonb(a)->>'updated_at' AS updated_at,
+        to_jsonb(a)->>'status' AS status, to_jsonb(a)->>'send_at' AS send_at
         FROM ${schema}.audit_interaction_answer a
         WHERE COALESCE(to_jsonb(a)->>'interaction_id', to_jsonb(a)->>'audit_interaction_id') = $1
         ORDER BY to_jsonb(a)->>'created_at' LIMIT 100`, [id])
@@ -102,11 +110,21 @@ async function readContour(source, search, connection) {
         ORDER BY created_at LIMIT 20`, [id]);
       registrations = result.rows;
     }
+    let form = null;
+    if (interaction.submission_form_id && UUID.test(interaction.submission_form_id)) {
+      const tables = await client.query(`SELECT table_name FROM information_schema.tables WHERE table_schema = $1 AND table_name = 'form_submissions'`, [schema]);
+      if (tables.rows.length) {
+        const result = await client.query(`SELECT id, to_jsonb(f)->>'form_template_id' AS template_id,
+          to_jsonb(f)->>'submitted_at' AS submitted_at, to_jsonb(f)->>'created_at' AS created_at
+          FROM ${schema}.form_submissions f WHERE id = $1::uuid LIMIT 1`, [interaction.submission_form_id]);
+        form = result.rows[0] || null;
+      }
+    }
     await client.query('COMMIT');
-    return { source: source.name, found: true, interaction, history: history.rows, files: files.rows, answers: answers.rows, registrations };
+    return { source: source.name, stand: source.stand, database: source.database, found: true, interaction, history: history.rows, files: files.rows, answers: answers.rows, registrations, form };
   } catch (error) {
     if (client) await client.query('ROLLBACK').catch(() => {});
-    return { source: source.name, found: false, error: error.message };
+    return { source: source.name, stand: source.stand, database: source.database, found: false, error: error.message };
   } finally {
     client?.release();
     if (pool) await pool.end();
@@ -119,7 +137,7 @@ export function analyzeContours(internal, external, kind) {
   const findings = [];
   const current = internal.interaction || external.interaction;
   if (!current) {
-    findings.push(finding('unknown', 'Карточка не найдена в доступных данных', 'Проверь номер и выбранный контур. Ошибка подключения одного из источников не доказывает отсутствие карточки.', [internal.error, external.error].filter(Boolean)));
+    findings.push(finding('unknown', internal.error && external.error ? 'Не удалось проверить карточку' : 'Карточка не найдена в доступных данных', 'Проверь номер и доступность настроенных контуров. Ошибка подключения источника не доказывает отсутствие карточки.', [internal.error, external.error].filter(Boolean)));
     return findings;
   }
   if (internal.error || external.error) findings.push(finding('unknown', 'Проверка контуров неполная', 'Один из источников недоступен; вывод о доставке по нему делать нельзя.', [internal.error ? 'Ошибка закрытого контура' : '', external.error ? 'Ошибка открытого контура' : ''].filter(Boolean)));
@@ -169,7 +187,35 @@ function redact(line) {
     .replace(/(password\s*[:=]\s*)\S+/gi, '$1[скрыто]');
 }
 
-async function readLogs(ids, minutes, connection) {
+export function logRange(contours, minutes, now = Date.now()) {
+  const stamps = contours.flatMap(contour => contour.found ? [
+    contour.interaction?.created_at, contour.interaction?.updated_at, contour.interaction?.send_at,
+    ...(contour.history || []).map(row => row.changed_at),
+    ...(contour.files || []).map(row => row.created_at),
+    ...(contour.answers || []).flatMap(row => [row.created_at, row.updated_at, row.send_at]),
+    ...(contour.registrations || []).flatMap(row => [row.created_at, row.updated_at])
+  ] : []).map(value => Date.parse(value)).filter(Number.isFinite);
+  const margin = minutes * 60000;
+  return { start: new Date(Math.max(0, (stamps.length ? Math.min(...stamps) : now) - margin)).toISOString(),
+    end: new Date(Math.min(now, (stamps.length ? Math.max(...stamps) : now) + margin)).toISOString() };
+}
+
+export function matchesLogId(line, ids) {
+  const lower = line.toLowerCase();
+  return ids.some(value => {
+    const id = String(value).toLowerCase();
+    if (!lower.includes(id)) return false;
+    if (!/^\d+$/.test(id)) return true;
+    let at = lower.indexOf(id);
+    while (at !== -1) {
+      if (!/\d/.test(lower[at - 1] || '') && !/\d/.test(lower[at + id.length] || '')) return true;
+      at = lower.indexOf(id, at + 1);
+    }
+    return false;
+  });
+}
+
+async function readLogs(ids, range, connection) {
   const kubeconfig = connection.kubeconfig || process.env.LK_KUBECONFIG || localSettings.kubeconfig;
   if (!kubeconfig) return { status: 'unavailable', reason: 'Не задан LK_KUBECONFIG.', entries: [] };
   if (!PODS.length) return { status: 'unavailable', reason: 'Не настроены namespace и префиксы pod для поиска логов.', entries: [] };
@@ -177,7 +223,7 @@ async function readLogs(ids, minutes, connection) {
   const base = ['--kubeconfig', kubeconfig];
   if (process.env.LK_KUBE_CONTEXT) base.push('--context', process.env.LK_KUBE_CONTEXT);
   const entries = [], errors = [];
-  let scannedPods = 0, omittedPods = 0;
+  let scannedPods = 0, omittedPods = 0, newerPods = 0;
   for (const group of PODS) {
     if (!/^[a-z0-9][a-z0-9-]*$/.test(group.namespace) || !Array.isArray(group.prefixes) || !group.prefixes.every(prefix => /^[a-z0-9][a-z0-9-]*$/.test(prefix))) {
       errors.push('Некорректные правила поиска pod.');
@@ -190,38 +236,79 @@ async function readLogs(ids, minutes, connection) {
       omittedPods += Math.max(0, eligible.length - 8);
       pods = eligible.slice(0, 8);
       scannedPods += pods.length;
+      newerPods += pods.filter(pod => Date.parse(pod.metadata?.creationTimestamp) > Date.parse(range.end)).length;
+      if(!pods.length)errors.push(`${group.namespace}: подходящие работающие pod не найдены.`);
     } catch (error) { errors.push(`${group.namespace}: ${error.message}`); continue; }
     await Promise.all(pods.map(async pod => {
       const name = pod.metadata.name;
       try {
-        const result = await runFile(executable, [...base, '-n', group.namespace, 'logs', name, `--since=${minutes}m`, '--timestamps=true', '--tail=2000'], { windowsHide: true, timeout: 20000, maxBuffer: 3 * 1024 * 1024 });
-        const matching = result.stdout.split(/\r?\n/).filter(line => ids.some(id => line.toLowerCase().includes(id.toLowerCase()))).slice(0, 40);
+        const result = await runFile(executable, [...base, '-n', group.namespace, 'logs', name, `--since-time=${range.start}`, '--timestamps=true', '--tail=5000'], { windowsHide: true, timeout: 20000, maxBuffer: 6 * 1024 * 1024 });
+        const matching = result.stdout.split(/\r?\n/).filter(line => {
+          const stamp = Date.parse(line.split(' ',1)[0]);
+          return (!Number.isFinite(stamp) || stamp <= Date.parse(range.end)) && matchesLogId(line, ids);
+        }).slice(0, 60);
         if (matching.length) entries.push({ namespace: group.namespace, pod: name, lines: matching.map(line => redact(line.slice(0, 1200))) });
       } catch (error) { errors.push(`${group.namespace}/${name}: ${error.message}`); }
     }));
   }
-  return { status: errors.length || omittedPods ? 'partial' : 'ok', reason: errors.length ? errors.slice(0, 4).join(' · ') : omittedPods ? `Не проверено pod: ${omittedPods}.` : '', entries, windowMinutes: minutes, tailPerPod: 2000, scannedPods, omittedPods };
+  const notes=[...errors.slice(0,4)];if(omittedPods)notes.push(`Не проверено pod: ${omittedPods}.`);if(newerPods)notes.push(`Pod запущены после исследуемого периода: ${newerPods}; их прежние экземпляры недоступны.`);
+  return { status: notes.length ? 'partial' : 'ok', reason: notes.join(' · '), entries, range, tailPerPod: 5000, scannedPods, omittedPods, newerPods,
+    coverage: 'Проверены только текущие pod и последние 5000 строк каждого с начала периода; удалённые pod и архив логов не доступны этому поиску.' };
+}
+
+export function detectKind(interaction) {
+  const actual = String(interaction?.kind || interaction?.type_code || '').toLowerCase();
+  if (/уведом|notice|^notif[_-]/.test(actual)) return 'notice';
+  if (/запрос|request|^req[_-]/.test(actual)) return 'request';
+  return 'unknown';
+}
+
+export function buildJourney(contours, logs, kind) {
+  const events=[];
+  for(const contour of contours.filter(item=>item.found)){
+    const base={source:contour.source,database:contour.database,stand:contour.stand};
+    const push=(time,stage,detail,evidence)=>{if(time&&Number.isFinite(Date.parse(time)))events.push({...base,time,stage,detail,evidence})};
+    const item=contour.interaction;
+    if(contour.form)push(contour.form.submitted_at||contour.form.created_at,'Форма отправлена',`Форма ${contour.form.id}; шаблон ${contour.form.template_id||'не установлен'}`,`БД ${contour.database}: form_submissions.id=${contour.form.id}`);
+    push(item.created_at,kind==='notice'?'Уведомление создано':'Запрос создан',`Номер ${item.sequence_number||'не указан'}`,`БД ${contour.database}: audit_interaction.id=${item.id}`);
+    for(const row of contour.history||[])push(row.changed_at,'Смена статуса',row.status_name||row.status_code||'Код статуса не получен',`БД ${contour.database}: audit_interaction_status_history`);
+    for(const row of contour.files||[])push(row.created_at,'Файл прикреплён',`${row.original_name||row.id} · ${row.file_type||row.mime_type||'тип не указан'}`,`БД ${contour.database}: file.id=${row.id}`);
+    for(const row of contour.registrations||[])push(row.updated_at||row.created_at,'САДЭД',`${row.status||row.integration_status||'статус не указан'}${row.error_code?' · '+row.error_code:''}`,`БД ${contour.database}: saded_registration.id=${row.id}`);
+    if(item.send_at)push(item.send_at,'Отправка отмечена','В карточке заполнено send_at; получение другим контуром проверяется отдельно.',`БД ${contour.database}: audit_interaction.send_at`);
+    for(const row of contour.answers||[])push(row.created_at,'Ответ создан',`Ответ ${row.sequence_number||row.id}${row.status?' · '+row.status:''}`,`БД ${contour.database}: audit_interaction_answer.id=${row.id}`);
+  }
+  for(const entry of logs.entries||[])for(const line of entry.lines){const time=line.split(' ',1)[0];if(Number.isFinite(Date.parse(time)))events.push({time,stage:'Лог Kubernetes',detail:line.slice(0,500),source:`${entry.namespace}/${entry.pod}`,database:null,stand:null,evidence:`Kubernetes ${entry.namespace}/${entry.pod}`})}
+  events.sort((a,b)=>Date.parse(a.time)-Date.parse(b.time));
+  const found=contours.filter(item=>item.found),internal=found.find(item=>item.source==='Закрытый контур'),external=found.find(item=>item.source==='Открытый контур');
+  const nextStep=!found.length?'Уточнить номер/UUID и доступность настроенных БД.':internal&&!external?(internal.interaction.send_at?'Проверить перенос в открытый контур по UUID и адресным логам.':'Проверить этап перед отправкой в САДЭД/Flow по истории и адресным логам.') : external&&!internal?'Проверить соответствующую карточку закрытого контура по UUID и возможную разницу номеров.':'Сверить итоговый статус, ответ и файлы в обоих контурах; отсутствие ошибок в доступных логах не доказывает полный маршрут.';
+  return {stands:found.map(item=>({stand:item.stand,contour:item.source,database:item.database})),searchedStands:contours.map(item=>({stand:item.stand,contour:item.source,database:item.database,available:!item.error})),events:events.slice(0,160),omittedEvents:Math.max(0,events.length-160),lastConfirmed:events.at(-1)||null,nextStep};
 }
 
 export async function investigate({ kind, number, minutes = 180, connection = {} }) {
-  if (!['request', 'notice'].includes(kind)) throw new Error('Выбери запрос или уведомление.');
+  if (!['auto','request', 'notice'].includes(kind)) throw new Error('Выбери автоматическое определение, запрос или уведомление.');
   const search = normalizeSearch(number);
   const windowMinutes = Math.max(1, Math.min(1440, Number(minutes) || 180));
-  const [internal, external] = await Promise.all(SOURCES.map(source => readContour(source, search, connection)));
+  let [internal, external] = await Promise.all(SOURCES.map(source => readContour(source, search, connection)));
+  if(internal.found&&!external.found&&!external.error&&!external.ambiguous)external={...await readContour(SOURCES[1],{query:internal.interaction.id,byId:true},connection),matchedBy:'UUID закрытого контура'};
+  else if(external.found&&!internal.found&&!internal.error&&!internal.ambiguous)internal={...await readContour(SOURCES[0],{query:external.interaction.id,byId:true},connection),matchedBy:'UUID открытого контура'};
   const current = internal.interaction || external.interaction;
+  const detectedKind=detectKind(current);
   if (current) {
-    const actual = String(current.kind || '').toLowerCase();
-    if (kind === 'request' && actual !== 'запрос' || kind === 'notice' && actual !== 'уведомление') {
+    if (kind !== 'auto' && detectedKind !== 'unknown' && kind !== detectedKind) {
       throw new Error(`Номер относится к типу «${current.kind || current.type_code || 'неизвестен'}». Переключи вид карточки.`);
     }
   }
-  const ids = [...new Set([current?.id, current?.sequence_number, current?.submission_form_id,
+  const effectiveKind=kind==='auto'?detectedKind:kind;
+  const ids = [...new Set([search.query,...[internal,external].flatMap(contour=>[contour.interaction?.id,contour.interaction?.sequence_number,contour.interaction?.submission_form_id,contour.interaction?.event_id,contour.interaction?.event_object_id]),
     ...(internal.registrations || []).flatMap(item => [item.id, item.isn_prj && String(item.isn_prj), item.registered_isn_doc && String(item.registered_isn_doc)]),
     ...[internal, external].flatMap(contour => [...(contour.files || []).map(file => file.id), ...(contour.answers || []).map(answer => answer.id)])
-  ].filter(Boolean))].slice(0, 60);
-  const logs = current ? await readLogs(ids, windowMinutes, connection) : { status: 'skipped', reason: 'Карточка не найдена.', entries: [] };
-  const findings = [...analyzeContours(internal, external, kind), ...analyzeLogSignals(logs)];
-  return { checkedAt: new Date().toISOString(), kind, searched: search.query, interactionId: current?.id || null, contours: [internal, external], findings, logs };
+  ].filter(value=>String(value||'').length>=6))].slice(0, 60);
+  const range=logRange([internal,external],windowMinutes);
+  const logs = current ? await readLogs(ids, range, connection) : { status: 'skipped', reason: 'Карточка не найдена.', entries: [] };
+  const findings = [...analyzeContours(internal, external, effectiveKind), ...analyzeLogSignals(logs)];
+  if(current&&detectedKind==='unknown')findings.push(finding('unknown','Тип обращения не определён','Проверь классификацию карточки в БД и интерфейсе; этапы запроса и уведомления автоматически не приравниваются.',[`type_code=${current.type_code||'не указан'}`]));
+  const journey=buildJourney([internal,external],logs,effectiveKind);
+  return { checkedAt: new Date().toISOString(), kind: effectiveKind, searched: search.query, interactionId: current?.id || null, contours: [internal, external], findings, logs, journey, correlatedIds:ids.length };
 }
 
 export async function checkDatabaseConnection(connection) {

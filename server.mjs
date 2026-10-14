@@ -437,10 +437,10 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname === '/api/investigation') {
     const supplied = Buffer.from(String(req.headers['x-csrf-token'] || ''));
     if (supplied.length !== csrf.length || !timingSafeEqual(supplied, Buffer.from(csrf))) return json(403,{error:'Перезагрузи страницу и повтори поиск.'});
-    const kind = url.searchParams.get('kind') || '';
+    const kind = url.searchParams.get('kind') || 'auto';
     const number = url.searchParams.get('number') || '';
     const minutes = Number(url.searchParams.get('minutes') || 180);
-    if (!['request','notice'].includes(kind) || number.length > 120 || !Number.isInteger(minutes) || minutes < 1 || minutes > 1440) return json(400,{error:'Проверь вид карточки, номер и окно логов.'});
+    if (!['auto','request','notice'].includes(kind) || number.length > 500 || !Number.isInteger(minutes) || minutes < 1 || minutes > 1440) return json(400,{error:'Проверь вид карточки, номер и окно логов.'});
     if (investigationBusy) return json(429,{error:'Предыдущий разбор ещё выполняется. Подожди его завершения.'});
     investigationBusy = true;
     try { return json(200, await investigate({kind,number,minutes,connection:profile})); }

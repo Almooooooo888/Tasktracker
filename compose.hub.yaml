@@ -11,6 +11,16 @@ services:
       LK_GITLAB_TOKEN: ${LK_GITLAB_TOKEN:-}
       LK_EXCHANGE_DOMAIN: ${LK_EXCHANGE_DOMAIN:-da.gov.ru}
       LK_EXCHANGE_AUTODISCOVER_URL: ${LK_EXCHANGE_AUTODISCOVER_URL:-https://autodiscover.da.gov.ru/autodiscover/autodiscover.xml}
+      LK_PG_HOST: ${LK_PG_HOST:-}
+      LK_PG_USER: ${LK_PG_USER:-}
+      LK_PG_PASSWORD: ${LK_PG_PASSWORD:-}
+      LK_PG_PORT: ${LK_PG_PORT:-5432}
+      LK_DB_INTERNAL: ${LK_DB_INTERNAL:-}
+      LK_SCHEMA_INTERNAL: ${LK_SCHEMA_INTERNAL:-}
+      LK_STAND_INTERNAL: ${LK_STAND_INTERNAL:-}
+      LK_DB_EXTERNAL: ${LK_DB_EXTERNAL:-}
+      LK_SCHEMA_EXTERNAL: ${LK_SCHEMA_EXTERNAL:-}
+      LK_STAND_EXTERNAL: ${LK_STAND_EXTERNAL:-}
       LK_INSTALL_MODE: docker
       LK_UPDATER_URL: http://docker-updater:18765
       LK_UPDATER_TOKEN_FILE: /updater-state/token
