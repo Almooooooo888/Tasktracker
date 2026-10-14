@@ -934,11 +934,11 @@ function renderUpdateProgress(state){
  const age=Date.now()-Date.parse(state.checkedAt);
  if(Number.isFinite(age)&&age>15000)detail.textContent+=` Новых событий ${Math.floor(age/1000)} с.`;
 }
-async function watchUpdate(){
+async function watchUpdate(attemptId=null){
  if(updateWorking)return;
  updateWorking=true;$('update-install').disabled=true;$('update-install').hidden=true;
  try{
-  let failures=0,lastState=null;
+  let failures=0,unmatched=0,lastState=null;
   for(let attempt=0;attempt<180;attempt++){
    await new Promise(resolve=>setTimeout(resolve,1500));
    let state;
@@ -948,9 +948,14 @@ async function watchUpdate(){
     state=await response.json();lastState=state;failures=0;
    }catch{
     if(lastState?.stage==='running')renderUpdateProgress(lastState);
-    if(++failures>=20)throw Error('Нет связи с обновлятором более 30 секунд. Проверь Docker Desktop.');
+    if(++failures>=20)throw Error('Нет связи с программой обновления более 30 секунд.');
     continue;
    }
+   if(attemptId&&state.attemptId!==attemptId){
+    if(++unmatched>=10)throw Error('Статус новой попытки не появился. Проверь обновление позже.');
+    continue;
+   }
+   unmatched=0;
    renderUpdateProgress(state);
    if(state.stage==='error')throw Error(state.message||'Обновление не удалось.');
    if(state.stage==='done'){window.location.reload();return}
@@ -964,7 +969,7 @@ $('update-button').onclick=async()=>{
  try{
   try{
    const statusResponse=await fetch('/api/update/status',{signal:AbortSignal.timeout(2500)});
-   if(statusResponse.ok){const state=await statusResponse.json();if(state.stage==='running'){renderUpdateProgress(state);void watchUpdate();return}}
+   if(statusResponse.ok){const state=await statusResponse.json();if(state.stage==='running'&&Date.now()-Date.parse(state.checkedAt)<10*60*1000){renderUpdateProgress(state);void watchUpdate(state.attemptId||null);return}}
   }catch{}
   const response=await fetch('/api/update',{signal:AbortSignal.timeout(15000)}),info=await response.json();
   if(!response.ok)throw Error(info.error||'Не удалось проверить обновления.');
@@ -982,7 +987,7 @@ $('update-install').onclick=async()=>{
  try{
   const response=await fetch('/api/update/install',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':configuration.csrf},body:'{}',signal:AbortSignal.timeout(15000)}),result=await response.json();
   if(!response.ok)throw Error(result.error||'Не удалось запустить обновление.');
-  await watchUpdate();
+  await watchUpdate(result.attemptId||null);
  }catch(error){$('update-progress').hidden=true;$('update-message').textContent=error.name==='TimeoutError'?'Обновление не ответило вовремя.':error.message}
  finally{$('update-install').disabled=false}
 };

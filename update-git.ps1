@@ -1,4 +1,4 @@
-﻿param()
+﻿param([string]$AttemptId = '')
 $ErrorActionPreference = 'Stop'
 $repo = $PSScriptRoot
 $safeRepo = $repo.Replace('\', '/')
@@ -6,7 +6,7 @@ $stateDir = Join-Path $env:LOCALAPPDATA 'LK-Jira-Board'
 $stateFile = Join-Path $stateDir 'update-status.json'
 New-Item -ItemType Directory -Force -Path $stateDir | Out-Null
 function Set-UpdateState([string]$stage, [string]$message) {
-    $json = @{ stage = $stage; message = $message; checkedAt = (Get-Date).ToUniversalTime().ToString('o') } | ConvertTo-Json -Compress
+    $json = @{ stage = $stage; message = $message; checkedAt = (Get-Date).ToUniversalTime().ToString('o'); attemptId = $AttemptId } | ConvertTo-Json -Compress
     [IO.File]::WriteAllText($stateFile, $json, [Text.UTF8Encoding]::new($false))
 }
 function Invoke-Git([string[]]$arguments) {

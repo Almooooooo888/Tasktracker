@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { spawn } from 'node:child_process';
 import { randomBytes, timingSafeEqual, createHash } from 'node:crypto';
@@ -19,6 +19,18 @@ const installMode=process.env.LK_INSTALL_MODE||(process.platform==='win32'?'git'
 const updaterUrl=process.env.LK_UPDATER_URL||'';
 const updaterTokenFile=process.env.LK_UPDATER_TOKEN_FILE||'';
 let updateBusy=false;
+const gitUpdateStatusPath=path.join(directory,'update-status.json');
+async function writeGitUpdateStatus(state){
+  await mkdir(directory,{recursive:true});
+  await writeFile(gitUpdateStatusPath,JSON.stringify({...state,checkedAt:new Date().toISOString()}),'utf8');
+}
+async function finishGitUpdateAttempt(attemptId,code){
+  updateBusy=false;
+  try{
+    const state=JSON.parse(await readFile(gitUpdateStatusPath,'utf8'));
+    if(state.attemptId===attemptId&&state.stage==='running')await writeGitUpdateStatus({attemptId,stage:'error',message:code===0?'Скрипт завершился без подтверждения обновления.':'Скрипт обновления завершился с ошибкой. Повтори попытку или запусти update-git.ps1 вручную.'});
+  }catch{}
+}
 const require = createRequire(import.meta.url);
 const { fetch, Agent } = require('undici');
 const tlsErrorCodes = new Set(['UNABLE_TO_VERIFY_LEAF_SIGNATURE','CERT_HAS_EXPIRED','DEPTH_ZERO_SELF_SIGNED_CERT','SELF_SIGNED_CERT_IN_CHAIN','ERR_TLS_CERT_ALTNAME_INVALID']);
@@ -371,10 +383,22 @@ const server = http.createServer(async (req, res) => {
       if(!info.available)return json(409,{error:'Новой версии в GitHub сейчас нет.'});
       if(!info.canInstall)return json(409,{error:info.reason});
       const script=fileURLToPath(new URL('./update-git.ps1',import.meta.url));
-      const child=spawn('powershell.exe',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',script],{cwd:path.dirname(script),detached:true,windowsHide:true,stdio:'ignore'});
-      child.on('error',()=>{updateBusy=false});child.on('exit',()=>{updateBusy=false});
-      updateBusy=true;child.unref();
-      return json(202,{message:'Обновление запущено. Приложение перезапустится после установки.'});
+      const attemptId=randomBytes(16).toString('hex');
+      await writeGitUpdateStatus({attemptId,stage:'running',message:'Запускаю скрипт обновления.'});
+      updateBusy=true;
+      try{
+        const child=spawn('powershell.exe',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',script,'-AttemptId',attemptId],{cwd:path.dirname(script),detached:true,windowsHide:true,stdio:'ignore'});
+        child.once('exit',code=>{void finishGitUpdateAttempt(attemptId,code)});
+        await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject)});
+        child.unref();
+        return json(202,{message:'Обновление запущено. Приложение перезапустится после установки.',attemptId});
+      }catch(error){
+        updateBusy=false;
+        const code=String(error.code||'ошибка запуска').replace(/[^A-Za-z0-9_-]/g,'');
+        const message=`Не удалось запустить скрипт обновления (${code}).`;
+        await writeGitUpdateStatus({attemptId,stage:'error',message});
+        return json(502,{error:message});
+      }
     } catch { return json(502,{error:'Не удалось проверить GitHub или запустить обновление.'}); }
   }
   if(url.pathname==='/api/hosts'){
@@ -522,7 +546,7 @@ const server = http.createServer(async (req, res) => {
     if(installMode==='docker'){
       try{return json(200,await updaterRequest('/status'))}catch(error){return json(502,{error:error.message})}
     }
-    try{return json(200,JSON.parse(await readFile(path.join(directory,'update-status.json'),'utf8')))}
+    try{return json(200,JSON.parse(await readFile(gitUpdateStatusPath,'utf8')))}
     catch{return json(200,{stage:'idle'})}
   }
   if (url.pathname === '/api/stands') {
