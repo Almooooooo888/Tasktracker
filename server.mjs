@@ -162,6 +162,21 @@ async function getCreatedBugs(startAt, connection) {
     created:issue.fields?.created || '', updated:issue.fields?.updated || ''
   })), total:page.total, startAt, fetchedAt:new Date().toISOString()};
 }
+async function getWatchedIssues(username, startAt, connection) {
+  const page=await jira('/rest/api/2/search',{
+    jql:`watcher = ${JSON.stringify(username)} ORDER BY updated DESC`,startAt,maxResults:100,
+    fields:['summary','status','issuetype','priority','assignee','reporter','updated']
+  },connection);
+  if(!Array.isArray(page.issues)||!Number.isInteger(page.total))throw new Error('Jira вернула некорректный список наблюдаемых задач.');
+  return {issues:page.issues.map(issue=>({
+    key:issue.key,url:`${connection.base}/browse/${encodeURIComponent(issue.key)}`,
+    summary:issue.fields?.summary||'(без названия)',status:issue.fields?.status?.name||'Не указан',
+    type:issue.fields?.issuetype?.name||'',priority:issue.fields?.priority?.name||'',
+    assignee:issue.fields?.assignee?.displayName||'Не назначен',
+    author:issue.fields?.reporter?.displayName||issue.fields?.reporter?.name||'Не указан',
+    updated:issue.fields?.updated||''
+  })),total:page.total,startAt,fetchedAt:new Date().toISOString()};
+}
 async function gitlabIssueBranches(key) {
   const connection=getGitLabConnection();if (!connection.base || !connection.token) return {status:'not-configured',repositories:[]};
   if(Date.now()<gitlabRetryAt)throw new Error('GitLab HTTP 429');
@@ -587,6 +602,22 @@ const server = http.createServer(async (req, res) => {
     } catch(error) {
       const tls=tlsFailure(error);
       return json(error.message.startsWith('Нет доступа')?403:502,{error:tls || (/^(Jira:|Нет доступа|В Jira|Jira не|Jira вернула)/.test(error.message)?error.message:'Не удалось загрузить созданные баги. Проверь подключение к Jira.')});
+    }
+  }
+  if(url.pathname==='/api/watched'){
+    if(!profile.token)return json(409,{error:'Добавь токен в настройках профиля.'});
+    const username=(url.searchParams.get('user')||'').trim();
+    if(!username||username.length>120||/[\s"\\\x00-\x1f]/u.test(username))return json(400,{error:'Выбери пользователя из списка.'});
+    const startAt=Number(url.searchParams.get('startAt')||0);
+    if(!Number.isSafeInteger(startAt)||startAt<0||startAt>100000)return json(400,{error:'Некорректная страница списка.'});
+    const connection=profile;
+    try{
+      const result=await getWatchedIssues(username,startAt,connection);
+      if(connection!==profile)return json(409,{error:'Профиль изменён. Обнови список.'});
+      return json(200,result);
+    }catch(error){
+      const tls=tlsFailure(error);
+      return json(error.message.startsWith('Нет доступа')?403:502,{error:tls||(/^(Jira:|Нет доступа|Jira вернула)/.test(error.message)?error.message:'Не удалось загрузить задачи в наблюдении. Проверь подключение к Jira.')});
     }
   }
   if(url.pathname==='/api/release-builder'){
