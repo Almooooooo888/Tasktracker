@@ -240,6 +240,7 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 /* An exact percentage is shown only for a Docker layer that reports byte totals. */
 #update-progress{margin-top:18px;padding:14px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
 #update-progress[hidden]{display:none}
+.update-changes{margin-top:18px;padding:14px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}.update-changes[hidden]{display:none}.update-changes h3{margin:0 0 8px;font-size:15px}.update-changes p{margin:0;color:var(--muted);font-size:13px}.update-changes strong{display:block;margin-top:10px;font-size:13px}.update-changes ul{margin:6px 0 0;padding-left:20px;line-height:1.55}.update-changes li+li{margin-top:5px}
 .update-progress-head{display:flex;justify-content:space-between;align-items:baseline;gap:14px;color:var(--text);font-size:13px}
 #update-percent{font-variant-numeric:tabular-nums;color:var(--muted)}
 #update-bar{display:block;width:100%;height:9px;margin:13px 0 9px;accent-color:var(--accent)}
@@ -292,7 +293,7 @@ body{background:var(--page);color:var(--text)}p,label,.key,.meta,.user-option sm
 <form id="investigation-form" class="investigation-form"><label for="investigation-kind">Вид обращения<select id="investigation-kind"><option value="auto">Определить автоматически</option><option value="request">Запрос</option><option value="notice">Уведомление</option></select></label><label for="investigation-number">Номер, UUID или ссылка<input id="investigation-number" inputmode="text" placeholder="Номер обращения или ссылка на карточку" autocomplete="off" maxlength="500" required></label><label for="investigation-window">Окно вокруг событий<select id="investigation-window"><option value="60">1 час</option><option value="180" selected>3 часа</option><option value="360">6 часов</option><option value="1440">24 часа</option></select></label><button type="submit" id="investigation-run">Разобрать путь</button></form>
 <p class="investigation-note">Taskboard ищет карточку в настроенных контурах, связывает их по UUID и проверяет логи вокруг подтверждённых событий. Недоступные стенды и пробелы в логах показываются отдельно.</p><p id="investigation-error" role="alert" hidden></p><div id="investigation-result" aria-live="polite"></div>
 </section></main></div>
-<dialog id="update-dialog" aria-labelledby="update-title"><h2 id="update-title">Обновление Taskboard</h2><p id="update-message" role="status">Проверяю опубликованные версии…</p><div id="update-progress" hidden><div class="update-progress-head"><strong id="update-phase">Подготовка</strong><span id="update-percent"></span></div><progress id="update-bar" max="100" aria-label="Ход текущего этапа обновления"></progress><p id="update-detail"></p></div><div class="actions"><button id="update-install" type="button" hidden>Установить обновление</button><button id="update-close" type="button">Закрыть</button></div></dialog>
+<dialog id="update-dialog" aria-labelledby="update-title"><h2 id="update-title">Обновление Taskboard</h2><p id="update-message" role="status">Проверяю опубликованные версии…</p><section id="update-changes" class="update-changes" aria-label="Что изменилось" hidden></section><div id="update-progress" hidden><div class="update-progress-head"><strong id="update-phase">Подготовка</strong><span id="update-percent"></span></div><progress id="update-bar" max="100" aria-label="Ход текущего этапа обновления"></progress><p id="update-detail"></p></div><div class="actions"><button id="update-install" type="button" hidden>Установить обновление</button><button id="update-close" type="button">Закрыть</button></div></dialog>
 <dialog id="profile-dialog" aria-labelledby="profile-title"><form id="profile-form"><h2 id="profile-title">Настройки профиля</h2>
 <p id="profile-account"></p>
 <label for="profile-token">Токен Jira<input id="profile-token" type="password" autocomplete="new-password" maxlength="8000"></label>
@@ -964,6 +965,12 @@ async function poll(){
 }
 $('profile-button').onclick=openProfile;
 let updateDetails=null,updateWorking=false;
+function renderUpdateChanges(info){
+ const section=$('update-changes');section.replaceChildren();section.hidden=false;
+ section.append(node('h3','',info.available?'Что добавлено в обновлении':'Что добавлено в установленной версии'));
+ if(!info.changes?.length){section.append(node('p','','Описание изменений пока недоступно.'));return}
+ for(const change of info.changes){const list=node('ul','','');for(const item of change.items)list.append(node('li','',item));section.append(node('strong','',`Версия ${change.version}`),list)}
+}
 let updateBadgeChecking=false,updateBadgeCheckedAt=0;
 function setUpdateBadge(info){
  const button=$('update-button'),available=Boolean(info?.available);
@@ -1033,7 +1040,7 @@ async function watchUpdate(attemptId=null){
  finally{updateWorking=false;$('update-install').disabled=false}
 }
 $('update-button').onclick=async()=>{
- const dialog=$('update-dialog');dialog.showModal();$('update-message').textContent='Проверяю опубликованные версии…';$('update-progress').hidden=true;$('update-install').hidden=true;updateDetails=null;
+ const dialog=$('update-dialog');dialog.showModal();$('update-message').textContent='Проверяю опубликованные версии…';$('update-changes').hidden=true;$('update-progress').hidden=true;$('update-install').hidden=true;updateDetails=null;
  try{
   try{
    const statusResponse=await fetch('/api/update/status',{signal:AbortSignal.timeout(2500)});
@@ -1045,6 +1052,7 @@ $('update-button').onclick=async()=>{
   setUpdateBadge(info);
   const source=info.mode==='docker'?'Docker Hub':'GitHub';
   $('update-message').textContent=info.available?`Установлена ${info.currentVersion}. В ${source} доступна ${info.latestVersion}.${info.reason?' '+info.reason:''}`:`Установлена ${info.currentVersion}. Новее в ${source} сейчас нет.${info.reason?' '+info.reason:''}`;
+  renderUpdateChanges(info);
   $('update-install').hidden=!info.canInstall;
  }catch(error){$('update-message').textContent=error.name==='TimeoutError'?'Источник обновлений не ответил за 15 секунд.':error.message}
 };

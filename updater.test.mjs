@@ -1,10 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { compareVersions, readUpdateInfo } from './updater.mjs';
+import { compareVersions, readUpdateInfo, selectReleaseNotes } from './updater.mjs';
 
 test('version comparison uses numeric components', () => {
   assert.ok(compareVersions('1.26.0', '1.9.9') > 0);
   assert.equal(compareVersions('1.26.0', '1.26.0'), 0);
+});
+
+test('описание обновления включает все пропущенные версии по порядку', () => {
+  const notes={versions:{'1.27.19':['Старое'],'1.27.20':['Разбор обращений'],'1.27.21':['Описание обновлений'],'1.27.22':['Будущее']}};
+  assert.deepEqual(selectReleaseNotes(notes,'1.27.19','1.27.21',true).map(item=>item.version),['1.27.20','1.27.21']);
+  assert.deepEqual(selectReleaseNotes(notes,'1.27.21','1.27.21',false).map(item=>item.version),['1.27.21']);
 });
 
 test('Docker update selects newest published numeric tag', async () => {
