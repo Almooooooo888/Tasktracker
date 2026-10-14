@@ -43,6 +43,7 @@ let profile = await loadProfile() || {
   gitlabToken: process.env.LK_GITLAB_TOKEN || ''
 };
 const csrf = randomBytes(32).toString('hex');
+const testerField = 'customfield_10400';
 async function updaterRequest(route, options={}) {
   if(!updaterUrl||!updaterTokenFile)throw new Error('Компонент обновления не настроен.');
   const token=(await readFile(updaterTokenFile,'utf8')).trim();
@@ -260,7 +261,7 @@ async function refresh(state) {
     const jql = `(("Тестировщик" = ${userLiteral} OR assignee = ${userLiteral} OR reporter = ${userLiteral}) OR (${lkWithoutTester})) AND statusCategory != Done ORDER BY updated DESC`;
     let issues = [], startAt = 0;
     for (;;) {
-      const page = await jira('/rest/api/2/search', { jql, startAt, maxResults: 100, fields: ['summary', 'status', 'issuetype', 'priority', 'assignee', 'reporter', 'updated'] }, connection);
+      const page = await jira('/rest/api/2/search', { jql, startAt, maxResults: 100, fields: ['summary', 'status', 'issuetype', 'priority', 'assignee', 'reporter', 'updated', testerField] }, connection);
       if (!Array.isArray(page.issues) || !Number.isInteger(page.total)) throw new Error('Некорректный ответ Jira');
       issues.push(...page.issues);
       startAt += page.issues.length;
@@ -268,7 +269,7 @@ async function refresh(state) {
       if (!page.issues.length) throw new Error('Jira вернула неполный список');
     }
     const previousGit=new Map(state.issues.map(issue=>[issue.key,issue.git]));
-    state.issues = [...new Map(issues.map(x => [x.key, { id:x.id,key: x.key, url: `${connection.base}/browse/${encodeURIComponent(x.key)}`, summary: x.fields.summary, status: x.fields.status.id === '10100' ? 'Сделать' : x.fields.status.name, type: x.fields.issuetype?.name, priority: x.fields.priority?.name, assignee: x.fields.assignee?.displayName || 'Не назначен', author: x.fields.reporter?.displayName || x.fields.reporter?.name || 'Не указан', updated: x.fields.updated,git:previousGit.get(x.key) }])).values()];
+    state.issues = [...new Map(issues.map(x => [x.key, { id:x.id,key: x.key, url: `${connection.base}/browse/${encodeURIComponent(x.key)}`, summary: x.fields.summary, status: x.fields.status.id === '10100' ? 'Сделать' : x.fields.status.name, type: x.fields.issuetype?.name, priority: x.fields.priority?.name, assignee: x.fields.assignee?.displayName || 'Не назначен', author: x.fields.reporter?.displayName || x.fields.reporter?.name || 'Не указан', testers: Object.hasOwn(x.fields,testerField)?(x.fields[testerField]||[]).map(user=>({username:user.name||'',displayName:user.displayName||user.name||''})):null, updated: x.fields.updated,git:previousGit.get(x.key) }])).values()];
     void enrichTaskGit(state,connection).catch(()=>{state.gitRefreshing=false});
     state.lastSuccess = new Date().toISOString();
     state.error = null;
@@ -523,6 +524,31 @@ const server = http.createServer(async (req, res) => {
       return json(200,publicProfile());
     } catch { return json(400,{error:'Не удалось сохранить профиль.'}); }
     finally { savingProfile=false; }
+  }
+  if(req.method==='POST'&&url.pathname==='/api/issues/tester'){
+    const supplied=Buffer.from(String(req.headers['x-csrf-token']||''));
+    if(req.headers.origin!==`http://${req.headers.host}`||supplied.length!==csrf.length||!timingSafeEqual(supplied,Buffer.from(csrf)))return json(403,{error:'Перезагрузи страницу и повтори действие.'});
+    if(!String(req.headers['content-type']).startsWith('application/json'))return json(415,{error:'Ожидается JSON.'});
+    if(!profile.token)return json(409,{error:'Добавь токен Jira в настройках профиля.'});
+    let bytes=0,chunks=[];for await(const chunk of req){bytes+=chunk.length;if(bytes>2000)return json(413,{error:'Слишком большой запрос.'});chunks.push(chunk)}
+    let input;try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'))}catch{return json(400,{error:'Некорректный запрос.'})}
+    const key=String(input.key||'').trim().toUpperCase(),username=String(input.username||'').trim();
+    if(!/^ECP-\d+$/.test(key)||!username||username.length>120||/[\s"\\\x00-\x1f]/u.test(username))return json(400,{error:'Проверь задачу и пользователя Jira.'});
+    const connection=profile;
+    try{
+      const issue=await jira(`/rest/api/2/issue/${encodeURIComponent(key)}?fields=${testerField}`,undefined,connection);
+      if(connection!==profile)return json(409,{error:'Профиль изменился. Повтори действие.'});
+      if(!Object.hasOwn(issue.fields||{},testerField))return json(409,{error:'Поле «Тестировщик» недоступно в этой задаче.'});
+      if((issue.fields[testerField]||[]).length)return json(409,{error:'Тестировщик уже выбран в Jira. Обнови список задач.'});
+      const user=await jira('/rest/api/2/user?username='+encodeURIComponent(username),undefined,connection);
+      if(user.name!==username||user.active===false)return json(400,{error:'Выбери активного пользователя из списка Jira.'});
+      const response=await fetch(connection.base+`/rest/api/2/issue/${encodeURIComponent(key)}`,{method:'PUT',redirect:'error',dispatcher,signal:AbortSignal.timeout(20000),headers:{Authorization:`Bearer ${connection.token}`,Accept:'application/json','Content-Type':'application/json'},body:JSON.stringify({update:{[testerField]:[{add:{name:username}}]}})});
+      if(!response.ok){if(response.status===401||response.status===403)return json(403,{error:'Токен Jira не может изменить тестировщика в этой задаче.'});const details=await response.json().catch(()=>({}));return json(response.status===400?400:502,{error:details.errors?.[testerField]||details.errorMessages?.[0]||`Jira: ошибка ${response.status} при выборе тестировщика.`})}
+      const saved=await jira(`/rest/api/2/issue/${encodeURIComponent(key)}?fields=${testerField}`,undefined,connection);
+      const testers=(saved.fields?.[testerField]||[]).map(item=>({username:item.name||'',displayName:item.displayName||item.name||''}));
+      for(const state of states.values()){const item=state.issues.find(issue=>issue.key===key);if(item)item.testers=testers;refreshTimes.set(state,0)}
+      return json(200,{key,testers});
+    }catch(error){const tls=tlsFailure(error);return json(error.message.startsWith('Нет доступа')?403:502,{error:tls||(error.message.startsWith('Нет доступа')||error.message.startsWith('Jira:')?error.message:'Не удалось сохранить тестировщика в Jira. Проверь сеть и права на задачу.')})}
   }
   if(req.method==='POST'&&url.pathname==='/api/release-links'){
     const supplied=Buffer.from(String(req.headers['x-csrf-token']||''));
